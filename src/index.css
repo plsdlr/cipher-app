@@ -1,0 +1,236 @@
+/* Add font-face declaration for KiwiSoda */
+@font-face {
+    font-family: 'KiwiSoda';
+    src: url('/src/KiwiSoda.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Reactor7';
+    src: url('/src/Reactor7.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'oxy';
+    src: url('/src/OXYGENE1.TTF') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+html,
+body {
+    background-color: #191919;
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    color: #ff0000;
+    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
+    font-size: 20px;
+}
+
+
+h1 {
+    margin: 0;
+    padding: 0;
+    color: #ff0000;
+    ;
+    font-family: 'oxy', system-ui, -apple-system, sans-serif;
+    font-size: 30px;
+    padding: 0px;
+
+}
+
+h2 {
+    margin: 0;
+    padding: 0;
+    color: #ff0000;
+    ;
+    font-family: 'oxy', system-ui, -apple-system, sans-serif;
+    font-size: 25px;
+    padding: 0px;
+}
+
+
+.wallet-page {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 0;
+    background: #000000;
+    border: 1px solid #ff0000;
+    ;
+
+}
+
+.wallet-status {
+    background-color: #000000;
+    color: #ff0000;
+    ;
+    padding: 8px 8px;
+    border-bottom: 1px solid #ff0000;
+    ;
+    border-top: 1px solid #ff0000;
+    ;
+    /* border: 1px solid #ced4da; */
+}
+
+
+.upper-section {
+    /* background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(94, 0, 0, 0.8) 100%); */
+    padding: 8px 8px;
+    border-top: 2px solid #ff0000;
+    ;
+    /* box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5); */
+}
+
+.upper-section h1 {
+    margin: 0;
+    color: #ff0000;
+    ;
+    font-weight: bold;
+}
+
+.action-section {
+    margin-bottom: 30px;
+    padding: 10px;
+    color: #ff0000;
+    ;
+    padding: 8px 8px;
+    border-top: 1px solid #ff0000;
+}
+
+button {
+    padding: 6px 20px;
+    background: linear-gradient(0deg, rgb(255, 0, 0) 0%, rgba(135, 179, 207, 0.8) 100%);
+    /* background: #000000; */
+    color: white;
+    border: 1px solid rgb(255, 255, 255);
+    border-top: 1px solid rgb(255, 255, 255);
+    border-left: 1px solid rgb(255, 255, 255);
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
+    font-size: 20px;
+}
+
+
+
+
+/* 
+#root,
+.app,
+main {
+    background-color: #191919;
+    min-height: 100vh;
+}
+
+
+
+
+
+.upper-section h1 {
+    margin: 0;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 36px;
+    letter-spacing: 6px;
+}
+
+.wallet-content {
+    padding: 0 20px 20px;
+}
+
+
+
+.message {
+    padding: 10px 15px;
+    margin-bottom: 20px;
+}
+
+.success {}
+
+.error {}
+
+.info {
+    padding: 8px 8px;
+    margin-bottom: 7px;
+    color: #ffffff;
+}
+
+
+.status-item {
+    margin-bottom: 10px;
+}
+
+.private-key {
+    background: linear-gradient(0deg, rgba(31, 32, 113, 0.8) 0%, rgba(255, 0, 0, 0.8) 100%);
+    padding: 5px;
+}
+
+
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input {
+    width: 80%;
+    padding: 8px;
+    border: 1px solid #ced4da;
+}
+
+.private-key-input {
+    font-family: monospace;
+}
+
+.input-note {
+    margin-top: 5px;
+    font-size: 12px;
+    color: #dc3545;
+}
+
+button {
+    padding: 6px 20px;
+    background: linear-gradient(0deg, rgba(31, 32, 113, 0.8) 0%, rgba(135, 179, 207, 0.8) 100%);
+    color: white;
+    border: none;
+    border-top: 1px solid rgb(255, 255, 255);
+    border-left: 1px solid rgb(255, 255, 255);
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 2px rgba(6, 0, 68, 0.7);
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
+}
+
+button:hover {
+    transform: translateY(1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.import-button {
+    background-color: #28a745;
+}
+
+.import-button:hover {
+    background-color: #218838;
+}
+
+.reset-button {
+    background-color: #dc3545;
+}
+
+.reset-button:hover {
+    background-color: #c82333;
+}
+
+*/
