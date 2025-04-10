@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .container {
+            display: grid;
+            grid-template-areas:
+                "menue menue menue menue menue wallet1 wallet1 wallet1"
+                "content content content content content wallet1 wallet1 wallet1"
+                "footer footer footer footer footer console console console";
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            background-color: #2196F3;
+        }
+
+        .container>div {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .container>div.menue {
+            grid-area: menue;
+            width: 100%;
+            text-align: left;
+            background-color: #f32121;
+        }
+
+        .container>div.content {
+            grid-area: content;
+            width: 100%;
+        }
+
+        .container>div.wallet1 {
+            grid-area: wallet1;
+            width: 100%;
+        }
+
+        .container>div.footer {
+            grid-area: footer;
+            width: 100%;
+            background-color: #9e9e9e;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div class="container">
+        <div class="menue">this is the menu why is this not 100% width</div>
+        <div class="content">
+            <h3>Lorem Ipsum</h3>
+            <p>Lorem ipsum odor amet, consectetuer adipiscing elit. Ridiculus sit nisl laoreet facilisis aliquet.
+                Potenti dignissim litora eget montes rhoncus sapien neque urna. Cursus libero sapien integer magnis
+                ligula lobortis quam ut.</p>
+        </div>
+        <div class="footer">
+            <h4>Footer</h4>
+        </div>
+
+        <div class="wallet1">
+            <h4>im an wallet</h4>
+        </div>
+    </div>
+
+</body>
+
+</html>
