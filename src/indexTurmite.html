@@ -49,6 +49,18 @@
         });
 
 
+
+        function seededRandom(seed) {
+            // Create a simple LCG
+            let state = seed;
+            return function () {
+                // Constants from a well-known LCG implementation
+                state = (state * 1664525 + 1013904223) % 2147483648;
+                return state / 2147483648;
+            };
+        }
+
+
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
@@ -59,18 +71,6 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 
-
-        // var choice = ["blue", "red", "green", "orange"];
-
-        // for (var b = 0; b < canvas.width; b = b + 100) {
-        //   for (var d = 0; d < canvas.height; d = d + 100) {
-
-        //     //ctx.fillStyle = choice[Math.floor(Math.random() * choice.length)];
-        //     ctx.fillStyle = "red"
-        //     ctx.fillRect(b, d, 25, 25);
-        //   }
-        // }
-
         function resizeCanvas() {
             // Keep internal resolution fixed
             canvas.width = 300;
@@ -79,24 +79,6 @@
             // The canvas styling is handled by CSS now
             // This ensures it fills the container while maintaining aspect ratio
         }
-
-
-        // function resizeCanvas() {
-        //     // Make canvas fill viewport width
-        //     canvas.style.width = '100vw';
-        //     // Keep square ratio in display size
-        //     canvas.style.height = '100vw';
-
-        //     // Keep internal resolution fixed (let's say 500x500)
-        //     canvas.width = 300;
-        //     canvas.height = 300;
-
-        //     // Remove any margins/spacing
-        //     canvas.style.display = 'block';
-        //     canvas.style.margin = '0';
-        // }
-
-
 
         function setSinglePixelColor(x, y, pixel, r, g, b) {
             const index = (y * canvas.width + x) * 4;
@@ -274,7 +256,7 @@
 
             move() {
                 // Random direction: 0 = up, 1 = right, 2 = down, 3 = left
-                const direction = Math.floor(Math.random() * 4);
+                const direction = Math.floor(costomRandom() * 4);
 
                 switch (direction) {
                     case 0: // up
@@ -490,12 +472,12 @@
 
             for (let i = 0; i < count; i++) {
                 // Generate random starting point
-                const x1 = Math.floor(Math.random() * (canvas.width - maxSize));
-                const y1 = Math.floor(Math.random() * (canvas.height - maxSize));
+                const x1 = Math.floor(costomRandom() * (canvas.width - maxSize));
+                const y1 = Math.floor(costomRandom() * (canvas.height - maxSize));
 
                 // Generate random width and height between min and max size
-                const width = Math.floor(Math.random() * (maxSize - minSize)) + minSize;
-                const height = Math.floor(Math.random() * (maxSize - minSize)) + minSize;
+                const width = Math.floor(costomRandom() * (maxSize - minSize)) + minSize;
+                const height = Math.floor(costomRandom() * (maxSize - minSize)) + minSize;
 
                 // Ensure we don't exceed canvas bounds
                 const x2 = Math.min(x1 + width, canvas.width);
@@ -619,7 +601,7 @@
             var choice = ["up", "down", "left", "right"];
 
             listofSelections.forEach(rect => {
-                const pusher = new PixelPusher(rect, choice[Math.floor(Math.random() * choice.length)], 70);
+                const pusher = new PixelPusher(rect, choice[Math.floor(costomRandom() * choice.length)], 70);
                 pixelPusher.push(pusher);
             });
 
@@ -657,7 +639,7 @@
 
                         listofSelections.forEach(rect => {
                             // You can create a PixelPusher for each rectangle
-                            const pusher = new PixelPusher(rect, choice[Math.floor(Math.random() * choice.length)], choice2[Math.floor(Math.random() * choice2.length)]);
+                            const pusher = new PixelPusher(rect, choice[Math.floor(costomRandom() * choice.length)], choice2[Math.floor(costomRandom() * choice2.length)]);
                             pixelPusher.push(pusher)
                         });
                     }
@@ -689,15 +671,12 @@
 
         // Configuration object that will be updated by postMessage
         const config = {
-            coordinates: Array(20).fill().map(() => ({ x: Math.floor(Math.random() * 256), y: Math.floor(Math.random() * 256) })),
-            speed: 1,
-            // cool combo for later saved
-            // walkerTurmites: ["ff0001000801ff0000ff0200"],   ///ff0001ff0201ff0000ff0800
-            // builderTurmites: ["ff0800ff0201ff0800000001", "ff0801000200000800ff0800", "ff0201000201ff0400000000"],
-            walkerTurmites: [],   ///ff0001ff0201ff0000ff0800
-            builderTurmites: [],
-            colorScheme: "red",
-            chaosNumbers: [],
+            coordinates: null,
+            speed: null,
+            walkerTurmites: null,
+            builderTurmites: null,
+            colorScheme: null,
+            chaosNumbers: null
         };
 
 
@@ -708,37 +687,72 @@
 
         // var allturmites = [];
 
+        // 1. Initial random declaration (keep this)
+        let random; // Don't initialize with a default value yet
+
+        // 2. In buildStart function, modify to:
         const buildStart = () => {
+            // Only proceed if we have the necessary configuration
+            if (!config.chaosNumbers || !config.chaosNumbers.length) {
+                console.log("Missing chaosNumbers, cannot start animation deterministically");
+                return;
+            }
 
+            // Set the random generator with the provided seed (no fallback)
+            costomRandom = seededRandom(config.chaosNumbers[0]);
+            console.log("Using seed:", config.chaosNumbers[0]);
+
+            // Make sure coordinates are properly set
+            if (!config.coordinates || !config.coordinates.length || config.coordinates.length < 20) {
+                console.log("Missing coordinates, cannot start animation");
+                return;
+            }
+
+            // Make sure turmite rules are provided
+            if (!config.builderTurmites || !config.builderTurmites.length ||
+                !config.walkerTurmites || !config.walkerTurmites.length) {
+                console.log("Missing turmite rules, cannot start animation");
+                return;
+            }
+
+            // Now proceed with the animation
             var allturmites = [];
-            console.log("from iframe")
-            console.log(config.coordinates[0].x)
 
+            // Create turmites without defaults
             for (var a = 0; a < 15; a++) {
-                // var gene = builders[Math.floor(Math.random() * builders.length)];
                 var gene = config.builderTurmites[a % config.builderTurmites.length];
-                const turmiteData = { posx: config.coordinates[a].x + 22, posy: config.coordinates[a].y + 22, rule: gene, state: 0, direction: 1 };
+                const turmiteData = {
+                    posx: config.coordinates[a].x + 22,
+                    posy: config.coordinates[a].y + 22,
+                    rule: gene,
+                    state: 0,
+                    direction: 1
+                };
                 const turmiteobjNew = new turmiteobj(turmiteData, "red");
-                allturmites.push(turmiteobjNew)
-                console.log("hey")
+                allturmites.push(turmiteobjNew);
             }
 
             for (var b = 15; b < 20; b++) {
-                var gene = config.walkerTurmites[b % config.walkerTurmites.length]
-                const turmiteData = { posx: config.coordinates[b].x + 22, posy: config.coordinates[b].y + 22, rule: gene, state: 0, direction: 1 };
+                var gene = config.walkerTurmites[b % config.walkerTurmites.length];
+                const turmiteData = {
+                    posx: config.coordinates[b].x + 22,
+                    posy: config.coordinates[b].y + 22,
+                    rule: gene,
+                    state: 0,
+                    direction: 1
+                };
                 const turmiteobjNew = new turmiteobj(turmiteData, "red");
-                allturmites.push(turmiteobjNew)
-                console.log("HEY")
+                allturmites.push(turmiteobjNew);
             }
-            main(allturmites);
 
+            main(allturmites);
         }
 
         // Listen for messages from the parent window
         window.addEventListener('message', (event) => {
             console.log('Iframe received message:', event.data);
             // You might want to check event.origin for security
-            if (event.data.type === 'UPDATE_ANIMATION') {
+            if (event.data.type === 'UPDATE_ANIMATION' && event.data.data) {
                 // Update the configuration
                 Object.assign(config, event.data.data);
                 // If needed, restart or update the animation with new values
@@ -747,9 +761,9 @@
         });
 
         // Start the animation when 
-        if (config.walkerTurmites.length > 0) {
-            buildStart();
-        }
+        // if (config.walkerTurmites.length > 0) {
+        //     buildStart();
+        // }
 
 
 
