@@ -248,6 +248,100 @@ button:hover {
 }
 
 
+.mint-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #ff0000;
+}
+
+.mint-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+@media (min-width: 768px) {
+    .mint-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.canvas-section {
+    background-color: #000000;
+    border: 1px solid #ff0000;
+    padding: 10px;
+}
+
+.canvas-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.gene-selection,
+.coordinates-section {
+    background-color: #000000;
+    border: 1px solid #ff0000;
+    padding: 15px;
+}
+
+.gene-section {
+    margin-bottom: 20px;
+}
+
+.gene-selector {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #ff0000;
+}
+
+.gene-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.gene-option {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.gene-name {
+    margin-left: 5px;
+}
+
+.coordinates-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.coordinate-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.coordinate-inputs {
+    display: flex;
+    gap: 5px;
+}
+
+input[type="number"] {
+    width: 60px;
+    background-color: #000000;
+    border: 1px solid #ff0000;
+    color: #ff0000;
+    padding: 3px;
+}
+
+input[type="radio"] {
+    accent-color: #ff0000;
+}
+
+
 
 
 /* 
