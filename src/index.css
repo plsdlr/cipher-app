@@ -198,6 +198,13 @@ canvas {
     overflow-y: auto;
 }
 
+.encryption-section {
+    border: 1px solid #ff0000;
+    padding: 10px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
 .coordinate-item {
     display: flex;
     align-items: center;

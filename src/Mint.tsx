@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import CipherWrapperIframe from './canvasWrapper';
+import encodeAll from './encodingUtils.js';
+import { useWallet } from './cipherWallet';
+
+import { decodeSlot1, decodeSlot2, decodeSlot3 } from './encodingUtils.js';
 
 // Define turmite gene constants
 const BUILDER_GENES = [
@@ -24,6 +28,15 @@ const WALKER_GENES = [
 ];
 
 const MintPage = () => {
+
+    const {
+        publicKey,
+        privateKey,
+        isGenerated,
+        isBackedUp,
+        generateEncryptionKey
+    } = useWallet();
+
     // Generate random coordinates between 0 and 256
     const generateRandomCoords = () => Array(20).fill().map(() => ({
         x: Math.floor(Math.random() * 256),
@@ -54,7 +67,28 @@ const MintPage = () => {
         };
 
         setCoordinates(newCoordinates);
+
     };
+
+    const handleGenerateProof = () => {
+        var allRules = builderGenes.concat(walkerGene)
+        var encoded = encodeAll(coordinates, allRules, [4, 5, 10]);
+        console.log("new encoding");
+
+        if (publicKey && privateKey) {
+            console.log("registered")
+            const newEncryptionKey = generateEncryptionKey();
+            console.log("generated Encryption key");
+            console.log(newEncryptionKey);
+        } else {
+            console.log("not registerd")
+        }
+
+        // console.log(encoded);
+        // var decodedSlot = decodeSlot1(encoded[0]);
+        // console.log(decodedSlot);
+
+    }
 
 
     // Generate random coordinates
@@ -173,6 +207,11 @@ const MintPage = () => {
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    <div className="encryption-section">
+                        <h3>Encrypt & Mint</h3>
+                        <button onClick={handleGenerateProof}>Encrypt meee</button>
                     </div>
                 </div>
             </div>

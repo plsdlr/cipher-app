@@ -579,18 +579,32 @@
 
         function main(turmites) {
             var pixelPusher = [];
+            var frameCount = 0;
             //var turmites = [];
 
             var lastTurmiteUpdate = 0;
             var lastPusherUpdate = 0;
             var lastCleanerUpdate = 0;
 
+            // // 1
+            // const FRAMES_PER_TURMITE_UPDATE = 1;    // Update every 50ms (faster)
+            // // 100
+            // const FRAMES_PER_PUSHER_UPDATE = 100;    // Update every 200ms (slower)
+            // //20
+            // const FRAMES_PER_CLEANER_UPDATE = 15;
+            // //50
+            // const RECTANGLE_PUSHER_NUMBER = 30;
+
+            // const newcleaner = new Cleaner(150, 0);
+
+
+
             // 1
-            const TURMITE_INTERVAL = 1;    // Update every 50ms (faster)
+            const FRAMES_PER_TURMITE_UPDATE = 1;    // Update every 50ms (faster)
             // 100
-            const PUSHER_INTERVAL = 100;    // Update every 200ms (slower)
+            const FRAMES_PER_PUSHER_UPDATE = 9;    // Update every 200ms (slower)
             //20
-            const CLEANER_INTERVAL = 15;
+            const FRAMES_PER_CLEANER_UPDATE = 1;
             //50
             const RECTANGLE_PUSHER_NUMBER = 30;
 
@@ -614,12 +628,13 @@
 
                 // }
 
+                frameCount++;
 
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 let currentPixels = imageData.data;
 
                 // Turmite updates more frequently
-                if (timestamp - lastTurmiteUpdate > TURMITE_INTERVAL) {
+                if (frameCount % FRAMES_PER_TURMITE_UPDATE === 0) {
                     turmites.forEach(turmite => {
                         currentPixels = turmite.step(currentPixels);
                     })
@@ -627,7 +642,7 @@
                 }
 
                 // Pixel pushers update less frequently
-                if (timestamp - lastPusherUpdate > PUSHER_INTERVAL) {
+                if (frameCount % FRAMES_PER_PUSHER_UPDATE === 0) {
                     pixelPusher = pixelPusher.filter(pusher => {
                         return pusher.currentSteps < pusher.steps;
                     });
@@ -654,7 +669,7 @@
                 imageData.data.set(currentPixels);
                 ctx.putImageData(imageData, 0, 0);
 
-                if (timestamp - lastCleanerUpdate > CLEANER_INTERVAL) {
+                if (frameCount % FRAMES_PER_CLEANER_UPDATE === 0) {
                     newcleaner.step(currentPixels);
                     lastCleanerUpdate = timestamp;
 
