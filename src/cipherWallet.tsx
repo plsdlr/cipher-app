@@ -3,6 +3,9 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Point, mulPointEscalar } from "@zk-kit/baby-jubjub";
 import { crypto } from "@zk-kit/utils";
 import { derivePublicKey, deriveSecretScalar } from "@zk-kit/eddsa-poseidon";
+import { poseidonEncrypt, poseidonDecrypt, poseidonDecryptWithoutCheck } from "@zk-kit/poseidon-cipher";
+
+
 // For encryption, we'll use the Web Crypto API
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -26,6 +29,7 @@ interface WalletContextType {
   backupWallet: (password: string) => Promise<boolean>;
   restoreWallet: (password: string) => Promise<boolean>;
   hasBackup: () => boolean;
+  poseidonEncryption: (nonce: bigint, encryptionKey: [bigint, bigint], encodedMessage: bigint[]) => bigint[];
 }
 
 // Create context with default values
@@ -42,7 +46,10 @@ const WalletContext = createContext<WalletContextType>({
   genEcdhSharedKey: () => null,
   backupWallet: async () => false,
   restoreWallet: async () => false,
-  hasBackup: () => false
+  hasBackup: () => false,
+  poseidonEncryption: (nonce: bigint, encryptionKey: bigint[], encodedMessage: bigint[]) => {
+    return [];
+  }
 });
 
 // Helper functions adapted from the provided code
@@ -56,6 +63,16 @@ const generateEncryptionKey = (keyPair: [PrivateKey, PublicKey]): EncryptionKey 
   const secretScalar = deriveSecretScalar(keyPair[0]);
   return mulPointEscalar(keyPair[1], secretScalar);
 };
+
+const createPoseidonEncryption = (nonce: bigint, encryptionKey: bigint[], encodedMessage: bigint[]): bigint[] => {
+  // console.log("LOGG FROM WALLET");
+  // console.log(typeof (encryptionKey[0]));
+  // console.log(typeof (encryptionKey[1]));
+  // console.log(typeof (nonce));
+  const messages = poseidonEncrypt(encodedMessage, [encryptionKey[0], encryptionKey[1]], nonce)
+  return messages;
+}
+
 
 const genEcdhSharedKey = (privKey: PrivateKey, pubKey: PublicKey): EncryptionKey => {
   const secretScalar = deriveSecretScalar(privKey);
@@ -440,7 +457,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     genEcdhSharedKey: createEcdhSharedKey,
     backupWallet,
     restoreWallet,
-    hasBackup
+    hasBackup,
+    poseidonEncryption: createPoseidonEncryption
   };
 
   return (

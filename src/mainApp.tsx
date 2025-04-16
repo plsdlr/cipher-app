@@ -131,11 +131,6 @@ function MainApp() {
                     //     <h3>Welcome to Cipher Wallet</h3>
                     //     <p>Your secure, decentralized solution for managing digital assets.
                     //         Use the menu above to navigate through different sections of the application.</p>
-                        <CipherWrapper coordinates={testvalues.coordinates}
-                            speed={1} colorScheme='red'
-                            walkerTurmites={testvalues.walkerTurmites}
-                            builderTurmites={testvalues.builderTurmites}
-                            chaosNumbers={testvalues.chaosNumbers} />
 
                     </>
                 );

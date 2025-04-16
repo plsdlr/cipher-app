@@ -32,6 +32,11 @@ function hexToByte(hexString) {
 }
 
 
+function timeStamp() {
+    return BigInt(Math.floor(new Date().getTime() / 1000));
+}
+
+
 function decodePositionsInt(hexstring) {
     let numbers = [];
     //assert(hexstring.length % 2 === 0)
@@ -119,6 +124,10 @@ function encodeSlot3(rule3, rule4, posPairs, additionalValues) {
     return fullPaddingHex;
 }
 
+function toBigInts(hexArray) {
+    return hexArray.map(x => BigInt(x));
+}
+
 
 function encodeAll(positions, rulesets, additionalValues) {
     var slot1Encoded = encodeSlot1(positions.slice(0, 15))
@@ -131,7 +140,7 @@ function encodeAll(positions, rulesets, additionalValues) {
 export { encodeAll as default };
 
 
-export { decodeSlot1, decodeSlot2, decodeSlot3 };
+export { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts };
 
 
 

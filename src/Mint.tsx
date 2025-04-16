@@ -3,7 +3,7 @@ import CipherWrapperIframe from './canvasWrapper';
 import encodeAll from './encodingUtils.js';
 import { useWallet } from './cipherWallet';
 
-import { decodeSlot1, decodeSlot2, decodeSlot3 } from './encodingUtils.js';
+import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from './encodingUtils.js';
 
 // Define turmite gene constants
 const BUILDER_GENES = [
@@ -34,7 +34,8 @@ const MintPage = () => {
         privateKey,
         isGenerated,
         isBackedUp,
-        generateEncryptionKey
+        generateEncryptionKey,
+        poseidonEncryption
     } = useWallet();
 
     // Generate random coordinates between 0 and 256
@@ -71,22 +72,19 @@ const MintPage = () => {
     };
 
     const handleGenerateProof = () => {
-        var allRules = builderGenes.concat(walkerGene)
-        var encoded = encodeAll(coordinates, allRules, [4, 5, 10]);
-        console.log("new encoding");
+
 
         if (publicKey && privateKey) {
-            console.log("registered")
+            var allRules = builderGenes.concat(walkerGene)
+            const encoded = toBigInts(encodeAll(coordinates, allRules, [4, 5, 10]));
             const newEncryptionKey = generateEncryptionKey();
-            console.log("generated Encryption key");
-            console.log(newEncryptionKey);
+            const currentTimestamp = timeStamp()
+            const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
+            console.log(cipherText)
+            /// test with decryption plz
         } else {
             console.log("not registerd")
         }
-
-        // console.log(encoded);
-        // var decodedSlot = decodeSlot1(encoded[0]);
-        // console.log(decodedSlot);
 
     }
 
