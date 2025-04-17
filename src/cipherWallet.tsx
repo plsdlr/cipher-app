@@ -13,11 +13,13 @@ const decoder = new TextDecoder();
 // Define types for our context
 type PublicKey = [BigInt, BigInt]; // Public key is an array of two BigInts
 type PrivateKey = Uint8Array;
+type SecretScalar = BigInt;
 type EncryptionKey = any; // Replace with the actual type from the library
 
 interface WalletContextType {
   publicKey: PublicKey | null;
   privateKey: PrivateKey | null;
+  secretScalar: SecretScalar | null;
   isGenerated: boolean;
   isBackedUp: boolean;
   generateKeys: () => { privateKey: PrivateKey; publicKey: PublicKey };
@@ -36,6 +38,7 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType>({
   publicKey: null,
   privateKey: null,
+  secretScalar: null,
   isGenerated: false,
   isBackedUp: false,
   generateKeys: () => ({ privateKey: new Uint8Array(), publicKey: [BigInt(0), BigInt(0)] }),
@@ -65,10 +68,6 @@ const generateEncryptionKey = (keyPair: [PrivateKey, PublicKey]): EncryptionKey 
 };
 
 const createPoseidonEncryption = (nonce: bigint, encryptionKey: bigint[], encodedMessage: bigint[]): bigint[] => {
-  // console.log("LOGG FROM WALLET");
-  // console.log(typeof (encryptionKey[0]));
-  // console.log(typeof (encryptionKey[1]));
-  // console.log(typeof (nonce));
   const messages = poseidonEncrypt(encodedMessage, [encryptionKey[0], encryptionKey[1]], nonce)
   return messages;
 }
@@ -174,11 +173,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [wallet, setWallet] = useState<{
     publicKey: PublicKey | null;
     privateKey: PrivateKey | null;
+    secretScalar: SecretScalar | null;
     isGenerated: boolean;
     isBackedUp: boolean;
   }>({
     publicKey: null,
     privateKey: null,
+    secretScalar: null,
     isGenerated: false,
     isBackedUp: false
   });
@@ -198,7 +199,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           ...prevWallet,
           publicKey,
           isGenerated: true,
-          isBackedUp: hasBackup
+          isBackedUp: hasBackup,
         }));
       } catch (error) {
         console.error('Failed to restore public key from localStorage:', error);
@@ -234,8 +235,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       publicKey,
       privateKey,
       isGenerated: true,
-      isBackedUp: false
+      isBackedUp: false,
+      secretScalar: deriveSecretScalar(privateKey)
     });
+    console.log("add secret scala here")
+    console.log(deriveSecretScalar(privateKey))
   };
 
 
@@ -317,7 +321,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         publicKey,
         privateKey,
         isGenerated: true,
-        isBackedUp: false // Imported keys are not considered backed up
+        isBackedUp: false, // Imported keys are not considered backed up
+        secretScalar: deriveSecretScalar(privateKey)
       });
 
       // Store only the public key in localStorage
@@ -374,7 +379,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         ...prevWallet,
         privateKey,
         isGenerated: true,
-        isBackedUp: true
+        isBackedUp: true,
+        secretScalar: deriveSecretScalar(privateKey)
       }));
 
       console.log('Wallet restored successfully');
@@ -421,7 +427,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       publicKey: null,
       privateKey: null,
       isGenerated: false,
-      isBackedUp: false
+      isBackedUp: false,
+      secretScalar: null,
     });
 
     localStorage.removeItem('walletPublicKey');
@@ -439,7 +446,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       hasPublicKey: !!wallet.publicKey,
       hasPrivateKey: !!wallet.privateKey,
       isGenerated: wallet.isGenerated,
-      isBackedUp: wallet.isBackedUp
+      isBackedUp: wallet.isBackedUp,
+      secretScalar: wallet.secretScalar
     });
   }, [wallet]);
 
@@ -449,6 +457,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     privateKey: wallet.privateKey,
     isGenerated: wallet.isGenerated,
     isBackedUp: wallet.isBackedUp,
+    secretScalar: wallet.secretScalar,
     generateKeys,
     hasGeneratedKeys,
     resetWallet,

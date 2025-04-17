@@ -4,6 +4,8 @@ import encodeAll from './encodingUtils.js';
 import { useWallet } from './cipherWallet';
 
 import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from './encodingUtils.js';
+import { poseidonDecrypt } from '@zk-kit/poseidon-cipher';
+import { generateProofTurmite } from './ProofSystem.tsx'
 
 // Define turmite gene constants
 const BUILDER_GENES = [
@@ -77,10 +79,14 @@ const MintPage = () => {
         if (publicKey && privateKey) {
             var allRules = builderGenes.concat(walkerGene)
             const encoded = toBigInts(encodeAll(coordinates, allRules, [4, 5, 10]));
+            console.log(encoded)
             const newEncryptionKey = generateEncryptionKey();
             const currentTimestamp = timeStamp()
             const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
-            console.log(cipherText)
+            //console.log(cipherText)
+
+            // const testDecryption = poseidonDecrypt(cipherText, newEncryptionKey, currentTimestamp, 3)
+            // console.log(testDecryption)
             /// test with decryption plz
         } else {
             console.log("not registerd")
