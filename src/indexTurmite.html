@@ -41,6 +41,25 @@
     <canvas id="myCanvas" width="300" height="300"></canvas>
     <script>
 
+        const pico8Palette = [
+            { r: 255, g: 70, b: 0 },    // black
+            { r: 169, g: 183, b: 223 },   // dark blue
+            { r: 126, g: 37, b: 83 },   // dark purple
+            { r: 0, g: 135, b: 81 },   // dark green
+            { r: 171, g: 82, b: 54 },   // brown
+            { r: 95, g: 87, b: 79 },   // dark gray
+            { r: 194, g: 195, b: 199 },  // light gray
+            { r: 255, g: 241, b: 232 },  // white
+            { r: 255, g: 0, b: 0 },   // red
+            { r: 255, g: 163, b: 0 },    // orange
+            { r: 255, g: 236, b: 39 },   // yellow
+            { r: 0, g: 228, b: 54 },   // green
+            { r: 41, g: 173, b: 255 },  // blue
+            { r: 131, g: 118, b: 156 },  // lavender
+            { r: 255, g: 119, b: 168 },  // pink
+            { r: 255, g: 204, b: 170 }   // peach
+        ];
+
 
         // Get the canvas element and its context
         const canvas = document.getElementById('myCanvas');
@@ -59,7 +78,6 @@
                 return state / 2147483648;
             };
         }
-
 
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -80,13 +98,13 @@
             // This ensures it fills the container while maintaining aspect ratio
         }
 
-        function setSinglePixelColor(x, y, pixel, r, g, b) {
-            const index = (y * canvas.width + x) * 4;
-            pixel[index] = r;
-            pixel[index + 1] = g;
-            pixel[index + 2] = b;
-            return pixel;
-        }
+        // function setSinglePixelColor(x, y, pixel, r, g, b) {
+        //     const index = (y * canvas.width + x) * 4;
+        //     pixel[index] = r;
+        //     pixel[index + 1] = g;
+        //     pixel[index + 2] = b;
+        //     return pixel;
+        // }
 
         function drawOnIndices(pixels, indices, r, g, b) {
             for (let i = 0; i < indices.length; i++) {
@@ -99,20 +117,35 @@
 
 
         class turmiteobj {
-            constructor(turmite1, color) {
+            constructor(turmite1, colorIndex) {
                 this.posx = parseInt(turmite1.posy);
                 this.posy = parseInt(turmite1.posx);
                 this.rule = turmite1.rule;
                 this.direction = turmite1.direction;
                 this.state = turmite1.state;
-                this.color = color;
+                this.color = pico8Palette[colorIndex];
                 this.gradient = 0;
+                this.colorIndicator = this.getHighestChannel(this.color);
 
 
                 /// temp slots
                 this.newDirection = 0;
                 this.colorOfField = 0;
             }
+
+
+            getHighestChannel(color) {
+                console.log("------")
+                console.log(color)
+                if (color.r >= color.g && color.r >= color.b) {
+                    return 'r';
+                } else if (color.g >= color.r && color.g >= color.b) {
+                    return 'g';
+                } else {
+                    return 'b';
+                }
+            }
+
 
             getPixelColor(x, y, pixels) {
                 const index = (y * canvas.width + x) * 4;
@@ -125,10 +158,8 @@
             }
 
 
-            /// rewritten to support gradient pixels
-
             chooseDirection(pixels) {
-                var stateOfField = this.getPixelColor(this.posx, this.posy, pixels).r;
+                var stateOfField = this.getPixelColor(this.posx, this.posy, pixels)[this.colorIndicator];
                 //console.log(stateOfField, this.state)
                 if (stateOfField == 0 && this.state == 0) {
                     //0 0 change mirrow
@@ -206,34 +237,31 @@
                 }
             }
 
-            setSinglePixelColor(x, y, pixel, r, g, b) {
+            setSinglePixelColor(x, y, pixel, r, g, b, a) {
                 const index = (y * canvas.width + x) * 4;
                 pixel[index] = r;
                 pixel[index + 1] = g;
                 pixel[index + 2] = b;
+                pixel[index + 3] = a;
                 return pixel;
             }
 
             newSetField(pixels) {
-                //console.log("______")
-                //console.log(this.colorOfField)
-                //console.log("______")
                 if (this.colorOfField == "ff") {
                     /// change me back later please
                     //return setSinglePixelColor(this.posx, this.posy, pixels, [40, 80, 150, 200, 250][Math.floor(this.gradient / 51.2)], 0, 0);
-                    return setSinglePixelColor(this.posx, this.posy, pixels, [40, 80, 150, 200, 250, 200, 150, 80][Math.floor(this.gradient / 32)], 0, 0)
+                    //return this.setSinglePixelColor(this.posx, this.posy, pixels, [40, 80, 150, 200, 250][Math.floor(this.gradient / 51.2)], 0, 0, 255);
+                    return this.setSinglePixelColor(this.posx, this.posy, pixels, this.color["r"], this.color["g"], this.color["b"], [40, 80, 150, 200, 250][Math.floor(this.gradient / 51.2)])
                 } else {
-                    return setSinglePixelColor(this.posx, this.posy, pixels, 0, 0, 0);
+                    return this.setSinglePixelColor(this.posx, this.posy, pixels, 0, 0, 0, 0);
                 }
             }
 
             step(pixels) {
-                //console.log("GET HERE")
                 this.chooseDirection(pixels);
                 const newPixels = this.newSetField(pixels);
                 this.changeDirection();
                 this.takeStep();
-                //this.gradient = (this.gradient + 1) % 256
                 this.gradient = (this.gradient + 1) % 256;
                 return newPixels
             }
@@ -690,7 +718,6 @@
             speed: null,
             walkerTurmites: null,
             builderTurmites: null,
-            colorScheme: null,
             chaosNumbers: null
         };
 
@@ -743,7 +770,7 @@
                     state: 0,
                     direction: 1
                 };
-                const turmiteobjNew = new turmiteobj(turmiteData, "red");
+                const turmiteobjNew = new turmiteobj(turmiteData, config.chaosNumbers[1]);
                 allturmites.push(turmiteobjNew);
             }
 
@@ -756,7 +783,7 @@
                     state: 0,
                     direction: 1
                 };
-                const turmiteobjNew = new turmiteobj(turmiteData, "red");
+                const turmiteobjNew = new turmiteobj(turmiteData, config.chaosNumbers[1]);
                 allturmites.push(turmiteobjNew);
             }
 

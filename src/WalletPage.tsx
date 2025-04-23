@@ -6,6 +6,7 @@ const WalletPage = () => {
   const {
     publicKey,
     privateKey,
+    secretScalar,
     isGenerated,
     isBackedUp,
     generateKeys,

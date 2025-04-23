@@ -3,7 +3,6 @@ import React, { useEffect, useState, useRef } from 'react';
 interface CipherWrapperProps {
     coordinates?: { x: number, y: number }[];
     speed?: number;
-    colorScheme?: string;
     walkerTurmites?: string[];
     builderTurmites?: string[];
     chaosNumbers?: number[];
@@ -12,7 +11,6 @@ interface CipherWrapperProps {
 const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
     coordinates,
     speed = 1,
-    colorScheme = "red",
     walkerTurmites = [],
     builderTurmites = [],
     chaosNumbers = []
@@ -30,7 +28,8 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
     }, [
         JSON.stringify(coordinates),
         JSON.stringify(walkerTurmites),
-        JSON.stringify(builderTurmites)
+        JSON.stringify(builderTurmites),
+        JSON.stringify(chaosNumbers)
     ]); // Reload on major configuration changes
 
     // Send data to the iframe after it loads
@@ -46,7 +45,6 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
                     data: {
                         coordinates,
                         speed,
-                        colorScheme,
                         walkerTurmites,
                         builderTurmites,
                         chaosNumbers
@@ -60,7 +58,6 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
     }, [
         coordinates,
         speed,
-        colorScheme,
         walkerTurmites,
         builderTurmites,
         chaosNumbers,
