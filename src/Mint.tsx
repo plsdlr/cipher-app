@@ -57,7 +57,8 @@ const MintPage = () => {
         isGenerated,
         isBackedUp,
         generateEncryptionKey,
-        poseidonEncryption
+        poseidonEncryption,
+        secretScalar
     } = useWallet();
 
     // Generate random coordinates between 0 and 256
@@ -105,19 +106,22 @@ const MintPage = () => {
     };
 
     const handleGenerateProof = () => {
-        if (publicKey && privateKey) {
+        if (publicKey && privateKey && secretScalar) {
             var allRules = builderGenes.concat(walkerGene)
-            const encoded = toBigInts(encodeAll(coordinates, allRules, [4, 5, 10]));
-            console.log(encoded)
+            const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers));
+            // console.log(encoded)
             const newEncryptionKey = generateEncryptionKey();
             const currentTimestamp = timeStamp()
             const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
+            // console.log(cipherText)
+            console.log(publicKey[0]);
+            console.log(typeof (publicKey));
 
             // Include color in the proof generation
-            //const proof = generateProofTurmite(privateKey, publicKey, encoded, color);
-            //console.log(cipherText)
+            const proof = generateProofTurmite(privateKey, publicKey, encoded, secretScalar, cipherText, newEncryptionKey, currentTimestamp);
+            console.log(proof)
 
-            // const testDecryption = poseidonDecrypt(cipherText, newEncryptionKey, currentTimestamp, 3)
+            //const testDecryption = poseidonDecrypt(cipherText, newEncryptionKey, currentTimestamp, 3)
             // console.log(testDecryption)
             /// test with decryption plz
         } else {

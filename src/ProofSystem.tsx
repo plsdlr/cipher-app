@@ -1,7 +1,7 @@
 // TurmiteProofService.ts
 import * as snarkjs from 'snarkjs';
 import { poseidonEncrypt } from "@zk-kit/poseidon-cipher";
-import { builder } from './witness_calculator_turmite';
+import builder from './circuit_turmites/witness_calculator.js';
 
 // Import your existing crypto utilities
 import { generateEncryptionKey } from './cryptoUtils';
@@ -13,7 +13,7 @@ interface ProofResult {
 }
 
 // Cache for proofs
-const proofCache = new Map<string, ProofResult>();
+// const proofCache = new Map<string, ProofResult>();
 
 /**
  * Generates a ZK proof for turmite data
@@ -34,17 +34,17 @@ export async function generateProofTurmite(
     nonce: bigint[]
 ): Promise<ProofResult> {
     // Create a cache key
-    const cacheKey = JSON.stringify({
-        privateKey: Array.from(privateKey),
-        publicKey: [publicKey[0].toString(), publicKey[1].toString()],
-        turmiteSlots,
-        nonce: nonce.toString()
-    });
+    // const cacheKey = JSON.stringify({
+    //     privateKey: Array.from(privateKey),
+    //     publicKey: [publicKey[0].toString(), publicKey[1].toString()],
+    //     turmiteSlots,
+    //     nonce: nonce.toString()
+    // });
 
-    // Check cache
-    if (proofCache.has(cacheKey)) {
-        return proofCache.get(cacheKey)!;
-    }
+    // // Check cache
+    // if (proofCache.has(cacheKey)) {
+    //     return proofCache.get(cacheKey)!;
+    // }
 
     try {
         // Prepare circuit input
@@ -65,10 +65,12 @@ export async function generateProofTurmite(
         // Load WASM for the circuit
         const wasmResponse = await fetch('./circuit_tumrites/verification-encoded-data-add.wasm');
         const wasmBuffer = await wasmResponse.arrayBuffer();
+        console.log("get here")
 
         // // Create witness calculator
-        // const witnessCalculator = await builder(wasmBuffer);
+        const witnessCalculator = await builder(wasmBuffer);
 
+        console.log("get here222")
         // // Calculate witness
         // const witness = await witnessCalculator.calculateWitness(input);
 

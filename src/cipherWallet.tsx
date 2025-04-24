@@ -11,9 +11,9 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 // Define types for our context
-type PublicKey = [BigInt, BigInt]; // Public key is an array of two BigInts
+type PublicKey = [bigint, bigint]; // Public key is an array of two BigInts
 type PrivateKey = Uint8Array;
-type SecretScalar = BigInt;
+type SecretScalar = bigint;
 type EncryptionKey = any; // Replace with the actual type from the library
 
 interface WalletContextType {
