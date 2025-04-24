@@ -43,6 +43,7 @@ const COLOR_NAMES = [
     "Orange",
     "Yellow",
     "Green",
+    "Blue2",
     "Lavender",
     "Pink",
     "Peach"
