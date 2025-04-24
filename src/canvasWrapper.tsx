@@ -116,7 +116,6 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
                 aspectRatio: '1/1',
                 position: 'relative',
                 overflow: 'hidden',
-                boxShadow: 'inset 0 0 0 1px #ff0000',
                 background: '#000000',
                 ...(isFullscreen && {
                     display: 'flex',
@@ -158,14 +157,8 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
                     right: '10px',
                     zIndex: 10,
                     background: 'rgba(0, 0, 0, 0.7)',
-                    color: '#ff0000',
-                    border: '1px solid #ff0000',
-                    borderRadius: '4px',
-                    padding: '8px 15px',
-                    cursor: 'pointer',
                     fontFamily: '"Reactor7", system-ui, -apple-system, sans-serif',
                     fontSize: '16px',
-                    outline: 'none',
                 }}
             >
                 {isFullscreen ? 'EXIT FULLSCREEN' : 'FULLSCREEN'}

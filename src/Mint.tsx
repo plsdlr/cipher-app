@@ -78,7 +78,8 @@ const MintPage = () => {
 
     // New state for color selection (0-15)
     const [color, setColor] = useState(0);
-    const [chaosNumbers, setChaosNumbers] = useState([0, 1, 0]);
+    const [chaosNumbers, setChaosNumbers] = useState([0, 0, 0]);
+
 
     // Handle coordinate input changes
     const handleCoordinateChange = (index, axis, value) => {
@@ -268,32 +269,6 @@ const MintPage = () => {
                     </div>
                 </div>
 
-                <style jsx>{`
-                    .color-selector {
-                        margin-bottom: 20px;
-                        padding: 10px;
-                        border-bottom: 1px solid #ff0000;
-                    }
-                    
-                    .color-dropdown {
-                        display: flex;
-                        align-items: center;
-                    }
-                    
-                    .color-select {
-                        background-color: #000000;
-                        color: #ff0000;
-                        border: 1px solid #ff0000;
-                        padding: 6px;
-                        font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
-                        font-size: 18px;
-                    }
-                    
-                    .color-select option {
-                        background-color: #000000;
-                        color: #ff0000;
-                    }
-                `}</style>
             </div>
         </div>
     );

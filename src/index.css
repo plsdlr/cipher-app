@@ -12,13 +12,23 @@
     font-style: normal;
 }
 
+
+:root {
+    /* --primary-color: #ff0000; */
+    --primary-color: rgb(255, 241, 232);
+    --primary-background: #000000;
+    --text-color: #ff0000;
+}
+
+
+
 html,
 body {
-    background-color: #191919;
+    background-color: var(--background-color);
     margin: 0;
     padding: 0;
     min-height: 100%;
-    color: #ff0000;
+    color: var(--primary-color);
     font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
     font-size: 20px;
 }
@@ -27,7 +37,7 @@ body {
 h1 {
     margin: 0;
     padding: 0;
-    color: #ff0000;
+    color: var(--primary-color);
     ;
     font-family: 'oxy', system-ui, -apple-system, sans-serif;
     font-size: 30px;
@@ -38,7 +48,7 @@ h1 {
 h2 {
     margin: 0;
     padding: 0;
-    color: #ff0000;
+    color: var(--primary-color);
     ;
     font-family: 'oxy', system-ui, -apple-system, sans-serif;
     font-size: 25px;
@@ -50,20 +60,20 @@ h2 {
     /* max-width: 400px; */
     margin: 0 auto;
     padding: 0;
-    background: #000000;
-    border: 1px solid #ff0000;
+    background: var(--primary-background);
+    border: 1px solid var(--primary-color);
     ;
 
 }
 
 .wallet-status {
-    background-color: #000000;
-    color: #ff0000;
+    background-color: var(--primary-background);
+    color: var(--primary-color);
     ;
     padding: 8px 8px;
-    border-bottom: 1px solid #ff0000;
+    border-bottom: 1px solid var(--primary-color);
     ;
-    border-top: 1px solid #ff0000;
+    border-top: 1px solid var(--primary-color);
     ;
     /* border: 1px solid #ced4da; */
 }
@@ -72,14 +82,14 @@ h2 {
 .upper-section {
     /* background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(94, 0, 0, 0.8) 100%); */
     padding: 8px 8px;
-    border-top: 2px solid #ff0000;
+    border-top: 2px solid var(--primary-color);
     ;
     /* box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5); */
 }
 
 .upper-section h1 {
     margin: 0;
-    color: #ff0000;
+    color: var(--primary-color);
     ;
     font-weight: bold;
 }
@@ -87,16 +97,16 @@ h2 {
 .action-section {
     margin-bottom: 30px;
     padding: 10px;
-    color: #ff0000;
+    color: var(--primary-color);
     ;
     padding: 8px 8px;
-    border-top: 1px solid #ff0000;
+    border-top: 1px solid var(--primary-color);
 }
 
 button {
     padding: 6px 20px;
     background: linear-gradient(0deg, rgb(255, 0, 0) 0%, rgba(135, 179, 207, 0.8) 100%);
-    /* background: #000000; */
+    /* background: var(--primary-background); */
     color: white;
     border: 1px solid rgb(255, 255, 255);
     border-top: 1px solid rgb(255, 255, 255);
@@ -130,12 +140,12 @@ button {
     grid-area: menue;
     /* width: 100%; */
     text-align: left;
-    background-color: #ff0000;
+    background-color: var(--primary-color);
 }
 
 .container>div.content {
     grid-area: content;
-    background-color: #000000;
+    background-color: var(--primary-background);
     width: 100%;
 }
 
@@ -161,7 +171,7 @@ canvas {
 
 .mint-page {
     padding: 0;
-    color: #ff0000;
+    color: var(--primary-color);
 }
 
 .mint-content {
@@ -192,14 +202,14 @@ canvas {
 }
 
 .coordinates-section {
-    border: 1px solid #ff0000;
+    border: 1px solid var(--primary-color);
     padding: 10px;
     max-height: 500px;
     overflow-y: auto;
 }
 
 .encryption-section {
-    border: 1px solid #ff0000;
+    border: 1px solid var(--primary-color);
     padding: 10px;
     max-height: 500px;
     overflow-y: auto;
@@ -224,9 +234,9 @@ canvas {
 .coordinate-inputs input {
     width: 60px;
     padding: 5px;
-    background: #000000;
-    color: #ff0000;
-    border: 1px solid #ff0000;
+    background: var(--primary-background);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
     text-align: center;
 }
 
@@ -237,17 +247,17 @@ canvas {
 }
 
 button {
-    background: #000000;
-    color: #ff0000;
-    border: 1px solid #ff0000;
+    background: var(--primary-background);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
     padding: 5px 10px;
     cursor: pointer;
     font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
 }
 
 button:hover {
-    background: #ff0000;
-    color: #000000;
+    background: var(--primary-color);
+    color: var(--primary-background);
 }
 
 .toggle-btn {
@@ -259,7 +269,7 @@ button:hover {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-    color: #ff0000;
+    color: var(--primary-color);
 }
 
 .mint-grid {
@@ -275,8 +285,8 @@ button:hover {
 }
 
 .canvas-section {
-    background-color: #000000;
-    border: 1px solid #ff0000;
+    background-color: var(--primary-background);
+    border: 1px solid var(--primary-color);
     padding: 10px;
 }
 
@@ -288,8 +298,8 @@ button:hover {
 
 .gene-selection,
 .coordinates-section {
-    background-color: #000000;
-    border: 1px solid #ff0000;
+    background-color: var(--primary-background);
+    border: 1px solid var(--primary-color);
     padding: 15px;
 }
 
@@ -300,7 +310,7 @@ button:hover {
 .gene-selector {
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px dashed #ff0000;
+    border-bottom: 1px dashed var(--primary-color);
 }
 
 .gene-options {
@@ -338,14 +348,40 @@ button:hover {
 
 input[type="number"] {
     width: 60px;
-    background-color: #000000;
-    border: 1px solid #ff0000;
-    color: #ff0000;
+    background-color: var(--primary-background);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
     padding: 3px;
 }
 
 input[type="radio"] {
-    accent-color: #ff0000;
+    accent-color: var(--primary-color);
+}
+
+
+.color-selector {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-bottom: 1px solid var(--primary-color);
+}
+
+.color-dropdown {
+    display: flex;
+    align-items: center;
+}
+
+.color-select {
+    background-color: var(--primary-background);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    padding: 6px;
+    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
+    font-size: 18px;
+}
+
+.color-select option {
+    background-color: var(--primary-background);
+    color: var(--primary-color);
 }
 
 
