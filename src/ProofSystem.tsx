@@ -1,5 +1,10 @@
 // TurmiteProofService.ts
+//import * as snarkjs from 'snarkjs';
 import * as snarkjs from 'snarkjs';
+
+console.log("snarkjs structure:", Object.keys(snarkjs));
+console.log("groth16 available?", snarkjs.groth16);
+
 import { poseidonEncrypt } from "@zk-kit/poseidon-cipher";
 import builder from './circuit_turmites/witness_calculator.js';
 
@@ -75,33 +80,65 @@ export async function generateProofTurmite(
 
         // Load WASM for the circuit
         //const wasmResponse = await fetch('./circuit_tumrites/verification-encoded-data-add.wasm');
-        const wasmResponse = await fetch('/circuit_turmites/verification-encoded-data-add.wasm');
+        //const wasmResponse = await fetch('/circuit_turmites/verification-encoded-data-add.wasm');
         // const wasmResponse = await fetch(wasmUrl);
-        const wasmBuffer = await wasmResponse.arrayBuffer();
+        //const wasmBuffer = await wasmResponse.arrayBuffer();
         console.log("get here")
 
-        // // Create witness calculator
-        const witnessCalculator = await builder(wasmBuffer);
 
-        console.log("get here222")
-        // // Calculate witness
-        const witness = await witnessCalculator.calculateWitness(input);
-        console.log("witness calc done")
+        // Use fullProve which handles witness calculation internally
+        const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+            input,
+            '/circuit_turmites/verification-encoded-data-add.wasm',
+            '/circuit_turmites/groth16_pkey.zkey'
+        );
 
-        // // Generate proof
+        console.log("Proof generated successfully:", proof);
+
+
+        // // // Create witness calculator
+        // const witnessCalculator = await builder(wasmBuffer);
+
+        // // // Calculate witness
+        // const witness = await witnessCalculator.calculateWitness(input);
+        // console.log("witness calc done")
+
+        // const zkeyResponse = await fetch('/circuit_turmites/groth16_pkey.zkey');
+        // const zkeyBuffer = await zkeyResponse.arrayBuffer();
+
+        // // Convert the buffer to a Uint8Array
+        // const zkeyData = new Uint8Array(zkeyBuffer);
+
+        // const zkeyCheck = await fetch('/circuit_turmites/groth16_pkey.zkey');
+        // if (!zkeyCheck.ok) {
+        //     console.error(`Failed to load zkey file: ${zkeyCheck.status} ${zkeyCheck.statusText}`);
+        //     throw new Error(`Failed to load zkey file: ${zkeyCheck.status}`);
+        // }
+        // const zkeyResponse = await fetch('/circuit_turmites/groth16_pkey.zkey');
+
+        // // Check if the fetch succeeded
+        // if (!zkeyResponse.ok) {
+        //     throw new Error(`Failed to fetch zkey: ${zkeyResponse.status} ${zkeyResponse.statusText}`);
+        // }
+
+        // const zkeyBuffer = await zkeyResponse.arrayBuffer();
+
+        // // Create a temporary blob URL for the zkey
+        // const zkeyBlob = new Blob([zkeyBuffer]);
+        // const zkeyUrl = URL.createObjectURL(zkeyBlob);
+
+        // // Similarly for witness if needed
+        // const witnessBlob = new Blob([witness]);
+        // const witnessUrl = URL.createObjectURL(witnessBlob);
+
         // const { proof, publicSignals } = await snarkjs.groth16.prove(
-        //     '/circuits/verification-encoded-data-add.zkey',
-        //     witness
+        //     zkeyUrl,
+        //     witnessUrl
         // );
 
-        // const result: ProofResult = {
-        //     proof,
-        //     publicSignals,
-        //     ciphertext
-        // };
+        // console.log("Proof generated:", proof);
 
-        // // Cache the result
-        // proofCache.set(cacheKey, result);
+
 
         return result;
     } catch (err: any) {
