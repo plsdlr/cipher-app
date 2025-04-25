@@ -47,6 +47,17 @@ export async function generateProofTurmite(
     // }
 
     try {
+
+        console.log("ALL LOGS______>>>")
+        console.log("turmiteSlots:", turmiteSlots);
+        console.log("deriveSecretScalarPrivKey:", deriveSecretScalarPrivKey);
+        console.log("publicKey:", publicKey);
+        console.log("encryptionKey:", encryptionKey);
+        console.log("nonce:", nonce);
+        console.log("ciphertext:", ciphertext);
+
+
+
         // Prepare circuit input
         const input = {
             slot1: turmiteSlots[0],
@@ -63,7 +74,9 @@ export async function generateProofTurmite(
         };
 
         // Load WASM for the circuit
-        const wasmResponse = await fetch('./circuit_tumrites/verification-encoded-data-add.wasm');
+        //const wasmResponse = await fetch('./circuit_tumrites/verification-encoded-data-add.wasm');
+        const wasmResponse = await fetch('/circuit_turmites/verification-encoded-data-add.wasm');
+        // const wasmResponse = await fetch(wasmUrl);
         const wasmBuffer = await wasmResponse.arrayBuffer();
         console.log("get here")
 
@@ -72,7 +85,8 @@ export async function generateProofTurmite(
 
         console.log("get here222")
         // // Calculate witness
-        // const witness = await witnessCalculator.calculateWitness(input);
+        const witness = await witnessCalculator.calculateWitness(input);
+        console.log("witness calc done")
 
         // // Generate proof
         // const { proof, publicSignals } = await snarkjs.groth16.prove(

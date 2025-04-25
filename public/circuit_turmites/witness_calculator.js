@@ -5,7 +5,6 @@ export default async function builder(code, options) {
 	let wasmModule;
 	try {
 		wasmModule = await WebAssembly.compile(code);
-		console.log("WASM COMPILED!!!")
 	} catch (err) {
 		console.log(err);
 		console.log("\nTry to run circom --c in order to generate c++ code instead\n");
@@ -134,9 +133,9 @@ class WitnessCalculator {
 		this.instance.exports.init((this.sanityCheck || sanityCheck) ? 1 : 0);
 		let prefix = "";
 		var input = new Object();
-		console.log("Input: ", input_orig);
+		//console.log("Input: ", input_orig);
 		qualify_input(prefix, input_orig, input);
-		console.log("Input after: ", input);
+		//console.log("Input after: ",input);	
 		const keys = Object.keys(input);
 		var input_counter = 0;
 		keys.forEach((k) => {
@@ -292,7 +291,7 @@ function qualify_input_list(prefix, input, input1) {
 
 function qualify_input(prefix, input, input1) {
 	if (Array.isArray(input)) {
-		let a = flatArray(input);
+		a = flatArray(input);
 		if (a.length > 0) {
 			let t = typeof a[0];
 			for (let i = 1; i < a.length; i++) {
