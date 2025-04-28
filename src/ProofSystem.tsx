@@ -14,11 +14,7 @@ import { generateEncryptionKey } from './cryptoUtils';
 interface ProofResult {
     proof: any;
     publicSignals: any[];
-    ciphertext: any;
 }
-
-// Cache for proofs
-// const proofCache = new Map<string, ProofResult>();
 
 /**
  * Generates a ZK proof for turmite data
@@ -38,28 +34,16 @@ export async function generateProofTurmite(
     encryptionKey: bigint[],
     nonce: bigint[]
 ): Promise<ProofResult> {
-    // Create a cache key
-    // const cacheKey = JSON.stringify({
-    //     privateKey: Array.from(privateKey),
-    //     publicKey: [publicKey[0].toString(), publicKey[1].toString()],
-    //     turmiteSlots,
-    //     nonce: nonce.toString()
-    // });
-
-    // // Check cache
-    // if (proofCache.has(cacheKey)) {
-    //     return proofCache.get(cacheKey)!;
-    // }
 
     try {
 
-        console.log("ALL LOGS______>>>")
-        console.log("turmiteSlots:", turmiteSlots);
-        console.log("deriveSecretScalarPrivKey:", deriveSecretScalarPrivKey);
-        console.log("publicKey:", publicKey);
-        console.log("encryptionKey:", encryptionKey);
-        console.log("nonce:", nonce);
-        console.log("ciphertext:", ciphertext);
+        // console.log("ALL LOGS______>>>")
+        // console.log("turmiteSlots:", turmiteSlots);
+        // console.log("deriveSecretScalarPrivKey:", deriveSecretScalarPrivKey);
+        // console.log("publicKey:", publicKey);
+        // console.log("encryptionKey:", encryptionKey);
+        // console.log("nonce:", nonce);
+        // console.log("ciphertext:", ciphertext);
 
 
 
@@ -78,12 +62,7 @@ export async function generateProofTurmite(
             computedCipherText: ciphertext
         };
 
-        // Load WASM for the circuit
-        //const wasmResponse = await fetch('./circuit_tumrites/verification-encoded-data-add.wasm');
-        //const wasmResponse = await fetch('/circuit_turmites/verification-encoded-data-add.wasm');
-        // const wasmResponse = await fetch(wasmUrl);
-        //const wasmBuffer = await wasmResponse.arrayBuffer();
-        console.log("get here")
+        // console.log("get here")
 
 
         // Use fullProve which handles witness calculation internally
@@ -96,51 +75,8 @@ export async function generateProofTurmite(
         console.log("Proof generated successfully:", proof);
 
 
-        // // // Create witness calculator
-        // const witnessCalculator = await builder(wasmBuffer);
 
-        // // // Calculate witness
-        // const witness = await witnessCalculator.calculateWitness(input);
-        // console.log("witness calc done")
-
-        // const zkeyResponse = await fetch('/circuit_turmites/groth16_pkey.zkey');
-        // const zkeyBuffer = await zkeyResponse.arrayBuffer();
-
-        // // Convert the buffer to a Uint8Array
-        // const zkeyData = new Uint8Array(zkeyBuffer);
-
-        // const zkeyCheck = await fetch('/circuit_turmites/groth16_pkey.zkey');
-        // if (!zkeyCheck.ok) {
-        //     console.error(`Failed to load zkey file: ${zkeyCheck.status} ${zkeyCheck.statusText}`);
-        //     throw new Error(`Failed to load zkey file: ${zkeyCheck.status}`);
-        // }
-        // const zkeyResponse = await fetch('/circuit_turmites/groth16_pkey.zkey');
-
-        // // Check if the fetch succeeded
-        // if (!zkeyResponse.ok) {
-        //     throw new Error(`Failed to fetch zkey: ${zkeyResponse.status} ${zkeyResponse.statusText}`);
-        // }
-
-        // const zkeyBuffer = await zkeyResponse.arrayBuffer();
-
-        // // Create a temporary blob URL for the zkey
-        // const zkeyBlob = new Blob([zkeyBuffer]);
-        // const zkeyUrl = URL.createObjectURL(zkeyBlob);
-
-        // // Similarly for witness if needed
-        // const witnessBlob = new Blob([witness]);
-        // const witnessUrl = URL.createObjectURL(witnessBlob);
-
-        // const { proof, publicSignals } = await snarkjs.groth16.prove(
-        //     zkeyUrl,
-        //     witnessUrl
-        // );
-
-        // console.log("Proof generated:", proof);
-
-
-
-        return result;
+        return { proof: proof, publicSignals: publicSignals };
     } catch (err: any) {
         throw new Error(`Error generating proof: ${err.message}`);
     }
