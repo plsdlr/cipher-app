@@ -1,6 +1,7 @@
 // WalletPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useWallet } from './cipherWallet';
+import EthWallet from './EthConnector';
 
 const WalletPage = () => {
   const {
@@ -156,6 +157,7 @@ const WalletPage = () => {
   return (
     <div className="wallet-page">
       <div className="upper-section">
+        <EthWallet></EthWallet>
         <h1>CIPHER WALLET</h1>
 
       </div>

@@ -1,6 +1,6 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 
-function App() {
+function EthWallet() {
   const account = useAccount()
   const { connectors, connect, status, error } = useConnect()
   const { disconnect } = useDisconnect()
@@ -8,7 +8,7 @@ function App() {
   return (
     <>
       <div>
-        <h2>Account</h2>
+        <h2>ETH ACCOUNT</h2>
 
         <div>
           status: {account.status}
@@ -26,7 +26,7 @@ function App() {
       </div>
 
       <div>
-        <h2>Connect</h2>
+        <h2>CONNECT</h2>
         {connectors.map((connector) => (
           <button
             key={connector.uid}
@@ -43,4 +43,4 @@ function App() {
   )
 }
 
-export default App
+export default EthWallet

@@ -6,6 +6,7 @@ import { useWallet } from './cipherWallet';
 import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from './encodingUtils.js';
 import { poseidonDecrypt } from '@zk-kit/poseidon-cipher';
 import { generateProofTurmite } from './ProofSystem.tsx'
+import { MintNFT } from './MintConnector.tsx';
 
 // Define turmite gene constants
 const BUILDER_GENES = [
@@ -51,6 +52,7 @@ const COLOR_NAMES = [
 
 const MintPage = () => {
 
+
     const {
         publicKey,
         privateKey,
@@ -69,6 +71,8 @@ const MintPage = () => {
 
     // State for coordinates
     const [coordinates, setCoordinates] = useState(generateRandomCoords());
+
+    const [proofCalldata, setProofCalldata] = useState({});
 
     // State for selected genes
     const [builderGenes, setBuilderGenes] = useState([
@@ -105,7 +109,7 @@ const MintPage = () => {
         setColor(selectedColor);
     };
 
-    const handleGenerateProof = () => {
+    const handleGenerateProof = async () => {
         if (publicKey && privateKey && secretScalar) {
             var allRules = builderGenes.concat(walkerGene)
             const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers));
@@ -118,8 +122,10 @@ const MintPage = () => {
             console.log(typeof (publicKey));
 
             // Include color in the proof generation
-            const proof = generateProofTurmite(privateKey, publicKey, encoded, secretScalar, cipherText, newEncryptionKey, currentTimestamp);
-            console.log(proof)
+            const proof = await generateProofTurmite(privateKey, publicKey, encoded, secretScalar, cipherText, newEncryptionKey, currentTimestamp);
+            setProofCalldata(proof.calldata);
+
+            //console.log(formatZKProofCalldata(proof.proof, proof.publicSignals));
 
             //const testDecryption = poseidonDecrypt(cipherText, newEncryptionKey, currentTimestamp, 3)
             // console.log(testDecryption)
@@ -270,7 +276,9 @@ const MintPage = () => {
 
                     <div className="encryption-section">
                         <h3>Encrypt & Mint</h3>
-                        <button onClick={handleGenerateProof}>Encrypt meee</button>
+                        <button onClick={handleGenerateProof}>Generate Poof</button>
+                        {proofCalldata ? <MintNFT calldata={proofCalldata} /> : "generate Poof"}
+
                     </div>
                 </div>
 

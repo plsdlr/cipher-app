@@ -14,6 +14,7 @@ import { generateEncryptionKey } from './cryptoUtils';
 interface ProofResult {
     proof: any;
     publicSignals: any[];
+    calldata: any;
 }
 
 /**
@@ -72,11 +73,24 @@ export async function generateProofTurmite(
             '/circuit_turmites/groth16_pkey.zkey'
         );
 
-        console.log("Proof generated successfully:", proof);
+        const calldata = await snarkjs.groth16.exportSolidityCallData(proof, publicSignals);
+
+        const jsonString = `[${calldata}]`;
+
+        const parsed = JSON.parse(jsonString);
+
+        const strucuredCalldata = {
+            a: parsed[0],        // a points (2 elements)
+            b: parsed[1],        // b points (2x2 elements)
+            c: parsed[2],        // c points (2 elements)
+            publivInput: parsed[3]     // public inputs (variable length)
+        }
+
+        // console.log("Proof generated successfully:", proof);
 
 
 
-        return { proof: proof, publicSignals: publicSignals };
+        return { proof: proof, publicSignals: publicSignals, calldata: strucuredCalldata };
     } catch (err: any) {
         throw new Error(`Error generating proof: ${err.message}`);
     }
