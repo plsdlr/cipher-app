@@ -3,6 +3,7 @@ import WalletPage from './WalletPage.tsx'
 import CipherWrapper from './canvasWrapper.tsx'
 
 import MintPage from './Mint.tsx'
+import ViewPage from './view.tsx';
 
 function MainApp() {
     const [activeMenu, setActiveMenu] = useState('home');
@@ -36,6 +37,13 @@ function MainApp() {
                 return (
                     <>
                         <MintPage />
+                    </>
+                );
+
+            case 'view':
+                return (
+                    <>
+                        <ViewPage />
                     </>
                 );
         }
