@@ -6,22 +6,6 @@
 // Total capacity: 20 position pairs, 3 additional values, 4 rulesets
 // All slots are under the 254-bit field limit for Circom
 
-// const positions = [
-//     { x: 13, y: 20 }, { x: 30, y: 40 }, { x: 50, y: 60 }, { x: 70, y: 80 }, { x: 90, y: 100 },
-//     { x: 110, y: 120 }, { x: 130, y: 140 }, { x: 150, y: 160 }, { x: 170, y: 180 }, { x: 190, y: 200 },
-//     { x: 210, y: 220 }, { x: 230, y: 240 }, { x: 250, y: 255 }, { x: 240, y: 230 }, { x: 220, y: 210 },
-//     { x: 200, y: 190 }, { x: 188, y: 170 }, { x: 160, y: 150 }, { x: 140, y: 130 }, { x: 120, y: 110 }
-// ];
-
-// const additionalValues = [5, 10, 15];
-
-// const rulesets = [
-//     "ff0801000200000800ff0800",
-//     "ff0201ff0801000400000200",
-//     "ff0000ff0801000000000200",
-//     "ff0401000800ff0200000400"
-// ];
-
 
 function byteToHex(number) {
     return (number & 0xFF).toString(16).padStart(2, '0');
@@ -75,6 +59,11 @@ function decodeSlot2(hexString) {
     return { positions: positions, rules: rules }
 }
 
+function decodeSlot2_withPadding(intNumber) {
+    var paddedData = intNumber.toString(16).padStart(66, '0');
+    return decodeSlot2(paddedData);
+}
+
 
 function encodeSlot2(rule1, rule2, posPairs) {
     //const hexPosPairs = posPairs.map((pos) => [byteToHex(pos.x), byteToHex(pos.y)]).flat(1)
@@ -91,6 +80,13 @@ function decodeSlot1(hexString) {
     return { positions: positions }
 }
 
+function decodeSlot1_withPadding(intNumber) {
+    var paddedData = intNumber.toString(16).padStart(66, '0');
+    return decodeSlot1(paddedData);
+}
+
+
+
 
 function encodeSlot1(posPairs) {
     var thepositions = encodePositionsHexString(posPairs);
@@ -99,7 +95,7 @@ function encodeSlot1(posPairs) {
 }
 
 function decodeSlot3(hexString) {
-    console.log(hexString.substring(58, 67))
+    //console.log(hexString.substring(58, 67))
     var positions = decodePositionsInt(hexString.substring(58, 67)).reverse();
     var rules = [hexString.substring(34, 58), hexString.substring(10, 34)]
     var additionalValues1 = {
@@ -107,10 +103,15 @@ function decodeSlot3(hexString) {
         value2: hexToByte(hexString[6] + hexString[7]),
         value1: hexToByte(hexString[8] + hexString[9])
     }
-    console.log(additionalValues1)
+    //console.log(additionalValues1)
     // hexToByte(hexString[4] + hexString[5])
     //console.log(additionalValues1)
     return { positions: positions, rules: rules, additionalValues: additionalValues1 }
+}
+
+function decodeSlot3_withPadding(intNumber) {
+    var paddedData = intNumber.toString(16).padStart(66, '0');
+    return decodeSlot3(paddedData);
 }
 
 function encodeSlot3(rule3, rule4, posPairs, additionalValues) {
@@ -140,11 +141,28 @@ function encodeAll(positions, rulesets, additionalValues) {
 export { encodeAll as default };
 
 
-export { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts };
+export { decodeSlot1, decodeSlot1_withPadding, decodeSlot2, decodeSlot3_withPadding, decodeSlot3, decodeSlot2_withPadding, timeStamp, toBigInts };
 
 
 
-//var test = encodeSlot1(positions.slice(0, 15))
+const positions = [
+    { x: 13, y: 20 }, { x: 30, y: 40 }, { x: 50, y: 60 }, { x: 70, y: 80 }, { x: 90, y: 100 },
+    { x: 110, y: 120 }, { x: 130, y: 140 }, { x: 150, y: 160 }, { x: 170, y: 180 }, { x: 190, y: 200 },
+    { x: 210, y: 220 }, { x: 230, y: 240 }, { x: 250, y: 255 }, { x: 240, y: 230 }, { x: 220, y: 210 },
+    { x: 200, y: 190 }, { x: 188, y: 170 }, { x: 160, y: 150 }, { x: 140, y: 130 }, { x: 120, y: 110 }
+];
+
+// const additionalValues = [5, 10, 15];
+
+// const rulesets = [
+//     "ff0801000200000800ff0800",
+//     "ff0201ff0801000400000200",
+//     "ff0000ff0801000000000200",
+//     "ff0401000800ff0200000400"
+// ];
+
+
+// var test = encodeSlot1(positions.slice(0, 15))
 // encodeSlot2(rulesets[0], rulesets[1], positions.slice(15, 18))
 // encodeSlot3(rulesets[2], rulesets[3], positions.slice(18, 20), [5, 10, 15])
 
