@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from './cipherWallet';
+import CipherWrapperIframe from './canvasWrapper';
 import encodeAll from './encodingUtils.js';
 import { useContractUtils } from './utils/utils.tsx';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractAbi';
@@ -11,7 +12,14 @@ import {
     useReadContract
 } from 'wagmi';
 
+import { useParams, BrowserRouter, Routes, Route, useLocation, useNavigate, Link, Navigate } from 'react-router-dom';
+
 import { decodeSlot1, decodeSlot1_withPadding, decodeSlot2, decodeSlot3_withPadding, decodeSlot3, decodeSlot2_withPadding, timeStamp, toBigInts } from './encodingUtils.js';
+
+
+type TokenParams = {
+    tokenId?: string;
+}
 
 
 const ViewPage = () => {
@@ -25,31 +33,37 @@ const ViewPage = () => {
         secretScalar
     } = useWallet();
 
+    const { tokenId } = useParams<TokenParams>();
+    const navigate = useNavigate();
+
     const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
     const formattedAddress = contractAddress as `0x${string}`;
     const { address } = useAccount();
-
-    const awnser = useReadContract({
-        abi: EncryptedNFTABI,
-        address: formattedAddress,
-        functionName: 'ownerOf',
-        args: ["2"]
-    });
 
     const encryptedNotes = useReadContract({
         abi: EncryptedNFTABI,
         address: formattedAddress,
         functionName: 'getEncryptedNote',
-        args: ["2"]
+        args: [tokenId]
     });
 
     // State to store decrypted data
-    const [decryptedData, setDecryptedData] = useState(null);
+    const [allPositions, setAllPositions] = useState(null);
+    const [allRules, setAllRules] = useState(null);
+    const [allAdditionalData, setAdditionalData] = useState(null);
+
     const [error, setError] = useState(null);
+
+    //private key not loaded here :
 
     useEffect(() => {
         const decrypt = async () => {
+            console.log("get hereeeeeeeeeeeeeee1")
+            console.log(isGenerated)
+            console.log(privateKey)
+            console.log(encryptedNotes.data)
             if (isGenerated && privateKey && encryptedNotes.data && !encryptedNotes.isLoading) {
+                console.log("get hereeeeeeeeeeeeeee2")
                 try {
                     const newEncryptionKey = generateEncryptionKey();
                     const timeStamp = encryptedNotes.data[4];
@@ -71,24 +85,21 @@ const ViewPage = () => {
 
 
                     console.log('Decrypted data:', fun);
-                    //setDecryptedData(fun);
-                    const slot1 = decodeSlot1_withPadding(fun[0]);
-                    // console.log("slot1")
-                    // console.log(slot1);
-                    const slot2 = decodeSlot2_withPadding(fun[1]);
-                    // console.log("slot2")
-                    // console.log(slot2);
 
+                    const slot1 = decodeSlot1_withPadding(fun[0]);
+                    const slot2 = decodeSlot2_withPadding(fun[1]);
                     const slot3 = decodeSlot3_withPadding(fun[2]);
-                    // console.log("slot3")
-                    // console.log(slot3);
+
 
                     const allPositions = slot1["positions"].concat(slot2["positions"]).concat(slot3["positions"])
-                    const allRules = slot2["rules"].concat(slot3["rules"])
+                    const allRulesNew = slot2["rules"].concat(slot3["rules"])
                     const additionalValues = slot3["additionalValues"]
-                    console.log(allPositions)
-                    console.log(allRules)
-                    console.log(additionalValues)
+
+                    setAllPositions(allPositions);
+                    setAdditionalData(additionalValues);
+                    setAllRules(allRulesNew);
+
+
                 } catch (err) {
                     console.error('Decryption error:', err);
                     setError(err.message);
@@ -111,12 +122,18 @@ const ViewPage = () => {
 
     return (
         <div>
-            <h1>View Page</h1>
+            <h1>VIEWPAGE</h1>
             {/* Display your data here */}
-            {decryptedData && (
+            {allPositions && allAdditionalData && allRules && (
                 <div>
-                    <h2>Decrypted Data:</h2>
-                    <pre>{JSON.stringify(decryptedData, null, 2)}</pre>
+                    <CipherWrapperIframe
+                        coordinates={allPositions}
+                        builderTurmites={[allRules[0], allRules[1], allRules[2]]}
+                        walkerTurmites={[allRules[3]]}
+                        speed={1}
+                        chaosNumbers={allAdditionalData}
+                    />
+
                 </div>
             )}
             {error && (

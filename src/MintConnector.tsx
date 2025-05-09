@@ -27,6 +27,8 @@ export function MintNFT({ calldata }) {
         writeContract
     } = useWriteContract()
 
+    const { address } = useAccount();
+
     // Getting the contract address for Sepolia testnet
     const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
 
@@ -45,7 +47,7 @@ export function MintNFT({ calldata }) {
             address: formattedAddress,
             abi: EncryptedNFTABI,
             functionName: 'mint',
-            args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, "0x53064B75D3Ca0f5375860EAa5A306E9dA1A749A1"],
+            args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, address],
         })
     }
 

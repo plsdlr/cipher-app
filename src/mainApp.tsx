@@ -1,80 +1,104 @@
 import React, { useState, useEffect } from 'react';
-import WalletPage from './WalletPage.tsx'
-import CipherWrapper from './canvasWrapper.tsx'
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Link, Navigate } from 'react-router-dom';
+import WalletPage from './WalletPage';
+import CipherWrapper from './canvasWrapper';
+import MintPage from './Mint';
+import ViewList from './viewList';
+import ViewPage from './view'; // Import the TokenView component
 
-import MintPage from './Mint.tsx'
-import ViewPage from './view.tsx';
+// Main content component that handles routing
+const MainContent = () => {
+    const location = useLocation();
 
-function MainApp() {
-    const [activeMenu, setActiveMenu] = useState('home');
+    // Determine active menu item from URL path
+    const getActiveMenuFromPath = () => {
+        const path = location.pathname.split('/')[1];
+        if (!path) return 'home';
+        return path;
+    };
+
+    return (
+        <Routes>
+            <Route path="/" element={
+                <div>
+                    <h3>Welcome to Cipher Wallet</h3>
+                    <p>Your secure, decentralized solution for managing digital assets.
+                        Use the menu above to navigate through different sections of the application.</p>
+                </div>
+            } />
+            <Route path="/mint" element={<MintPage />} />
+            <Route path="/view" element={<ViewList />} />
+            <Route path="/view/:tokenId" element={<ViewPage />} />
+            <Route path="/send" element={<div>Send Page Coming Soon</div>} />
+            <Route path="/market" element={<div>Market Page Coming Soon</div>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    );
+};
+
+// Menu component
+const Menu = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Determine which menu item is active
+    const getActiveMenu = () => {
+        const path = location.pathname.split('/')[1];
+        if (!path) return 'home';
+        if (path === 'view' && location.pathname.split('/').length > 2) return 'view';
+        return path;
+    };
+
+    const activeMenu = getActiveMenu();
 
     // Menu items
     const menuItems = [
-        { id: 'home', label: 'HOME' },
-        { id: 'mint', label: 'MINT' },
-        { id: 'view', label: 'VIEW' },
-        { id: 'send', label: 'SEND' },
-        { id: 'market', label: 'MARKET' }
+        { id: 'home', label: 'HOME', path: '/' },
+        { id: 'mint', label: 'MINT', path: '/mint' },
+        { id: 'view', label: 'VIEW', path: '/view' },
+        { id: 'send', label: 'SEND', path: '/send' },
+        { id: 'market', label: 'MARKET', path: '/market' }
     ];
 
-
     // Function to handle menu item selection
-    const handleMenuSelect = (menuId) => {
-        setActiveMenu(menuId);
+    const handleMenuSelect = (path) => {
+        navigate(path);
     };
-    const renderContent = () => {
-        switch (activeMenu) {
-            case 'home':
-                return (
-                    <>
-                    //     <h3>Welcome to Cipher Wallet</h3>
-                    //     <p>Your secure, decentralized solution for managing digital assets.
-                    //         Use the menu above to navigate through different sections of the application.</p>
-
-                    </>
-                );
-            case 'mint':
-                return (
-                    <>
-                        <MintPage />
-                    </>
-                );
-
-            case 'view':
-                return (
-                    <>
-                        <ViewPage />
-                    </>
-                );
-        }
-    };
-
 
     return (
-        <>
+        <ul className="menu-list">
+            {menuItems.map((item) => (
+                <li
+                    key={item.id}
+                    className={activeMenu === item.id ? 'active' : ''}
+                    onClick={() => handleMenuSelect(item.path)}
+                    style={{
+                        display: 'inline-block',
+                        padding: '8px 15px',
+                        cursor: 'pointer',
+                        color: activeMenu === item.id ? '#ffffff' : '#000000'
+                    }}
+                >
+                    {item.label}
+                </li>
+            ))}
+        </ul>
+    );
+};
+
+// Main application component with router
+function MainApp() {
+    return (
+        <BrowserRouter>
             <div className="container">
                 <div className="menue">
-                    <ul className="menu-list">
-                        {menuItems.map((item) => (
-                            <li
-                                key={item.id}
-                                className={activeMenu === item.id ? 'active' : ''}
-                                onClick={() => handleMenuSelect(item.id)}
-                                style={{
-                                    display: 'inline-block',
-                                    padding: '8px 15px',
-                                    cursor: 'pointer',
-                                    color: activeMenu === item.id ? '#ffffff' : '#000000'
-                                }}
-                            >
-                                {item.label}
-                            </li>
-                        ))}
-                    </ul>
+                    <Menu />
                 </div>
+
                 <div className="content">
-                    {renderContent()}
+                    <MainContent />
                 </div>
+
                 <div className="footer">
                     <h4>Footer</h4>
                 </div>
@@ -84,11 +108,107 @@ function MainApp() {
                 </div>
 
                 <div className="console">
-                    <h4> here will be the console</h4>
+                    <h4>here will be the console</h4>
                 </div>
-            </div >
-        </>
-    )
+            </div>
+        </BrowserRouter>
+    );
 }
 
-export default MainApp
+export default MainApp;
+
+
+// import React, { useState, useEffect } from 'react';
+// import WalletPage from './WalletPage.tsx'
+// import CipherWrapper from './canvasWrapper.tsx'
+
+// import MintPage from './Mint.tsx'
+// import ViewList from './viewList.tsx';
+
+// function MainApp() {
+//     const [activeMenu, setActiveMenu] = useState('home');
+
+//     // Menu items
+//     const menuItems = [
+//         { id: 'home', label: 'HOME' },
+//         { id: 'mint', label: 'MINT' },
+//         { id: 'view', label: 'VIEW' },
+//         { id: 'send', label: 'SEND' },
+//         { id: 'market', label: 'MARKET' }
+//     ];
+
+
+//     // Function to handle menu item selection
+//     const handleMenuSelect = (menuId) => {
+//         setActiveMenu(menuId);
+//     };
+//     const renderContent = () => {
+//         switch (activeMenu) {
+//             case 'home':
+//                 return (
+//                     <>
+//                     //     <h3>Welcome to Cipher Wallet</h3>
+//                     //     <p>Your secure, decentralized solution for managing digital assets.
+//                     //         Use the menu above to navigate through different sections of the application.</p>
+
+//                     </>
+//                 );
+//             case 'mint':
+//                 return (
+//                     <>
+//                         <MintPage />
+//                     </>
+//                 );
+
+//             case 'view':
+//                 return (
+//                     <>
+//                         <ViewList />
+//                     </>
+//                 );
+//         }
+//     };
+
+
+//     return (
+//         <>
+//             <div className="container">
+//                 <div className="menue">
+//                     <ul className="menu-list">
+//                         {menuItems.map((item) => (
+//                             <li
+//                                 key={item.id}
+//                                 className={activeMenu === item.id ? 'active' : ''}
+//                                 onClick={() => handleMenuSelect(item.id)}
+//                                 style={{
+//                                     display: 'inline-block',
+//                                     padding: '8px 15px',
+//                                     cursor: 'pointer',
+//                                     color: activeMenu === item.id ? '#ffffff' : '#000000'
+//                                 }}
+//                             >
+//                                 {item.label}
+//                             </li>
+//                         ))}
+//                     </ul>
+//                 </div>
+//                 <div className="content">
+//                     {renderContent()}
+//                 </div>
+//                 <div className="footer">
+//                     <h4>Footer</h4>
+//                 </div>
+
+//                 <div className="wallet1">
+//                     <WalletPage />
+//                 </div>
+
+//                 <div className="console">
+//                     <h4> here will be the console</h4>
+//                 </div>
+//             </div >
+//         </>
+//     )
+// }
+
+// export default MainApp
