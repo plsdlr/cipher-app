@@ -95,8 +95,11 @@ const ViewPage = () => {
                     const allRulesNew = slot2["rules"].concat(slot3["rules"])
                     const additionalValues = slot3["additionalValues"]
 
+                    console.log("From encryption:")
+                    console.log(additionalValues)
+
                     setAllPositions(allPositions);
-                    setAdditionalData(additionalValues);
+                    setAdditionalData([additionalValues["value1"], additionalValues["value2"], additionalValues["value3"]]);
                     setAllRules(allRulesNew);
 
 
