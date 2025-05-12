@@ -62,6 +62,49 @@ const keyGeneration = (): [PrivateKey, PublicKey] => {
   return [privKey, publicKey];
 };
 
+// New utility functions to add to the top of the WalletProvider component
+const generateSessionEncryptionKey = (): string => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
+};
+
+const encryptForSession = (privateKey: Uint8Array, sessionKey: string): string => {
+  // Convert session key from hex string to Uint8Array
+  const keyArray = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) {
+    keyArray[i] = parseInt(sessionKey.substring(i * 2, i * 2 + 2), 16);
+  }
+
+  // Encrypt using XOR (in production, use Web Crypto API with AES-GCM)
+  const encrypted = new Uint8Array(privateKey.length);
+  for (let i = 0; i < privateKey.length; i++) {
+    encrypted[i] = privateKey[i] ^ keyArray[i % keyArray.length];
+  }
+
+  // Convert to Base64 for storage
+  return btoa(String.fromCharCode.apply(null, Array.from(encrypted)));
+};
+
+const decryptFromSession = (encryptedBase64: string, sessionKey: string): Uint8Array => {
+  // Convert Base64 to Uint8Array
+  const encryptedArray = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+
+  // Convert session key from hex string to Uint8Array
+  const keyArray = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) {
+    keyArray[i] = parseInt(sessionKey.substring(i * 2, i * 2 + 2), 16);
+  }
+
+  // Decrypt using XOR
+  const decrypted = new Uint8Array(encryptedArray.length);
+  for (let i = 0; i < encryptedArray.length; i++) {
+    decrypted[i] = encryptedArray[i] ^ keyArray[i % keyArray.length];
+  }
+
+  return decrypted;
+};
+
 const generateEncryptionKey = (keyPair: [PrivateKey, PublicKey]): EncryptionKey => {
   const secretScalar = deriveSecretScalar(keyPair[0]);
   return mulPointEscalar(keyPair[1], secretScalar);
@@ -185,9 +228,63 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Check local storage for existing public key and backup status on initial load
+  // useEffect(() => {
+  //   const storedPublicKey = localStorage.getItem('walletPublicKey');
+  //   console.log(storedPublicKey);
+  //   const hasBackup = localStorage.getItem('walletBackup') !== null;
+
+  //   if (storedPublicKey) {
+  //     try {
+  //       const publicKey = deserializePublicKey(storedPublicKey);
+  //       console.log("Restored public key from localStorage:", publicKey);
+
+  //       setWallet(prevWallet => ({
+  //         ...prevWallet,
+  //         publicKey,
+  //         isGenerated: true,
+  //         isBackedUp: hasBackup,
+  //       }));
+  //     } catch (error) {
+  //       console.error('Failed to restore public key from localStorage:', error);
+  //       localStorage.removeItem('walletPublicKey');
+  //     }
+  //   }
+  // }, []);
+
+
+
   useEffect(() => {
+    // First check session storage for a session-persistent wallet
+    const sessionKey = sessionStorage.getItem('walletSessionKey');
+    const encryptedSessionPrivKey = sessionStorage.getItem('walletSessionPrivKey');
+
+    if (sessionKey && encryptedSessionPrivKey) {
+      try {
+        // Attempt to restore from session storage first
+        const privateKey = decryptFromSession(encryptedSessionPrivKey, sessionKey);
+        const publicKey = derivePublicKey(privateKey);
+
+        console.log("Restored wallet from session storage");
+
+        setWallet({
+          publicKey,
+          privateKey,
+          isGenerated: true,
+          isBackedUp: localStorage.getItem('walletBackup') !== null,
+          secretScalar: deriveSecretScalar(privateKey)
+        });
+
+        return; // Exit early as we've restored the wallet
+      } catch (error) {
+        console.error('Failed to restore wallet from session storage:', error);
+        // Clear invalid session data
+        sessionStorage.removeItem('walletSessionKey');
+        sessionStorage.removeItem('walletSessionPrivKey');
+      }
+    }
+
+    // If session restoration failed, check localStorage for stored public key
     const storedPublicKey = localStorage.getItem('walletPublicKey');
-    console.log(storedPublicKey);
     const hasBackup = localStorage.getItem('walletBackup') !== null;
 
     if (storedPublicKey) {
@@ -231,6 +328,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const [privateKey, publicKey] = keyGeneration();
     console.log("Generated new keys - publicKey:", publicKey);
 
+    // Generate a session encryption key and store encrypted private key
+    const sessionKey = generateSessionEncryptionKey();
+    const encryptedPrivKey = encryptForSession(privateKey, sessionKey);
+
+    // Save to session storage
+    sessionStorage.setItem('walletSessionKey', sessionKey);
+    sessionStorage.setItem('walletSessionPrivKey', encryptedPrivKey);
+
     setWallet({
       publicKey,
       privateKey,
@@ -238,8 +343,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       isBackedUp: false,
       secretScalar: deriveSecretScalar(privateKey)
     });
-    console.log("add secret scala here")
-    console.log(deriveSecretScalar(privateKey))
   };
 
 
@@ -316,6 +419,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const publicKey = derivePublicKey(privateKey);
       console.log('Imported private key and derived public key:', publicKey);
 
+      // Generate a session encryption key and store encrypted private key
+      const sessionKey = generateSessionEncryptionKey();
+      const encryptedPrivKey = encryptForSession(privateKey, sessionKey);
+
+      // Save to session storage
+      sessionStorage.setItem('walletSessionKey', sessionKey);
+      sessionStorage.setItem('walletSessionPrivKey', encryptedPrivKey);
+
       // Update wallet state
       setWallet({
         publicKey,
@@ -328,7 +439,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       // Store only the public key in localStorage
       try {
         const serializedPublicKey = serializePublicKey(publicKey);
-        localStorage.setItem('walletPublicKey', serializedPublicKey);
+        //localStorage.setItem('walletPublicKey', serializedPublicKey);
         // Remove any previous backup as it won't work with this key
         localStorage.removeItem('walletBackup');
         localStorage.removeItem('walletBackupSalt');
@@ -373,6 +484,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         console.error('Key verification failed: Derived public key does not match stored key');
         return false;
       }
+
+      // Also store in session storage for session persistence
+      const sessionKey = generateSessionEncryptionKey();
+      const encryptedPrivKey = encryptForSession(privateKey, sessionKey);
+
+      sessionStorage.setItem('walletSessionKey', sessionKey);
+      sessionStorage.setItem('walletSessionPrivKey', encryptedPrivKey);
 
       // Update wallet with restored private key
       setWallet(prevWallet => ({
@@ -431,13 +549,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       secretScalar: null,
     });
 
+    // Clear everything including session storage
     localStorage.removeItem('walletPublicKey');
-    localStorage.removeItem('walletBackupSalt');
-    localStorage.removeItem('walletBackup');
+    sessionStorage.removeItem('walletSessionKey');
+    sessionStorage.removeItem('walletSessionPrivKey');
 
-    // Don't remove backup by default - user might want to restore it later
-    // To completely remove backup, call localStorage.removeItem('walletBackup') and 
-    // localStorage.removeItem('walletBackupSalt')
+    // Don't remove backup by default
+    console.log('Wallet reset successfully');
   };
 
   // Debug log wallet state changes
