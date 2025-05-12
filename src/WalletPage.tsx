@@ -1,7 +1,7 @@
 // WalletPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useWallet } from './cipherWallet';
-import EthWallet from './EthConnector';
+import { useWallet } from './cipherWallet/cipherWallet';
+import EthWallet from './ETHWalletConnector/EthConnector';
 
 const WalletPage = () => {
   const {

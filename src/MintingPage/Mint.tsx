@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import CipherWrapperIframe from './canvasWrapper';
-import encodeAll from './encodingUtils.js';
-import { useWallet } from './cipherWallet';
+import CipherWrapperIframe from '../canvasWrapper.tsx';
+import encodeAll from '../utils/encodingUtils.js';
+import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 
-import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from './encodingUtils.js';
+import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from '../utils/encodingUtils.js';
 import { poseidonDecrypt } from '@zk-kit/poseidon-cipher';
-import { generateProofTurmite } from './ProofSystem.tsx'
+import { generateProofTurmite } from '../ProofSystem/ProofSystem.tsx'
 import { MintNFT } from './MintConnector.tsx';
 
 // Define turmite gene constants

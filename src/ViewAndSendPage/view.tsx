@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useWallet } from './cipherWallet';
-import CipherWrapperIframe from './canvasWrapper';
-import encodeAll from './encodingUtils.js';
+import { useWallet } from '../cipherWallet/cipherWallet.tsx';
+import CipherWrapperIframe from '../canvasWrapper.tsx';
+import encodeAll from '../utils/encodingUtils.js';
 import { useContractUtils } from './utils/utils.tsx';
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractAbi';
+import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi.ts';
 import { poseidonDecrypt } from '@zk-kit/poseidon-cipher';
 import {
     type BaseError,
@@ -14,7 +14,7 @@ import {
 
 import { useParams, BrowserRouter, Routes, Route, useLocation, useNavigate, Link, Navigate } from 'react-router-dom';
 
-import { decodeSlot1, decodeSlot1_withPadding, decodeSlot2, decodeSlot3_withPadding, decodeSlot3, decodeSlot2_withPadding, timeStamp, toBigInts } from './encodingUtils.js';
+import { decodeSlot1, decodeSlot1_withPadding, decodeSlot2, decodeSlot3_withPadding, decodeSlot3, decodeSlot2_withPadding, timeStamp, toBigInts } from '../utils/encodingUtils.js';
 
 
 type TokenParams = {

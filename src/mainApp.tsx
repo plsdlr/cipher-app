@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Link, Navigate } from 'react-router-dom';
 import WalletPage from './WalletPage';
 import CipherWrapper from './canvasWrapper';
-import MintPage from './Mint';
-import ViewList from './viewList';
-import ViewPage from './view'; // Import the TokenView component
+import MintPage from './MintingPage/Mint';
+import ViewList from './ViewAndSendPage/viewList';
+import ViewPage from './ViewAndSendPage/view'; // Import the TokenView component
 
 // Main content component that handles routing
 const MainContent = () => {

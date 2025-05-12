@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractAbi.ts';
+import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi.ts';
 import { useAccount, useReadContract } from 'wagmi';
 
 const ViewList = () => {

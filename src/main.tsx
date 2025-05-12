@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { WagmiProvider } from 'wagmi'
-import { WalletProvider } from './cipherWallet.tsx';
+import { WalletProvider } from './cipherWallet/cipherWallet.tsx';
 import MainApp from './mainApp.tsx';
 import { config } from './wagmi.ts'
 

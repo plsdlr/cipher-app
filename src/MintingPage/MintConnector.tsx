@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractAbi';
+import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi';
 
 import {
     type BaseError,

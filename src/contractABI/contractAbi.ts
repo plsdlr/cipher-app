@@ -1,7 +1,7 @@
 import { Abi } from 'viem';  // viem is a dependency of wagmi
 
 // Import the ABI directly from the JSON file
-import EncryptedNFT from './contractABI/EncryptedERC721.json';
+import EncryptedNFT from './EncryptedERC721.json';
 
 export const EncryptedNFTABI = EncryptedNFT.abi as Abi;
 
