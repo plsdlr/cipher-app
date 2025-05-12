@@ -129,7 +129,7 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
             <iframe
                 ref={iframeRef}
                 key={`iframe-${iframeKey}-${isFullscreen ? 'full' : 'normal'}`}
-                src="./src/indexTurmite.html"
+                src="/src/indexTurmite.html"
                 title="Cipher Animation"
                 style={{
                     width: isFullscreen ? '100%' : '100%',

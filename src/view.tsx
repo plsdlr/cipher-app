@@ -128,12 +128,11 @@ const ViewPage = () => {
                 <div>
                     <CipherWrapperIframe
                         coordinates={allPositions}
-                        builderTurmites={[allRules[0], allRules[1], allRules[2]]}
+                        builderTurmites={allRules}
                         walkerTurmites={[allRules[3]]}
                         speed={1}
                         chaosNumbers={allAdditionalData}
                     />
-
                 </div>
             )}
             {error && (
