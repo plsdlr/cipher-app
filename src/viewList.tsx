@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractAbi.ts';
 import { useAccount, useReadContract } from 'wagmi';
@@ -8,6 +9,11 @@ const ViewList = () => {
     const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
     const formattedAddress = contractAddress as `0x${string}`;
     const { address } = useAccount();
+
+    // State to track which token's send form is open
+    const [selectedTokenForSend, setSelectedTokenForSend] = useState<string | null>(null);
+    // State to store the receiver address
+    const [receiverAddress, setReceiverAddress] = useState('');
 
     // Fetch tokens owned by the user
     const encryptedNotes = useReadContract({
@@ -20,6 +26,30 @@ const ViewList = () => {
     // Navigate to token detail view
     const handleTokenClick = (tokenId) => {
         navigate(`/view/${tokenId}`);
+    };
+
+    // Handle showing the send form for a specific token
+    const handleSendClick = (e, tokenId) => {
+        e.stopPropagation(); // Prevent the row click event from firing
+        setSelectedTokenForSend(tokenId.toString());
+        setReceiverAddress(''); // Reset receiver address when opening a new form
+    };
+
+    // Handle form submission (empty implementation as requested)
+    const handleSendSubmit = (e) => {
+        e.preventDefault();
+        // Empty handler function as requested
+        console.log(`Send token ${selectedTokenForSend} to ${receiverAddress}`);
+
+        // Close the form after submission
+        setSelectedTokenForSend(null);
+        setReceiverAddress('');
+    };
+
+    // Cancel sending and close the form
+    const handleCancelSend = () => {
+        setSelectedTokenForSend(null);
+        setReceiverAddress('');
     };
 
     // Loading state
@@ -44,29 +74,74 @@ const ViewList = () => {
                     <p>You don't own any Turmite NFTs yet.</p>
                 </div>
             ) : (
-                <table className="token-table">
-                    <thead>
-                        <tr>
-                            <th>Token ID</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {tokenIds.map((tokenId) => (
-                            <tr
-                                key={tokenId.toString()}
-                                className="token-row"
-                                onClick={() => handleTokenClick(tokenId)}
-                            >
-                                <td>CIPHER #{tokenId.toString()}</td>
-                                <td><button className="view-btn">View</button></td>
+                <>
+                    <table className="token-table">
+                        <thead>
+                            <tr>
+                                <th>Token ID</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {tokenIds.map((tokenId) => (
+                                <tr
+                                    key={tokenId.toString()}
+                                    className="token-row"
+                                    onClick={() => handleTokenClick(tokenId)}
+                                >
+                                    <td>CIPHER #{tokenId.toString()}</td>
+                                    <td>
+                                        <button className="view-btn">View</button>
+                                        <button
+                                            className="send-btn"
+                                            onClick={(e) => handleSendClick(e, tokenId)}
+                                        >
+                                            Send
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    {/* Dynamic Send Form */}
+                    {selectedTokenForSend && (
+                        <div className="send-form-container">
+                            <form className="send-form" onSubmit={handleSendSubmit}>
+                                <h3>Send CIPHER #{selectedTokenForSend}</h3>
+                                <div className="form-group">
+                                    <label htmlFor="receiver-address">Receiver Address:</label>
+                                    <input
+                                        id="receiver-address"
+                                        type="text"
+                                        placeholder="0x..."
+                                        value={receiverAddress}
+                                        onChange={(e) => setReceiverAddress(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-actions">
+                                    <button type="submit" className="confirm-send-btn">
+                                        Confirm Send
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="cancel-send-btn"
+                                        onClick={handleCancelSend}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+                </>
             )}
+
+
         </div>
     );
 };
 
 export default ViewList;
+

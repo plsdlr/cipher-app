@@ -389,6 +389,71 @@ input[type="radio"] {
 
 
 
+.view-list-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.token-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    border: 1px solid #ffffff;
+    color: #ffffff;
+    background-color: #000000;
+}
+
+.token-table th,
+.token-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ffffff;
+}
+
+.token-row {
+    cursor: pointer;
+}
+
+.token-row:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
+
+.send-form-container {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ffffff;
+    background-color: #000000;
+}
+
+.send-form h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    background-color: #000000;
+    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+}
+
+
 
 /* 
 #root,
