@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<style>
+    <style>html,
+    body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        /* Allow content to determine size, don't force hidden */
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    canvas {
+        display: block;
+        image-rendering: pixelated;
+        /* Chrome */
+        image-rendering: crisp-edges;
+        /* Firefox */
+        /* Let canvas size be contained within viewport */
+        max-width: 100%;
+        max-height: 100%;
+        width: min(100vw, 100vh);
+        height: min(100vw, 100vh);
+    }
+</style>
+
+<body>
+    <canvas id="myCanvas" width="30" height="30"></canvas>
+    <script>
+
+        class PixelPusher {
+            constructor(area, direction, steps) {
+                this.steps = steps
+                this.currentSteps = 0;
+                this.direction = direction;
+                // area is  {x1, y1, x2, y2}
+                this.area = area;
+            }
+
+
+            shiftRectangleLeft(pixels, canvasWidth) {
+                const newPixels = new Uint8ClampedArray(pixels);
+                const startX = Math.min(this.area.x1, this.area.x2);
+                const endX = Math.max(this.area.x1, this.area.x2);
+                const startY = Math.min(this.area.y1, this.area.y2);
+                const endY = Math.max(this.area.y1, this.area.y2);
+
+                for (let y = startY; y < endY; y++) {
+                    const rowStart = (y * canvasWidth + startX) * 4;
+                    const temp = [
+                        newPixels[rowStart],
+                        newPixels[rowStart + 1],
+                        newPixels[rowStart + 2],
+                        newPixels[rowStart + 3]
+                    ];
+
+                    for (let x = startX; x < endX - 1; x++) {
+                        const currentIndex = (y * canvasWidth + x) * 4;
+                        const nextIndex = currentIndex + 4;
+                        for (let i = 0; i < 4; i++) {
+                            newPixels[currentIndex + i] = newPixels[nextIndex + i];
+                        }
+                    }
+
+                    const lastIndex = (y * canvasWidth + endX - 1) * 4;
+                    for (let i = 0; i < 4; i++) {
+                        newPixels[lastIndex + i] = temp[i];
+                    }
+                }
+
+                return { pixels: newPixels, width: canvasWidth, height: pixels.length / (4 * canvasWidth) };
+            }
+
+            shiftRectangleRight(pixels, canvasWidth) {
+                const newPixels = new Uint8ClampedArray(pixels);
+                const startX = Math.min(this.area.x1, this.area.x2);
+                const endX = Math.max(this.area.x1, this.area.x2);
+                const startY = Math.min(this.area.y1, this.area.y2);
+                const endY = Math.max(this.area.y1, this.area.y2);
+
+                for (let y = startY; y < endY; y++) {
+                    // Save last pixel instead of first for right shift
+                    const lastIndex = (y * canvasWidth + endX - 1) * 4;
+                    const temp = [
+                        newPixels[lastIndex],
+                        newPixels[lastIndex + 1],
+                        newPixels[lastIndex + 2],
+                        newPixels[lastIndex + 3]
+                    ];
+
+                    for (let x = endX - 1; x > startX; x--) {
+                        const currentIndex = (y * canvasWidth + x) * 4;
+                        const prevIndex = currentIndex - 4;
+                        for (let i = 0; i < 4; i++) {
+                            newPixels[currentIndex + i] = newPixels[prevIndex + i];
+                        }
+                    }
+
+                    // Put saved pixel at start
+                    const firstIndex = (y * canvasWidth + startX) * 4;
+                    for (let i = 0; i < 4; i++) {
+                        newPixels[firstIndex + i] = temp[i];
+                    }
+                }
+
+                return { pixels: newPixels, width: canvasWidth, height: pixels.length / (4 * canvasWidth) };
+            }
+
+            shiftRectangleUp(pixels, canvasWidth) {
+                const newPixels = new Uint8ClampedArray(pixels);
+                const startX = Math.min(this.area.x1, this.area.x2);
+                const endX = Math.max(this.area.x1, this.area.x2);
+                const startY = Math.min(this.area.y1, this.area.y2);
+                const endY = Math.max(this.area.y1, this.area.y2);
+
+                for (let x = startX; x < endX; x++) {
+                    const colStart = (startY * canvasWidth + x) * 4;
+                    const temp = [
+                        newPixels[colStart],
+                        newPixels[colStart + 1],
+                        newPixels[colStart + 2],
+                        newPixels[colStart + 3]
+                    ];
+
+                    for (let y = startY; y < endY - 1; y++) {
+                        const currentIndex = (y * canvasWidth + x) * 4;
+                        const nextIndex = ((y + 1) * canvasWidth + x) * 4;
+                        for (let i = 0; i < 4; i++) {
+                            newPixels[currentIndex + i] = newPixels[nextIndex + i];
+                        }
+                    }
+
+                    const lastIndex = ((endY - 1) * canvasWidth + x) * 4;
+                    for (let i = 0; i < 4; i++) {
+                        newPixels[lastIndex + i] = temp[i];
+                    }
+                }
+
+                return { pixels: newPixels, width: canvasWidth, height: pixels.length / (4 * canvasWidth) };
+            }
+
+            shiftRectangleDown(pixels, canvasWidth) {
+                const newPixels = new Uint8ClampedArray(pixels);
+                const startX = Math.min(this.area.x1, this.area.x2);
+                const endX = Math.max(this.area.x1, this.area.x2);
+                const startY = Math.min(this.area.y1, this.area.y2);
+                const endY = Math.max(this.area.y1, this.area.y2);
+
+                for (let x = startX; x < endX; x++) {
+                    // Save bottom pixel instead of top for down shift
+                    const bottomIndex = ((endY - 1) * canvasWidth + x) * 4;
+                    const temp = [
+                        newPixels[bottomIndex],
+                        newPixels[bottomIndex + 1],
+                        newPixels[bottomIndex + 2],
+                        newPixels[bottomIndex + 3]
+                    ];
+
+                    for (let y = endY - 1; y > startY; y--) {
+                        const currentIndex = (y * canvasWidth + x) * 4;
+                        const prevIndex = ((y - 1) * canvasWidth + x) * 4;
+                        for (let i = 0; i < 4; i++) {
+                            newPixels[currentIndex + i] = newPixels[prevIndex + i];
+                        }
+                    }
+
+                    // Put saved pixel at top
+                    const topIndex = (startY * canvasWidth + x) * 4;
+                    for (let i = 0; i < 4; i++) {
+                        newPixels[topIndex + i] = temp[i];
+                    }
+                }
+
+                return { pixels: newPixels, width: canvasWidth, height: pixels.length / (4 * canvasWidth) };
+            }
+
+
+            shift(pixels, canvasWidth) {
+                this.currentSteps = this.currentSteps + 1;
+                switch (this.direction) {
+                    case 'left': return this.shiftRectangleLeft(pixels, canvasWidth);
+                    case 'right': return this.shiftRectangleRight(pixels, canvasWidth);
+                    case 'up': return this.shiftRectangleUp(pixels, canvasWidth);
+                    case 'down': return this.shiftRectangleDown(pixels, canvasWidth);
+                    default: return this.shiftRectangleLeft(pixels, canvasWidth);
+                }
+            }
+        }
+
+
+        // Function to fill canvas with random red pixels
+        function fillRandomRedPixels() {
+            // Create an ImageData object to manipulate pixels
+            const imageData = ctx.createImageData(canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Fill with random red pixels (rand(1)>0.5)
+            for (let i = 0; i < data.length; i += 4) {
+                // Random decision to place a red pixel
+                if (Math.random() > 0.5) {
+                    data[i] = 255;     // R
+                    data[i + 1] = 0;   // G
+                    data[i + 2] = 0;   // B
+                    data[i + 3] = 255; // A
+                } else {
+                    data[i] = 0;       // R
+                    data[i + 1] = 0;   // G
+                    data[i + 2] = 0;   // B
+                    data[i + 3] = 255; // A
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            return imageData;
+        }
+
+
+
+        // Get the canvas element and its context
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d', {
+            willReadFrequently: true  // Optimizes for frequent pixel manipulation
+        });
+
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        let currentImageData = fillRandomRedPixels();
+
+
+        const area1 = {
+            x1: 5,
+            y1: 5,
+            x2: 25,
+            y2: 25
+        };
+
+        const area2 = {
+            x1: 15,
+            y1: 15,
+            x2: 25,
+            y2: 25
+        };
+
+        const pixelPusher1 = new PixelPusher(area1, 'left', 30);
+        const pixelPusher2 = new PixelPusher(area2, 'right', 30);
+
+        let lastTime = 0;
+        const frameDelay = 100; // milliseconds between frames (currently 10fps)
+
+        function animate() {
+            const timestamp = Date.now()
+            const elapsed = timestamp - lastTime;
+
+            if (elapsed > frameDelay) {
+                lastTime = Date.now();
+
+                let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                let currentPixels = imageData.data;
+                const result = pixelPusher1.shift(currentPixels, 30);
+                //const result = pusher.shift(currentPixels, canvas.width);
+                currentPixels = result.pixels;
+
+                console.log(currentPixels);
+
+                imageData.data.set(currentPixels);
+                ctx.putImageData(imageData, 0, 0);
+
+                requestAnimationFrame(animate);
+
+
+            }
+        }
+
+        requestAnimationFrame(animate);
+
+    </script>
+    hellooo
+</body>

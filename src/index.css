@@ -444,8 +444,8 @@ input[type="radio"] {
 .form-group input {
     width: 100%;
     padding: 8px;
-    background-color: #000000;
     font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
+    background-color: #ffffff;
 }
 
 .form-actions {

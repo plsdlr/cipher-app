@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi.ts';
 import { useAccount, useReadContract } from 'wagmi';
+import { useSendToken } from './Sending.ts';
 
 const ViewList = () => {
     const navigate = useNavigate();
@@ -23,6 +24,10 @@ const ViewList = () => {
         args: ["0", "200", address]
     });
 
+    // Use our custom hook at the component level
+    const { prepareTokenSend, encryptedData, isLoading: isSendLoading, error: sendError } = useSendToken();
+
+
     // Navigate to token detail view
     const handleTokenClick = (tokenId) => {
         navigate(`/view/${tokenId}`);
@@ -33,6 +38,7 @@ const ViewList = () => {
         e.stopPropagation(); // Prevent the row click event from firing
         setSelectedTokenForSend(tokenId.toString());
         setReceiverAddress(''); // Reset receiver address when opening a new form
+        prepareTokenSend(tokenId.toString());
     };
 
     // Handle form submission (empty implementation as requested)
