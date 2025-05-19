@@ -17,6 +17,118 @@ interface ProofResult {
     calldata: any;
 }
 
+
+// const input2 = {
+//     myPrivateKey: deriveSecretScalarPrivKey1.toString(),
+//     oldSenderPublicKey: [
+//         key1[1][0].toString(), // x-coordinate
+//         key1[1][1].toString()  // y-coordinate
+//     ],
+//     newReciverPublicKey: [
+//         key2[1][0].toString(), // x-coordinate
+//         key2[1][1].toString()  // y-coordinate
+//     ],
+//     oldResultKey: [
+//         ecdhOld[0].toString(), // x-coordinate
+//         ecdhOld[1].toString()  // y-coordinate
+//     ],
+//     newResultKey: [
+//         ecdhNew[0].toString(), // x-coordinate
+//         ecdhNew[1].toString()  // y-coordinate
+//     ],
+//     oldMessage: [
+//         decryptedData[0].toString(),
+//         decryptedData[1].toString(),
+//         decryptedData[2].toString()
+//     ],
+//     newMessage: [
+//         decryptedData[0].toString(),
+//         decryptedData[1].toString(),
+//         decryptedData[2].toString(),
+//     ],
+//     oldComputedCipherText: [
+//         ciphertextOld[0].toString(),
+//         ciphertextOld[1].toString(),
+//         ciphertextOld[2].toString(),
+//         ciphertextOld[3].toString()
+//     ],
+//     newComputedCipherText: [
+//         ciphertextNew[0].toString(),
+//         ciphertextNew[1].toString(),
+//         ciphertextNew[2].toString(),
+//         ciphertextNew[3].toString()
+//     ],
+//     oldNonce: nonce1.toString(),
+//     newNonce: nonce2.toString(),
+
+// };
+
+
+export async function generateProofTransfer(
+    privateKey: Uint8Array,
+    deriveSecretScalarPrivKey: bigint,
+    previosSenderPublicKey: bigint[],
+    nextReciverPublicKey: bigint[],
+    oldEncryptionKey: bigint[],
+    newEncryptionKey: bigint[],
+    oldMessage: bigint[],
+    newMessage: bigint[],
+    oldComputedCipherText: bigint[],
+    newComputedCipherText: bigint[],
+    oldNonce: bigint[],
+    newNonce: bigint[]
+): Promise<ProofResult> {
+
+    const input = {
+        myPrivateKey: deriveSecretScalarPrivKey,
+        oldSenderPublicKey: [
+            previosSenderPublicKey[0], // x-coordinate
+            previosSenderPublicKey[1] // y-coordinate
+        ],
+        newReciverPublicKey: [
+            nextReciverPublicKey[0], // x-coordinate
+            nextReciverPublicKey[1] // y-coordinate
+        ],
+        oldResultKey: [
+            oldEncryptionKey[0], // x-coordinate
+            oldEncryptionKey[1]  // y-coordinate
+        ],
+        newResultKey: [
+            newEncryptionKey[0], // x-coordinate
+            newEncryptionKey[1]  // y-coordinate
+        ],
+        oldMessage: [
+            oldMessage[0],
+            oldMessage[1],
+            oldMessage[2]
+        ],
+        newMessage: [
+            newMessage[0],
+            newMessage[1],
+            newMessage[2],
+        ],
+        oldComputedCipherText: [
+            oldComputedCipherText[0],
+            oldComputedCipherText[1],
+            oldComputedCipherText[2],
+            oldComputedCipherText[3]
+        ],
+        newComputedCipherText: [
+            newComputedCipherText[0],
+            newComputedCipherText[1],
+            newComputedCipherText[2],
+            newComputedCipherText[3]
+        ],
+        oldNonce: oldNonce,
+        newNonce: newNonce,
+    };
+
+    console.log(input)
+
+    return { proof: "proof", publicSignals: ["publicSignals"], calldata: "strucuredCalldata" };
+
+}
+
 /**
  * Generates a ZK proof for turmite data
  * 

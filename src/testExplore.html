@@ -244,18 +244,33 @@
             x1: 5,
             y1: 5,
             x2: 25,
-            y2: 25
+            y2: 15
         };
 
         const area2 = {
+            x1: 12,
+            y1: 5,
+            x2: 25,
+            y2: 25
+        };
+
+        const area3 = {
+            x1: 12,
+            y1: 12,
+            x2: 25,
+            y2: 25
+        };
+
+        const area4 = {
             x1: 15,
             y1: 15,
             x2: 25,
             y2: 25
         };
 
-        const pixelPusher1 = new PixelPusher(area1, 'left', 30);
-        const pixelPusher2 = new PixelPusher(area2, 'right', 30);
+        const pixelPusher1 = new PixelPusher(area1, 'right', 30);
+        const pixelPusher2 = new PixelPusher(area2, 'down', 30);
+        const pixelPusher3 = new PixelPusher(area3, 'left', 30);
 
         let lastTime = 0;
         const frameDelay = 100; // milliseconds between frames (currently 10fps)
@@ -269,19 +284,20 @@
 
                 let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 let currentPixels = imageData.data;
-                const result = pixelPusher1.shift(currentPixels, 30);
-                //const result = pusher.shift(currentPixels, canvas.width);
-                currentPixels = result.pixels;
+                const result1 = pixelPusher1.shift(currentPixels, 30);
+                const result2 = pixelPusher2.shift(result1.pixels, 30);
+                const result3 = pixelPusher3.shift(result2.pixels, 30);
 
-                console.log(currentPixels);
+                currentPixels = result3.pixels;
+
 
                 imageData.data.set(currentPixels);
                 ctx.putImageData(imageData, 0, 0);
 
-                requestAnimationFrame(animate);
 
 
             }
+            requestAnimationFrame(animate);
         }
 
         requestAnimationFrame(animate);

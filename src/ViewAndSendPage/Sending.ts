@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi.ts';
-import { useReadContract } from 'wagmi';
+import { useReadContract, useReadContracts } from 'wagmi';
 import { useDecryptTurmite } from '../utils/useDecryptTurmite';
 
 // This is a proper custom hook that follows React's rules
@@ -10,6 +10,7 @@ export const useSendToken = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [decryptedDataState, setDecryptedDataState] = useState<any>(null);
+    const [cipherFlag, setCipherFlag] = useState(false);
 
     // Only run the query if we have a tokenId to process
     const { data: encryptedNote, isLoading: isLoadingContract, error: contractError } = useReadContract({
@@ -20,13 +21,48 @@ export const useSendToken = () => {
         enabled: !!tokenToSend // Only run the query if tokenToSend exists
     });
 
+
+    const { data: lastAddress, isLoading: isLoadingContract1, error: contractError1 } = useReadContract({
+        abi: EncryptedNFTABI,
+        address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+        functionName: 'mapLastOwner',
+        args: tokenToSend ? [tokenToSend] : undefined,
+        enabled: !!tokenToSend // Only run the query if tokenToSend exists
+    });
+
+    const { data: lastSenderPubKeys, isLoading: isLoadingContract2, error: contractError2 } = useReadContracts({
+        contracts: [
+            {
+                abi: EncryptedNFTABI,
+                address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+                functionName: 'userPublicKeys',
+                args: [lastAddress, 0],
+            },
+            {
+                abi: EncryptedNFTABI,
+                address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+                functionName: 'userPublicKeys',
+                args: [lastAddress, 1],
+            },
+        ],
+        enabled: !!lastAddress,
+    });
+
+
+
     const {
         data: decryptedData,
         isLoading: isDecrypting,
         error: decryptError
     } = useDecryptTurmite(
-        encryptedNote as [bigint, bigint, bigint, bigint, bigint] || undefined
+        encryptedNote as [bigint, bigint, bigint, bigint, bigint] || undefined,
+        encryptedNote[5] as boolean
+
     );
+
+
+    // flag == true -> Poseidon Cipher with own keypair
+    // flag == false -> Poseidon Cipher with ECDH with previos sender
 
 
     // Process the encrypted note when it changes
@@ -34,6 +70,10 @@ export const useSendToken = () => {
         if (encryptedNote && !isLoadingContract) {
             console.log("✅ 1. Encrypted Note from blockchain:", encryptedNote);
             setEncryptedData(encryptedNote);
+            console.log("Timestamp:");
+            console.log(encryptedNote[4]);
+            console.log("Flag:");
+            console.log(encryptedNote[5]);
         }
         if (decryptedData && !isDecrypting) {
             console.log("✅ 2. Decryption complete:", decryptedData);
