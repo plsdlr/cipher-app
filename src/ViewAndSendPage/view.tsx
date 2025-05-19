@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useReadContract } from 'wagmi';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi.ts';
 import CipherWrapperIframe from '../canvasWrapper';
-import { useDecryptTurmite } from '../utils/useDecryptTurmite';
+import { useDecryptToken } from './useDecryptToken.ts'
 
 type TokenParams = {
     tokenId?: string;
@@ -24,9 +24,11 @@ const ViewPage = () => {
     });
 
     // Use our custom hook to decrypt the data
-    const { data: decryptedData, isLoading: isDecrypting, error: decryptError } = useDecryptTurmite(
-        encryptedNote as [bigint, bigint, bigint, bigint, bigint]
-    );
+    // const { data: decryptedData, isLoading: isDecrypting, error: decryptError } = useDecryptTurmite(
+    //     encryptedNote as [bigint, bigint, bigint, bigint, bigint]
+    // );
+
+    const { data: decryptedToken, isLoading: isDecrypting, error: decryptError } = useDecryptToken(tokenId);
 
     // Render loading state
     if (isLoadingContract || isDecrypting) {
@@ -48,20 +50,20 @@ const ViewPage = () => {
             <h1>VIEW PAGE</h1>
             Cipher #{tokenId}
 
-            {decryptedData ? (
+            {decryptedToken ? (
                 <div>
                     <CipherWrapperIframe
-                        coordinates={decryptedData.positions}
-                        builderTurmites={decryptedData.rules.slice(0, 3)}
-                        walkerTurmites={[decryptedData.rules[3]]}
+                        coordinates={decryptedToken.decryptedData.positions}
+                        builderTurmites={decryptedToken.decryptedData.rules.slice(0, 3)}
+                        walkerTurmites={[decryptedToken.decryptedData.rules[3]]}
                         speed={1}
-                        chaosNumbers={decryptedData.additionalValues}
+                        chaosNumbers={decryptedToken.decryptedData.additionalValues}
                     />
 
                     <div className="turmite-details">
                         <h3>Turmite Details</h3>
-                        <p>Color Palette: {decryptedData.additionalValues[1]}</p>
-                        <p>Chaos Factor: {decryptedData.additionalValues[0]}</p>
+                        <p>Color Palette: {decryptedToken.decryptedData.additionalValues[1]}</p>
+                        <p>Chaos Factor: {decryptedToken.decryptedData.additionalValues[0]}</p>
                     </div>
                 </div>
             ) : (
