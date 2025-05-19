@@ -55,10 +55,11 @@ export const useDecryptTurmite = (
 
             try {
                 var encryptionKey;
+                console.log(encryptionFlag)
                 // Get the encryption key
                 if (encryptionFlag == true) {
                     encryptionKey = generateEncryptionKey();
-                } else if (encryptionKey == false && previosSender) {
+                } else if (encryptionFlag == false && previosSender) {
                     encryptionKey = genEcdhSharedKey([previosSender[0], previosSender[1]])
                 }
                 if (!encryptionKey) {

@@ -3,6 +3,9 @@ import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/c
 import { useReadContract, useReadContracts } from 'wagmi';
 import { useDecryptTurmite } from '../utils/useDecryptTurmite';
 
+// flag == true -> Poseidon Cipher with own keypair
+// flag == false -> Poseidon Cipher with ECDH with previos sender
+
 // This is a proper custom hook that follows React's rules
 export const useSendToken = () => {
     const [tokenToSend, setTokenToSend] = useState<string | null>(null);
@@ -18,16 +21,19 @@ export const useSendToken = () => {
         address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
         functionName: 'getEncryptedNote',
         args: tokenToSend ? [tokenToSend] : undefined,
-        enabled: !!tokenToSend // Only run the query if tokenToSend exists
+        query: {
+            enabled: !!tokenToSend
+        }
     });
-
 
     const { data: lastAddress, isLoading: isLoadingContract1, error: contractError1 } = useReadContract({
         abi: EncryptedNFTABI,
         address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
         functionName: 'mapLastOwner',
         args: tokenToSend ? [tokenToSend] : undefined,
-        enabled: !!tokenToSend // Only run the query if tokenToSend exists
+        query: {
+            enabled: !!tokenToSend && !!encryptedNote && encryptedNote[5] === true // Check the flag here
+        }
     });
 
     const { data: lastSenderPubKeys, isLoading: isLoadingContract2, error: contractError2 } = useReadContracts({
@@ -45,24 +51,29 @@ export const useSendToken = () => {
                 args: [lastAddress, 1],
             },
         ],
-        enabled: !!lastAddress,
+        query: {
+            enabled: !!lastAddress,
+        }
     });
 
 
+    // Format lastSenderPubKeys for the decryption hook
+    const formattedPreviousSender = lastSenderPubKeys ?
+        [lastSenderPubKeys[0]?.result, lastSenderPubKeys[1]?.result] as [bigint, bigint] :
+        undefined;
 
+    // The hook can handle undefined inputs - it will just set appropriate error states
     const {
         data: decryptedData,
         isLoading: isDecrypting,
-        error: decryptError
+        error: decryptError,
+        usedEncryptionKey
     } = useDecryptTurmite(
         encryptedNote as [bigint, bigint, bigint, bigint, bigint] || undefined,
-        encryptedNote[5] as boolean
-
+        encryptedNote?.[5] as boolean,
+        formattedPreviousSender
     );
 
-
-    // flag == true -> Poseidon Cipher with own keypair
-    // flag == false -> Poseidon Cipher with ECDH with previos sender
 
 
     // Process the encrypted note when it changes
