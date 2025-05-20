@@ -10,7 +10,7 @@ interface DecryptedTokenData {
     usedEncryptionKey: [bigint, bigint] | null;
     cipherFlag: boolean;
     lastOwnerAddress?: string;
-    lastOwnerPubKeys?: [bigint, bigint];
+    lastOwnerPubKeys?: bigint[];
 }
 
 interface UseDecryptTokenResult {
@@ -108,7 +108,7 @@ export const useDecryptToken = (tokenId: string | null): UseDecryptTokenResult =
             usedEncryptionKey,
             cipherFlag,
             lastOwnerAddress: lastAddress || address,
-            lastOwnerPubKeys: usedPublicKey
+            lastOwnerPubKeys: usedPublicKey || [] as bigint[]
         } : null;
 
     return {

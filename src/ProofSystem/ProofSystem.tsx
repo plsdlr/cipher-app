@@ -123,9 +123,34 @@ export async function generateProofTransfer(
         newNonce: newNonce,
     };
 
-    console.log(input)
+    // console.log(input)
 
-    return { proof: "proof", publicSignals: ["publicSignals"], calldata: "strucuredCalldata" };
+
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+        input,
+        '/circuit_transfer/ecdh-poseidon-cipher-transfer.wasm',
+        '/circuit_transfer/groth16_pkey.zkey'
+    );
+
+
+
+    const calldata = await snarkjs.groth16.exportSolidityCallData(proof, publicSignals);
+
+    const jsonString = `[${calldata}]`;
+
+    const parsed = JSON.parse(jsonString);
+    const strucuredCalldata = {
+        a: parsed[0],        // a points (2 elements)
+        b: parsed[1],        // b points (2x2 elements)
+        c: parsed[2],        // c points (2 elements)
+        publivInput: parsed[3]     // public inputs (variable length)
+    }
+
+
+
+    return { proof: proof, publicSignals: publicSignals, calldata: strucuredCalldata };
+
+
 
 }
 

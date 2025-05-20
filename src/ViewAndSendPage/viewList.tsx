@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi.ts';
-import { useAccount, useReadContract, useReadContracts } from 'wagmi';
+import { useAccount, useReadContract, useReadContracts, useWriteContract } from 'wagmi';
 import { useDecryptToken } from './useDecryptToken.ts'
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 import { generateProofTransfer } from '../ProofSystem/ProofSystem.tsx'
@@ -15,6 +15,15 @@ const isValidEthAddress = (address: string): boolean => {
 };
 
 const ViewList = () => {
+
+    const {
+        data: hash,
+        error,
+        isPending,
+        writeContract
+    } = useWriteContract()
+
+
     const navigate = useNavigate();
     const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
     const formattedAddress = contractAddress as `0x${string}`;
@@ -71,96 +80,188 @@ const ViewList = () => {
         }
     });
 
+
     // Calculate shared ECDH key when we have the receiver's public key
     useEffect(() => {
-        // Only proceed if we have valid data and we should be fetching keys
-        if (newPublicKey && !isLoadingKeys && genEcdhSharedKey && shouldFetchKeys &&
-            newPublicKey[0]?.result !== undefined && newPublicKey[1]?.result !== undefined &&
-            !calculatedEncryptionKey) { // Don't recalculate if we already have a key
-            try {
-                // Extract the public key components from the contract results
-                const toPublicKey: [bigint, bigint] = [
-                    newPublicKey[0].result as bigint,
-                    newPublicKey[1].result as bigint
-                ];
+        // Define this as an async function
+        const processPublicKey = async () => {
+            // Only proceed if we have valid data and we should be fetching keys
+            if (newPublicKey && !isLoadingKeys && genEcdhSharedKey && shouldFetchKeys &&
+                newPublicKey[0]?.result !== undefined && newPublicKey[1]?.result !== undefined &&
+                !calculatedEncryptionKey) { // Don't recalculate if we already have a key
+                try {
+                    // Extract the public key components from the contract results
+                    const toPublicKey: [bigint, bigint] = [
+                        newPublicKey[0].result as bigint,
+                        newPublicKey[1].result as bigint
+                    ];
 
-                // Validate that we have non-zero public key values
-                if (toPublicKey[0] === 0n && toPublicKey[1] === 0n) {
-                    setAddressError('Recipient has not registered their public key');
-                    return;
+                    // Validate that we have non-zero public key values
+                    if (toPublicKey[0] === 0n && toPublicKey[1] === 0n) {
+                        setAddressError('Recipient has not registered their public key');
+                        return;
+                    }
+
+                    // Calculate the shared ECDH key
+                    const encryptionKey = genEcdhSharedKey(toPublicKey);
+                    setCalculatedEncryptionKey(encryptionKey);
+
+                    console.log('Calculated encryption key:', encryptionKey);
+
+                    if (decryptedToken && privateKey && secretScalar && encryptionKey &&
+                        decryptedToken.lastOwnerPubKeys && decryptedToken.usedEncryptionKey &&
+                        decryptedToken.decryptedData && decryptedToken.encryptedNote) {
+
+                        const currentTimestamp = timeStamp();
+                        const cipherText = poseidonEncryption(
+                            currentTimestamp,
+                            encryptionKey,
+                            decryptedToken.decryptedData.rawDecryption
+                        );
+
+                        // Use await directly here
+                        const generatedProof = await generateProofTransfer(
+                            privateKey,
+                            secretScalar,
+                            decryptedToken.lastOwnerPubKeys,
+                            toPublicKey,
+                            decryptedToken.usedEncryptionKey,
+                            encryptionKey,
+                            decryptedToken.decryptedData.rawDecryption,
+                            decryptedToken.decryptedData.rawDecryption,
+                            (decryptedToken.encryptedNote.slice(0, 4) as bigint[]),
+                            cipherText,
+                            ([decryptedToken.encryptedNote[4]]),
+                            currentTimestamp
+                        );
+                        console.log(generatedProof);
+
+
+                        const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
+
+                        //                 // Make sure the address is properly formatted as a hex string with 0x prefix
+                        //                 // This is what TypeScript is expecting for the address
+                        const formattedAddress = contractAddress as `0x${string}`;
+
+                        writeContract({
+                            address: formattedAddress,
+                            abi: EncryptedNFTABI,
+                            functionName: 'verifiedTransferFrom',
+                            args: [address, receiverAddress, selectedTokenForSend, generatedProof.calldata.a, generatedProof.calldata.b, generatedProof.calldata.c, generatedProof.calldata.publivInput],
+                        })
+
+                        // Do something with generatedProof here
+                    }
+                } catch (error) {
+                    console.error('Error in key processing:', error);
                 }
-
-                // Calculate the shared ECDH key
-                const encryptionKey = genEcdhSharedKey(toPublicKey);
-                setCalculatedEncryptionKey(encryptionKey);
-
-                console.log('Calculated encryption key:', encryptionKey);
-
-                if (decryptedToken && privateKey && secretScalar && encryptionKey) {
-
-
-
-                    //                 export async function generateProofTransfer(
-                    // privateKey: Uint8Array,
-                    // deriveSecretScalarPrivKey: bigint,
-                    // previosSenderPublicKey: bigint[],
-                    // nextReciverPublicKey: bigint[],
-                    // oldEncryptionKey: bigint[],
-                    // newEncryptionKey: bigint[],
-                    // oldMessage: bigint[],
-                    // newMessage: bigint[],
-                    // oldComputedCipherText: bigint[],
-                    // newComputedCipherText: bigint[],
-                    // oldNonce: bigint[],
-                    // newNonce: bigint[]
-                    //):
-                    console.log("looging from proof")
-
-                    console.log(decryptedToken)
-
-
-                    const currentTimestamp = timeStamp()
-                    const cipherText = poseidonEncryption(currentTimestamp, encryptionKey, decryptedToken?.decryptedData.rawDecryption);
-
-                    console.log(
-                        {
-                            "privateKey": privateKey,
-                            "secret scalar": secretScalar,
-                            "previosSenderPublicKey": decryptedToken?.lastOwnerAddress,
-                            "nextReciverPublicKey": toPublicKey,
-                            "oldEncryptionKey": decryptedToken?.usedEncryptionKey,
-                            "newEncryptionKey": encryptionKey,
-                            "oldMessage": decryptedToken?.decryptedData.rawDecryption,     /// not sure if this is decryted but encoded
-                            "newMessage": decryptedToken?.decryptedData.rawDecryption,     /// not sure if this is decryted but encoded
-                            "oldComputedCipherText": decryptedToken?.encryptedNote,
-                            "newComputedCipherText": cipherText,
-                            "oldNonce": "we should have that",
-                            "newNonce": currentTimestamp
-                        }
-
-                    );
-
-                }
-
-                // Now you can proceed with generating the proof transfer
-                // if (decryptedToken && privateKey && secretScalar) {
-                //     const generatedProof = generateProofTransfer(
-                //         privateKey,
-                //         secretScalar,
-                //         decryptedToken?.lastOwnerAddress,
-                //         toPublicKey,
-                //         decryptedToken?.usedEncryptionKey,
-                //         encryptionKey,
-                //         decryptedToken?.decryptedData
-                //     );
-                //     console.log('Generated proof:', generatedProof);
-                // }
-            } catch (error) {
-                console.error('Error calculating encryption key:', error);
-                setAddressError('Error calculating encryption key');
             }
-        }
-    }, [newPublicKey, isLoadingKeys, shouldFetchKeys, calculatedEncryptionKey, decryptedToken, privateKey, secretScalar]);
+        };
+
+        // Call the async function
+        processPublicKey();
+
+        // Cleanup function if needed
+        return () => {
+            // Any cleanup code
+        };
+    }, [newPublicKey, isLoadingKeys, genEcdhSharedKey, shouldFetchKeys, calculatedEncryptionKey,
+        decryptedToken, privateKey, secretScalar]); // Include all dependencies
+
+    // // Calculate shared ECDH key when we have the receiver's public key
+    // useEffect(() => {
+
+    //     const generateProofAsync = async () => {
+    //         const Proof = await generateProofTransfer(
+    //             privateKey,
+    //             secretScalar,
+    //             decryptedToken.lastOwnerPubKeys,
+    //             toPublicKey,
+    //             decryptedToken.usedEncryptionKey,
+    //             encryptionKey,
+    //             decryptedToken.decryptedData.rawDecryption,
+    //             decryptedToken.decryptedData.rawDecryption,
+    //             (decryptedToken.encryptedNote.slice(0, 4) as bigint[]),
+    //             cipherText,
+    //             ([decryptedToken.encryptedNote[4]]),
+    //             currentTimestamp
+    //         );
+    //         return Proof
+
+    //     }
+    //     // Only proceed if we have valid data and we should be fetching keys
+    //     if (newPublicKey && !isLoadingKeys && genEcdhSharedKey && shouldFetchKeys &&
+    //         newPublicKey[0]?.result !== undefined && newPublicKey[1]?.result !== undefined &&
+    //         !calculatedEncryptionKey) { // Don't recalculate if we already have a key
+    //         try {
+    //             // Extract the public key components from the contract results
+    //             const toPublicKey: [bigint, bigint] = [
+    //                 newPublicKey[0].result as bigint,
+    //                 newPublicKey[1].result as bigint
+    //             ];
+
+    //             // Validate that we have non-zero public key values
+    //             if (toPublicKey[0] === 0n && toPublicKey[1] === 0n) {
+    //                 setAddressError('Recipient has not registered their public key');
+    //                 return;
+    //             }
+
+    //             // Calculate the shared ECDH key
+    //             const encryptionKey = genEcdhSharedKey(toPublicKey);
+    //             setCalculatedEncryptionKey(encryptionKey);
+
+    //             console.log('Calculated encryption key:', encryptionKey);
+
+
+    //             if (decryptedToken && privateKey && secretScalar && encryptionKey &&
+    //                 decryptedToken.lastOwnerPubKeys && decryptedToken.usedEncryptionKey &&
+    //                 decryptedToken.decryptedData && decryptedToken.encryptedNote) {
+
+    //                 const currentTimestamp = timeStamp();
+    //                 const cipherText = poseidonEncryption(
+    //                     currentTimestamp,
+    //                     encryptionKey,
+    //                     decryptedToken.decryptedData.rawDecryption
+    //                 );
+
+    //                 const generatedProof = await generateProofTransfer(
+    //                     privateKey,
+    //                     secretScalar,
+    //                     decryptedToken.lastOwnerPubKeys,
+    //                     toPublicKey,
+    //                     decryptedToken.usedEncryptionKey,
+    //                     encryptionKey,
+    //                     decryptedToken.decryptedData.rawDecryption,
+    //                     decryptedToken.decryptedData.rawDecryption,
+    //                     (decryptedToken.encryptedNote.slice(0, 4) as bigint[]),
+    //                     cipherText,
+    //                     ([decryptedToken.encryptedNote[4]]),
+    //                     currentTimestamp
+    //                 );
+    //                 console.log(generatedProof)
+
+    //                 /// hacked together from here
+
+    //                 const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
+
+    //                 // Make sure the address is properly formatted as a hex string with 0x prefix
+    //                 // This is what TypeScript is expecting for the address
+    //                 const formattedAddress = contractAddress as `0x${string}`;
+
+    //                 // writeContract({
+    //                 //     address: formattedAddress,
+    //                 //     abi: EncryptedNFTABI,
+    //                 //     functionName: 'verifiedTransferFrom',
+    //                 //     args: [address, receiverAddress, selectedTokenForSend, calldata.a, calldata.b, calldata.c, calldata.publivInput],
+    //                 // })
+    //             }
+
+    //         } catch (error) {
+    //             console.error('Error calculating encryption key:', error);
+    //             setAddressError('Error calculating encryption key');
+    //         }
+    //     }
+    // }, [newPublicKey, isLoadingKeys, shouldFetchKeys, calculatedEncryptionKey, decryptedToken, privateKey, secretScalar]);
 
 
     // Navigate to token detail view
