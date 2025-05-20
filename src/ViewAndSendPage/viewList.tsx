@@ -5,6 +5,7 @@ import { useAccount, useReadContract, useReadContracts } from 'wagmi';
 import { useDecryptToken } from './useDecryptToken.ts'
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 import { generateProofTransfer } from '../ProofSystem/ProofSystem.tsx'
+import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from '../utils/encodingUtils.js';
 
 // Helper function to validate Ethereum address
 const isValidEthAddress = (address: string): boolean => {
@@ -23,7 +24,8 @@ const ViewList = () => {
         privateKey,
         isGenerated,
         secretScalar,
-        genEcdhSharedKey
+        genEcdhSharedKey,
+        poseidonEncryption,
     } = useWallet();
 
     // State to track which token's send form is open
@@ -93,6 +95,52 @@ const ViewList = () => {
                 setCalculatedEncryptionKey(encryptionKey);
 
                 console.log('Calculated encryption key:', encryptionKey);
+
+                if (decryptedToken && privateKey && secretScalar && encryptionKey) {
+
+
+
+                    //                 export async function generateProofTransfer(
+                    // privateKey: Uint8Array,
+                    // deriveSecretScalarPrivKey: bigint,
+                    // previosSenderPublicKey: bigint[],
+                    // nextReciverPublicKey: bigint[],
+                    // oldEncryptionKey: bigint[],
+                    // newEncryptionKey: bigint[],
+                    // oldMessage: bigint[],
+                    // newMessage: bigint[],
+                    // oldComputedCipherText: bigint[],
+                    // newComputedCipherText: bigint[],
+                    // oldNonce: bigint[],
+                    // newNonce: bigint[]
+                    //):
+                    console.log("looging from proof")
+
+                    console.log(decryptedToken)
+
+
+                    const currentTimestamp = timeStamp()
+                    const cipherText = poseidonEncryption(currentTimestamp, encryptionKey, decryptedToken?.decryptedData.rawDecryption);
+
+                    console.log(
+                        {
+                            "privateKey": privateKey,
+                            "secret scalar": secretScalar,
+                            "previosSenderPublicKey": decryptedToken?.lastOwnerAddress,
+                            "nextReciverPublicKey": toPublicKey,
+                            "oldEncryptionKey": decryptedToken?.usedEncryptionKey,
+                            "newEncryptionKey": encryptionKey,
+                            "oldMessage": decryptedToken?.decryptedData.rawDecryption,     /// not sure if this is decryted but encoded
+                            "newMessage": decryptedToken?.decryptedData.rawDecryption,     /// not sure if this is decryted but encoded
+                            "oldComputedCipherText": decryptedToken?.encryptedNote,
+                            "newComputedCipherText": cipherText,
+                            "oldNonce": "we should have that",
+                            "newNonce": currentTimestamp
+                        }
+
+                    );
+
+                }
 
                 // Now you can proceed with generating the proof transfer
                 // if (decryptedToken && privateKey && secretScalar) {

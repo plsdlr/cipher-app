@@ -7,6 +7,7 @@ interface UseDecryptTurmiteResult {
     isLoading: boolean;
     error: string | null;
     usedEncryptionKey: [bigint, bigint] | null;
+    usedPublicKey: bigint[] | null | undefined;
 }
 
 /**
@@ -20,12 +21,13 @@ export const useDecryptTurmite = (
     encryptionFlag: boolean | null | undefined,
     previosSender: [bigint, bigint] | null | undefined
 ): UseDecryptTurmiteResult => {
-    const { isGenerated, privateKey, generateEncryptionKey, genEcdhSharedKey } = useWallet();
+    const { isGenerated, privateKey, generateEncryptionKey, genEcdhSharedKey, publicKey } = useWallet();
     const [state, setState] = useState<UseDecryptTurmiteResult>({
         data: null,
         isLoading: true,
         error: null,
-        usedEncryptionKey: null
+        usedEncryptionKey: null,
+        usedPublicKey: null
     });
 
     useEffect(() => {
@@ -34,7 +36,8 @@ export const useDecryptTurmite = (
             data: null,
             isLoading: true,
             error: null,
-            usedEncryptionKey: null
+            usedEncryptionKey: null,
+            usedPublicKey: null
         });
 
         const decrypt = async () => {
@@ -48,19 +51,21 @@ export const useDecryptTurmite = (
                         : !isGenerated || !privateKey
                             ? "Wallet not initialized or unlocked"
                             : null,
-                    usedEncryptionKey: null
+                    usedEncryptionKey: null,
+                    usedPublicKey: null
                 });
                 return;
             }
 
             try {
                 var encryptionKey;
-                console.log(encryptionFlag)
-                // Get the encryption key
+                var usedPublicKey;
                 if (encryptionFlag == true) {
                     encryptionKey = generateEncryptionKey();
+                    usedPublicKey = publicKey
                 } else if (encryptionFlag == false && previosSender) {
                     encryptionKey = genEcdhSharedKey([previosSender[0], previosSender[1]])
+                    usedPublicKey = [previosSender[0], previosSender[1]]
                 }
                 if (!encryptionKey) {
                     throw new Error("Failed to generate encryption key");
@@ -74,7 +79,8 @@ export const useDecryptTurmite = (
                     data: decryptedData,
                     isLoading: false,
                     error: null,
-                    usedEncryptionKey: encryptionKey
+                    usedEncryptionKey: encryptionKey,
+                    usedPublicKey: usedPublicKey
                 });
             } catch (err) {
                 console.error('Hook decryption error:', err);
@@ -82,7 +88,8 @@ export const useDecryptTurmite = (
                     data: null,
                     isLoading: false,
                     error: err.message || "Unknown decryption error",
-                    usedEncryptionKey: null
+                    usedEncryptionKey: null,
+                    usedPublicKey: null
                 });
             }
         };
