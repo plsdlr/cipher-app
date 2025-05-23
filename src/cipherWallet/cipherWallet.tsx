@@ -227,31 +227,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     isBackedUp: false
   });
 
-  // Check local storage for existing public key and backup status on initial load
-  // useEffect(() => {
-  //   const storedPublicKey = localStorage.getItem('walletPublicKey');
-  //   console.log(storedPublicKey);
-  //   const hasBackup = localStorage.getItem('walletBackup') !== null;
-
-  //   if (storedPublicKey) {
-  //     try {
-  //       const publicKey = deserializePublicKey(storedPublicKey);
-  //       console.log("Restored public key from localStorage:", publicKey);
-
-  //       setWallet(prevWallet => ({
-  //         ...prevWallet,
-  //         publicKey,
-  //         isGenerated: true,
-  //         isBackedUp: hasBackup,
-  //       }));
-  //     } catch (error) {
-  //       console.error('Failed to restore public key from localStorage:', error);
-  //       localStorage.removeItem('walletPublicKey');
-  //     }
-  //   }
-  // }, []);
-
-
 
   useEffect(() => {
     // First check session storage for a session-persistent wallet

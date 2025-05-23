@@ -121,6 +121,7 @@ button {
     grid-template-areas:
         "menue menue menue menue menue wallet1 wallet1 wallet1"
         "content content content content content wallet1 wallet1 wallet1"
+        "content content content content content console console console"
         "footer footer footer footer footer console console console";
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: 50px 1fr 100px;

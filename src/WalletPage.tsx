@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from './cipherWallet/cipherWallet';
 import EthWallet from './ETHWalletConnector/EthConnector';
+import { useAccount, useReadContract, useWriteContract } from 'wagmi'
+import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractABI/contractAbi';
 
 const WalletPage = () => {
   const {
@@ -26,26 +28,49 @@ const WalletPage = () => {
   const [messageType, setMessageType] = useState('info');
   const [showBackupForm, setShowBackupForm] = useState(false);
 
+  // is the user connceted to eth via wallet
+  const [isETHConnected, setIsETHConnected] = useState(false);
+  // has the user currently keys generates
+  const [hasKeysNow, setHasKeysNow] = useState(false);
+  // has the user an encrypted backup in browser storage
+  const [hasBackupNow, setHasBackupNow] = useState(false);
+  // has the user registered his public keys onchain
+  const [hasRegisteredKey, setHasRegisteredKey] = useState(false);
+
+  const account = useAccount()
+  const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111]
+  const formattedAddress = contractAddress as `0x${string}`
+
+
+  // Check if the user's address is registered
+  const { data: addressRegistered, isLoading: isLoadingContract, error: contractError, refetch } = useReadContract({
+    abi: EncryptedNFTABI,
+    address: formattedAddress,
+    functionName: 'userPublicKeys',
+    args: [account.address, 0],
+    query: {
+      enabled: !!account.address
+    }
+  })
+
+
   // Check for wallet backup on load
   useEffect(() => {
-    if (hasBackup() && !privateKey) {
-      setMessage('Wallet backup found! Enter your password to restore.');
-      setMessageType('info');
-    }
-  }, [hasBackup, privateKey]);
 
-  // Handle key generation
-  const handleGenerateKeys = () => {
-    try {
-      generateKeys();
-      setMessage('New wallet keys generated successfully!');
-      setMessageType('success');
-      setShowBackupForm(true);
-    } catch (error) {
-      setMessage(`Failed to generate keys: ${error}`);
-      setMessageType('error');
+    if (hasBackup()) {
+      setHasBackupNow(true);
     }
-  };
+    if (isGenerated) {
+      setHasKeysNow(true);
+    }
+    if (account.status === 'connected') {
+      setIsETHConnected(true);
+    }
+    setHasRegisteredKey(!!addressRegistered);
+
+
+  }, [addressRegistered, isGenerated, hasBackupNow]);
+
 
   // Handle direct private key import
   const handleImportPrivateKey = (e) => {
@@ -85,8 +110,8 @@ const WalletPage = () => {
       return;
     }
 
-    if (password.length < 8) {
-      setMessage('Password must be at least 8 characters!');
+    if (password.length < 3) {
+      setMessage('Password must be at least 3 characters!');
       setMessageType('error');
       return;
     }
@@ -99,6 +124,7 @@ const WalletPage = () => {
         setPassword('');
         setConfirmPassword('');
         setShowBackupForm(false);
+        setHasBackupNow(true);
       } else {
         setMessage('Failed to backup wallet.');
         setMessageType('error');
@@ -129,186 +155,80 @@ const WalletPage = () => {
     }
   };
 
-  // Handle wallet reset
-  const handleResetWallet = () => {
-    if (window.confirm('Are you sure you want to reset your wallet? This will remove the active keys from memory.')) {
-      resetWallet();
-      setMessage('Wallet reset. Backup remains in storage if you need to restore.');
-      setMessageType('info');
-    }
-  };
+  const ImportKey = (
+    <div className="action-section">
+      <h2>IMPORT EXISTING PRIVATE KEY   </h2>
+      <p>Enter your private key in hexadecimal format (with or without 0x prefix):</p>
 
-  // Format a BigInt for display
-  const formatBigInt = (value) => {
-    if (!value) return 'None';
-    const str = value.toString();
-    return str.length > 10 ? `${str.substring(0, 5)}...${str.substring(str.length - 5)}` : str;
-  };
+      <p>
+        <form onSubmit={handleImportPrivateKey}>
+          <div className="form-group">
+            <input
+              type="text"
+              placeholder="Enter private key (hex format)"
+              value={privateKeyInput}
+              onChange={(e) => setPrivateKeyInput(e.target.value)}
+              className="private-key-input"
+            />
+            <p>
+              Note: This is sensitive information. Be careful when handling private keys.
+            </p>
+          </div>
 
-  // Format a byte array for display
-  const formatByteArray = (array) => {
-    if (!array) return 'None';
-    const hex = Array.from(array)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-    return hex;
-  };
+          <button type="submit" className="import-button">
+            Import Private Key
+          </button>
+        </form>
+      </p>
+    </div>
+  )
+
+  const CreateBackup = (<div className="action-section">
+    <h2>BACKUP YOUR WALLET</h2>
+    <p>Create a password to encrypt and backup your private key:</p>
+
+    <form onSubmit={handleBackupWallet}>
+      <div className="form-group">
+        <label htmlFor="password">Password:</label>
+        <input
+          type="password"
+          id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={4}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="confirmPassword">Confirm Password:</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          minLength={4}
+        />
+      </div>
+
+      <button type="submit">Backup Wallet</button>
+    </form>
+  </div>
+  )
+
 
   return (
     <div className="wallet-page">
-      <div className="upper-section">
-        <EthWallet></EthWallet>
-        <h1>CIPHER WALLET</h1>
-
-      </div>
-
-      {/* Wallet Status */}
-      <div className="wallet-status">
-        <h2>WALLET STATUS</h2>
-
-        <div className="status-item">
-          <strong>Keys Generated:</strong> {isGenerated ? 'Yes' : 'No'}
-        </div>
-        <div className="status-item">
-          <strong>Backup Created:</strong> {isBackedUp ? 'Yes' : 'No'}
-        </div>
-        {publicKey && (
-          <div className="status-item">
-            <strong>Public Key:</strong> [{formatBigInt(publicKey[0])}, {formatBigInt(publicKey[1])}]
-          </div>
-        )}
-        {privateKey && (
-          <div className="status-item private-key">
-            <strong>Private Key:</strong> {formatByteArray(privateKey)} (only in memory)
-          </div>
-        )}
-      </div>
-
-
-      {/* Status Message */}
-      {message && (
-        <div className={`message ${messageType}`}>
-          {message}
-        </div>
-      )}
-
-      {/* Generate Keys Section */}
-      {!isGenerated && (
-        <div className="action-section">
-          <h2>CREATE NEW WALLET</h2>
-          <button onClick={handleGenerateKeys}>Generate Keys</button>
-        </div>
-      )}
-
-      {/* Import Private Key Section */}
-      {!isGenerated && (
-        <div className="action-section">
-          <h2>IMPORT EXISTING PRIVATE KEY   </h2>
-          <p>Enter your private key in hexadecimal format (with or without 0x prefix):</p>
-
-          <p>
-            <form onSubmit={handleImportPrivateKey}>
-              <div className="form-group">
-                <input
-                  type="text"
-                  placeholder="Enter private key (hex format)"
-                  value={privateKeyInput}
-                  onChange={(e) => setPrivateKeyInput(e.target.value)}
-                  className="private-key-input"
-                />
-                <p>
-                  Note: This is sensitive information. Be careful when handling private keys.
-                </p>
-              </div>
-
-              <button type="submit" className="import-button">
-                Import Private Key
-              </button>
-            </form>
-          </p>
-        </div>
-      )}
-
-      {/* Backup Form */}
-      {isGenerated && privateKey && showBackupForm && (
-        <div className="action-section">
-          <h2>BACKUP YOUR WALLET</h2>
-          <p>Create a password to encrypt and backup your private key:</p>
-
-          <form onSubmit={handleBackupWallet}>
-            <div className="form-group">
-              <label htmlFor="password">Password:</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password:</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={8}
-              />
-            </div>
-
-            <button type="submit">Backup Wallet</button>
-          </form>
-        </div>
-      )}
-
-      {/* Show backup option if hidden */}
-      {isGenerated && privateKey && !showBackupForm && !isBackedUp && (
-        <div className="action-section">
-          <button onClick={() => setShowBackupForm(true)}>Create Backup</button>
-        </div>
-      )}
-
-      {/* Restore Form */}
-      {hasBackup() && !privateKey && (
-        <div className="action-section">
-          <h2>Restore Your Wallet</h2>
-          <p>Enter your password to decrypt and restore your private key:</p>
-
-          <p>
-            <form onSubmit={handleRestoreWallet}>
-              <div className="form-group">
-                <label htmlFor="restorePassword">Password:</label>
-                <input
-                  type="password"
-                  id="restorePassword"
-                  value={restorePassword}
-                  onChange={(e) => setRestorePassword(e.target.value)}
-                  required
-                />
-              </div>
-              <p>
-                <button type="submit">Restore Wallet</button>
-              </p>
-            </form>
-
-          </p>
-        </div>
-      )}
-
-      {/* Reset Wallet */}
-      {isGenerated && (
-        <div className="action-section">
-          <button className="reset-button" onClick={handleResetWallet}>
-            Reset Wallet
-          </button>
-        </div>
-      )}
-
-      {/* CSS Styles */}
+      <EthWallet></EthWallet>
+      KEYS Generated: {String(hasKeysNow)}
+      <br></br>
+      Backup Generated: {String(hasBackupNow)}
+      <br></br>
+      Registered Public Key: {String(hasRegisteredKey)}
+      <br></br>
+      {!hasKeysNow && !hasBackupNow && hasRegisteredKey && ImportKey}
+      {hasKeysNow && !hasBackupNow && hasRegisteredKey && CreateBackup}
     </div>
   );
 };
