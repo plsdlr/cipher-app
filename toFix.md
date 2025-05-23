@@ -8,4 +8,8 @@
 + needs update when nft is send
 + needs recypher page
 
+# cipher wallet
+
++ needs register public key module (which only apears when full wallet is there)
+
  

@@ -21,7 +21,7 @@ export const useDecryptTurmite = (
     encryptionFlag: boolean | null | undefined,
     previosSender: [bigint, bigint] | null | undefined
 ): UseDecryptTurmiteResult => {
-    const { isGenerated, privateKey, generateEncryptionKey, genEcdhSharedKey, publicKey } = useWallet();
+    const { privateKey, generateEncryptionKey, genEcdhSharedKey, publicKey } = useWallet();
     const [state, setState] = useState<UseDecryptTurmiteResult>({
         data: null,
         isLoading: true,
@@ -42,13 +42,13 @@ export const useDecryptTurmite = (
 
         const decrypt = async () => {
             // Check if we have the necessary data
-            if (!isGenerated || !privateKey || !encryptedData) {
+            if (!privateKey || !encryptedData) {
                 setState({
                     data: null,
                     isLoading: false,
                     error: !encryptedData
                         ? "No encrypted data provided"
-                        : !isGenerated || !privateKey
+                        : !privateKey
                             ? "Wallet not initialized or unlocked"
                             : null,
                     usedEncryptionKey: null,
@@ -95,7 +95,7 @@ export const useDecryptTurmite = (
         };
 
         decrypt();
-    }, [encryptedData, isGenerated, privateKey]);
+    }, [encryptedData, privateKey]);
 
     return state;
 };

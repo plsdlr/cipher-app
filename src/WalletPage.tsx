@@ -1,46 +1,39 @@
-// WalletPage.jsx
+// WalletPage.tsx - Refactored with radio button toggle
 import React, { useState, useEffect } from 'react';
 import { useWallet } from './cipherWallet/cipherWallet';
-import EthWallet from './ETHWalletConnector/EthConnector';
-import { useAccount, useReadContract, useWriteContract } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractABI/contractAbi';
+import EthWallet from './ETHWalletConnector/EthConnector';
+
+type WalletMode = 'create' | 'import';
 
 const WalletPage = () => {
   const {
+    walletState,
     publicKey,
     privateKey,
-    secretScalar,
-    isGenerated,
-    isBackedUp,
-    generateKeys,
-    importPrivateKey,
-    backupWallet,
+    createWallet,
+    importWallet,
     restoreWallet,
-    hasBackup,
     resetWallet
   } = useWallet();
 
+  // Form states
+  const [walletMode, setWalletMode] = useState<WalletMode>('create');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [restorePassword, setRestorePassword] = useState('');
   const [privateKeyInput, setPrivateKeyInput] = useState('');
   const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState('info');
-  const [showBackupForm, setShowBackupForm] = useState(false);
+  const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>('info');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // is the user connceted to eth via wallet
-  const [isETHConnected, setIsETHConnected] = useState(false);
-  // has the user currently keys generates
-  const [hasKeysNow, setHasKeysNow] = useState(false);
-  // has the user an encrypted backup in browser storage
-  const [hasBackupNow, setHasBackupNow] = useState(false);
-  // has the user registered his public keys onchain
   const [hasRegisteredKey, setHasRegisteredKey] = useState(false);
+  const [isETHConnected, setIsETHConnected] = useState(false);
 
-  const account = useAccount()
-  const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111]
-  const formattedAddress = contractAddress as `0x${string}`
-
+  const account = useAccount();
+  const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
+  const formattedAddress = contractAddress as `0x${string}`;
 
   // Check if the user's address is registered
   const { data: addressRegistered, isLoading: isLoadingContract, error: contractError, refetch } = useReadContract({
@@ -51,184 +44,348 @@ const WalletPage = () => {
     query: {
       enabled: !!account.address
     }
-  })
+  });
 
-
-  // Check for wallet backup on load
   useEffect(() => {
-
-    if (hasBackup()) {
-      setHasBackupNow(true);
-    }
-    if (isGenerated) {
-      setHasKeysNow(true);
-    }
     if (account.status === 'connected') {
       setIsETHConnected(true);
     }
     setHasRegisteredKey(!!addressRegistered);
+  }, [addressRegistered, account.status]);
 
-
-  }, [addressRegistered, isGenerated, hasBackupNow]);
-
-
-  // Handle direct private key import
-  const handleImportPrivateKey = (e) => {
-    e.preventDefault();
-
-    if (!privateKeyInput.trim()) {
-      setMessage('Please enter a private key');
-      setMessageType('error');
-      return;
-    }
-
-    try {
-      const result = importPrivateKey(privateKeyInput);
-
-      if (result) {
-        setMessage('Private key imported successfully and public key derived!');
-        setMessageType('success');
-        setPrivateKeyInput(''); // Clear the input field for security
-      } else {
-        setMessage('Failed to import private key. Please check the format and try again.');
-        setMessageType('error');
-      }
-    } catch (error) {
-      setMessage(`Error importing private key: ${error.message}`);
-      setMessageType('error');
-    }
+  // Show message helper
+  const showMessage = (msg: string, type: 'success' | 'error' | 'info') => {
+    setMessage(msg);
+    setMessageType(type);
+    setTimeout(() => setMessage(''), 5000);
   };
 
-  // Handle wallet backup
-  const handleBackupWallet = async (e) => {
+  // Validate password
+  const validatePassword = (pwd: string, confirmPwd: string): boolean => {
+    if (pwd !== confirmPwd) {
+      showMessage('Passwords do not match!', 'error');
+      return false;
+    }
+    if (pwd.length < 5) {
+      showMessage('Password must be at least 5 characters!', 'error');
+      return false;
+    }
+    return true;
+  };
+
+  // Handle form submission based on mode
+  const handleWalletSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
-    if (password !== confirmPassword) {
-      setMessage('Passwords do not match!');
-      setMessageType('error');
-      return;
-    }
+    if (!validatePassword(password, confirmPassword)) return;
 
-    if (password.length < 3) {
-      setMessage('Password must be at least 3 characters!');
-      setMessageType('error');
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      const success = await backupWallet(password);
+      let success = false;
+
+      if (walletMode === 'create') {
+        success = await createWallet(password);
+        if (success) {
+          showMessage('New wallet created and backed up successfully!', 'success');
+        }
+      } else {
+        if (!privateKeyInput.trim()) {
+          showMessage('Please enter a private key', 'error');
+          setIsLoading(false);
+          return;
+        }
+        success = await importWallet(privateKeyInput.trim(), password);
+        if (success) {
+          showMessage('Wallet imported and backed up successfully!', 'success');
+        }
+      }
+
       if (success) {
-        setMessage('Wallet backed up successfully! Keep your password safe.');
-        setMessageType('success');
+        // Clear form
         setPassword('');
         setConfirmPassword('');
-        setShowBackupForm(false);
-        setHasBackupNow(true);
+        setPrivateKeyInput('');
       } else {
-        setMessage('Failed to backup wallet.');
-        setMessageType('error');
+        showMessage(`Failed to ${walletMode} wallet. Please try again.`, 'error');
       }
     } catch (error) {
-      setMessage(`Backup error: ${error}`);
-      setMessageType('error');
+      showMessage(`Error: ${error.message}`, 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Handle wallet restore
-  const handleRestoreWallet = async (e) => {
+  // Handle restore wallet
+  const handleRestoreWallet = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!restorePassword.trim()) {
+      showMessage('Please enter your password', 'error');
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const success = await restoreWallet(restorePassword);
       if (success) {
-        setMessage('Wallet restored successfully!');
-        setMessageType('success');
+        showMessage('Wallet restored successfully!', 'success');
         setRestorePassword('');
       } else {
-        setMessage('Failed to restore wallet. Check your password and try again.');
-        setMessageType('error');
+        showMessage('Failed to restore wallet. Check your password.', 'error');
       }
     } catch (error) {
-      setMessage(`Restore error: ${error}`);
-      setMessageType('error');
+      showMessage(`Error restoring wallet: ${error.message}`, 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const ImportKey = (
-    <div className="action-section">
-      <h2>IMPORT EXISTING PRIVATE KEY   </h2>
-      <p>Enter your private key in hexadecimal format (with or without 0x prefix):</p>
+  // Handle reset wallet
+  const handleResetWallet = () => {
+    if (window.confirm('Are you sure you want to reset your wallet? This will remove all wallet data permanently.')) {
+      resetWallet();
+      showMessage('Wallet reset successfully.', 'info');
+    }
+  };
 
-      <p>
-        <form onSubmit={handleImportPrivateKey}>
-          <div className="form-group">
-            <input
-              type="text"
-              placeholder="Enter private key (hex format)"
-              value={privateKeyInput}
-              onChange={(e) => setPrivateKeyInput(e.target.value)}
-              className="private-key-input"
-            />
-            <p>
-              Note: This is sensitive information. Be careful when handling private keys.
-            </p>
-          </div>
+  // Handle mode change
+  const handleModeChange = (mode: WalletMode) => {
+    setWalletMode(mode);
+    // Clear form when switching modes
+    setPassword('');
+    setConfirmPassword('');
+    setPrivateKeyInput('');
+  };
 
-          <button type="submit" className="import-button">
-            Import Private Key
-          </button>
-        </form>
-      </p>
-    </div>
-  )
+  // Format BigInt for display
+  const formatBigInt = (value: bigint): string => {
+    const str = value.toString();
+    return str.length > 10 ? `${str.substring(0, 5)}...${str.substring(str.length - 5)}` : str;
+  };
 
-  const CreateBackup = (<div className="action-section">
-    <h2>BACKUP YOUR WALLET</h2>
-    <p>Create a password to encrypt and backup your private key:</p>
-
-    <form onSubmit={handleBackupWallet}>
-      <div className="form-group">
-        <label htmlFor="password">Password:</label>
-        <input
-          type="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={4}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="confirmPassword">Confirm Password:</label>
-        <input
-          type="password"
-          id="confirmPassword"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-          minLength={4}
-        />
-      </div>
-
-      <button type="submit">Backup Wallet</button>
-    </form>
-  </div>
-  )
-
+  // Format byte array for display
+  const formatByteArray = (array: Uint8Array): string => {
+    const hex = Array.from(array)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    return `${hex.substring(0, 8)}...${hex.substring(hex.length - 8)}`;
+  };
 
   return (
     <div className="wallet-page">
-      <EthWallet></EthWallet>
-      KEYS Generated: {String(hasKeysNow)}
-      <br></br>
-      Backup Generated: {String(hasBackupNow)}
-      <br></br>
-      Registered Public Key: {String(hasRegisteredKey)}
-      <br></br>
-      {!hasKeysNow && !hasBackupNow && hasRegisteredKey && ImportKey}
-      {hasKeysNow && !hasBackupNow && hasRegisteredKey && CreateBackup}
+      <div className="upper-section">
+        <h1>CIPHER WALLET</h1>
+      </div>
+
+      <EthWallet />
+
+
+      {/* Status Message */}
+      {message && (
+        <div className={`message ${messageType}`}>
+          {message}
+        </div>
+      )}
+
+
+      {/* Wallet State Display */}
+      <div className="wallet-status">
+        <h2>WALLET STATUS</h2>
+        <div className="status-item">
+          <strong>State:</strong> {walletState}
+        </div>
+        {publicKey && (
+          <div className="status-item">
+            <strong>Public Key:</strong> [{formatBigInt(publicKey[0])}, {formatBigInt(publicKey[1])}]
+          </div>
+        )}
+        {privateKey && (
+          <div className="status-item private-key">
+            <strong>Private Key:</strong> {formatByteArray(privateKey)} (active in session)
+          </div>
+        )}
+      </div>
+
+      {/* EMPTY State - Show wallet creation/import options */}
+      {walletState === 'EMPTY' && (
+        <div className="action-section">
+          <h2>SETUP WALLET</h2>
+
+          {/* Radio buttons for mode selection */}
+          <div className="mode-selector">
+            <label className={`mode-option ${walletMode === 'create' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="walletMode"
+                value="create"
+                checked={walletMode === 'create'}
+                onChange={() => handleModeChange('create')}
+              />
+              <span>CREATE NEW WALLET</span>
+            </label>
+            <label className={`mode-option ${walletMode === 'import' ? 'active' : ''}`}>
+              <input
+                type="radio"
+                name="walletMode"
+                value="import"
+                checked={walletMode === 'import'}
+                onChange={() => handleModeChange('import')}
+              />
+              <span>IMPORT EXISTING</span>
+            </label>
+          </div>
+
+          {/* Dynamic form based on selected mode */}
+          <form onSubmit={handleWalletSubmit} className="wallet-form">
+            <p className="form-description">
+              {walletMode === 'create'
+                ? 'Generate a new wallet with cryptographic keys'
+                : 'Import your wallet using a private key'}
+            </p>
+
+            {/* Show private key input only for import mode */}
+            {walletMode === 'import' && (
+              <div className="form-group">
+                <label htmlFor="private-key">Private Key:</label>
+                <input
+                  type="text"
+                  id="private-key"
+                  placeholder="Enter private key (hex format, with or without 0x prefix)"
+                  value={privateKeyInput}
+                  onChange={(e) => setPrivateKeyInput(e.target.value)}
+                  className="private-key-input"
+                  required
+                />
+                <div className="input-note">
+                  Your private key will be encrypted and backed up with your password.
+                </div>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label htmlFor="password">Password:</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={5}
+                placeholder="At least 5 characters"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="confirm-password">Confirm Password:</label>
+              <input
+                type="password"
+                id="confirm-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={5}
+                placeholder="Confirm your password"
+              />
+            </div>
+
+            <button type="submit" className={walletMode === 'import' ? 'import-button' : ''} disabled={isLoading}>
+              {isLoading ? 'Processing...' : walletMode === 'create' ? 'Create Wallet' : 'Import Wallet'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* NEEDS_RESTORE State - Show restore form */}
+      {walletState === 'NEEDS_RESTORE' && (
+        <div className="action-section">
+          <h2>RESTORE YOUR WALLET</h2>
+          <p>Enter your password to unlock your wallet</p>
+
+          <form onSubmit={handleRestoreWallet}>
+            <div className="form-group">
+              <label htmlFor="restore-password">Password:</label>
+              <input
+                type="password"
+                id="restore-password"
+                value={restorePassword}
+                onChange={(e) => setRestorePassword(e.target.value)}
+                required
+                placeholder="Enter your wallet password"
+              />
+            </div>
+
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? 'Restoring...' : 'Restore Wallet'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* ACTIVE State - Show wallet controls */}
+      {walletState === 'ACTIVE' && (
+        <div className="action-section">
+          <h2>WALLET CONTROLS</h2>
+          <p>Your wallet is active and ready to use</p>
+
+          <div className="wallet-actions">
+            <button className="reset-button" onClick={handleResetWallet}>
+              Reset Wallet
+            </button>
+          </div>
+
+          <div className="wallet-info">
+            <p><strong>Security Note:</strong> Your wallet will remain active until you close this browser tab or the session expires.</p>
+          </div>
+        </div>
+      )}
+
+
+      {/* Additional CSS for radio buttons */}
+      <style jsx>{`
+        .mode-selector {
+          display: flex;
+          gap: 20px;
+          margin-bottom: 20px;
+          padding: 10px 0;
+          border-bottom: 1px solid #ff0000;
+        }
+
+        .mode-option {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          color: #ff0000;
+          font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
+          font-size: 18px;
+          transition: opacity 0.2s;
+        }
+
+        .mode-option:hover {
+          opacity: 0.8;
+        }
+
+        .mode-option.active {
+          color: #ffffff;
+          background: linear-gradient(0deg, rgba(255, 0, 0, 0.3) 0%, rgba(255, 0, 0, 0.1) 100%);
+          padding: 5px 10px;
+          border: 1px solid #ff0000;
+        }
+
+        .mode-option input[type="radio"] {
+          margin-right: 8px;
+          accent-color: #ff0000;
+        }
+
+        .wallet-form {
+          margin-top: 20px;
+        }
+
+        .form-description {
+          margin-bottom: 20px;
+          color: #ff0000;
+          opacity: 0.8;
+        }
+      `}</style>
     </div>
   );
 };
