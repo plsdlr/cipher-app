@@ -798,6 +798,18 @@
                 // If needed, restart or update the animation with new values
                 buildStart();
             }
+
+            // ADD THIS NEW CASE:
+            if (event.data.type === 'EXPORT_SVG') {
+                console.log('Export SVG requested');
+                const svgString = redBlackCanvasToSVG(canvas);
+
+                // Send SVG data back to parent
+                window.parent.postMessage({
+                    type: 'SVG_READY',
+                    svgData: svgString
+                }, '*');
+            }
         });
 
         // Start the animation when 

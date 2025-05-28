@@ -107,6 +107,47 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
 
+
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data.type === 'SVG_READY') {
+                console.log('SVG export received from iframe');
+
+                // Create download
+                const svgString = event.data.svgData;
+                const blob = new Blob([svgString], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+
+                const downloadLink = document.createElement('a');
+                downloadLink.href = url;
+                downloadLink.download = 'cipher-turmite.svg';
+                downloadLink.style.display = 'none';
+                document.body.appendChild(downloadLink);
+
+                downloadLink.click();
+
+                setTimeout(() => {
+                    document.body.removeChild(downloadLink);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
+
+    // Add this function to trigger SVG export
+    const exportSVG = () => {
+        const iframe = iframeRef.current;
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({
+                type: 'EXPORT_SVG'
+            }, '*');
+        }
+    };
+
+
     return (
         <div
             ref={wrapperRef}
@@ -162,6 +203,21 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
                 }}
             >
                 {isFullscreen ? 'EXIT FULLSCREEN' : 'FULLSCREEN'}
+            </button>
+
+            <button
+                onClick={exportSVG}
+                style={{
+                    position: 'absolute',
+                    bottom: '10px',
+                    right: '120px',
+                    zIndex: 10,
+                    background: 'rgba(0, 0, 0, 0.7)',
+                    fontFamily: '"Reactor7", system-ui, -apple-system, sans-serif',
+                    fontSize: '16px',
+                }}
+            >
+                EXPORT SVG
             </button>
         </div>
     );
