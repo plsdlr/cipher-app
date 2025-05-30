@@ -40,6 +40,40 @@
 <body>
     <canvas id="myCanvas" width="300" height="300"></canvas>
     <script>
+        const transitions = {
+            'start': ['left', 'downLeft', 'down', 'up', 'right', 'upLeft', 'downRight', 'upRight'],
+            'left': ['downLeft', 'upLeft'],
+            'downLeft': ['down', 'upLeft', 'left'],
+            'down': ['downRight', 'downLeft'],
+            'up': ['upRight', 'upLeft'],
+            'right': ['downRight', 'upRight'],
+            'upLeft': ['left', 'up', 'upRight'],
+            'downRight': ['right', 'down', 'upRight'],
+            'upRight': ['right', 'up', 'downRight']
+        };
+
+        const transitionValues = {
+            'left->downLeft': 4,
+            'left->upLeft': 4,
+            'downLeft->down': 3,
+            'downLeft->upLeft': 4,
+            'downLeft->left': 4,
+            'down->downRight': 3,
+            'down->downLeft': 3,
+            'up->upRight': 1,
+            'up->upLeft': 1,
+            'right->downRight': 2,
+            'right->upRight': 2,
+            'upLeft->left': 1,
+            'upLeft->up': 1,
+            'upLeft->upRight': 1,
+            'downRight->right': 3,
+            'downRight->down': 3,
+            'downRight->upRight': 2,
+            'upRight->right': 2,
+            'upRight->up': 1,
+            'upRight->downRight': 2
+        };
 
         const pico8Palette = [
             { r: 255, g: 70, b: 0 },    // black
@@ -506,54 +540,129 @@
             }
         }
 
+        class SequenceValidator {
+            constructor() {
+                this.currentState = 'start';
+                this.sequence = [];
+                this.directionValues = [];
+            }
 
+            getTransitionValue(fromState, toMove) {
+                const key = `${fromState}->${toMove}`;
+                return transitionValues[key] || 0;
+            }
 
-        function getRectangleIndices(canvasWidth, x1, y1, x2, y2) {
-            const startX = Math.min(x1, x2);
-            const endX = Math.max(x1, x2);
-            const startY = Math.min(y1, y2);
-            const endY = Math.max(y1, y2);
+            generateSequence() {
+                this.sequence = [];
+                this.directionValues = [];
+                this.currentState = 'start';
 
-            // Returns array of indices that make up the rectangle
-            const indices = [];
+                const chooseStart = transitions['start'];
+                let nextState = chooseStart[Math.floor(costomRandom() * chooseStart.length)];
+                this.sequence.push(nextState);
+                this.currentState = nextState;
 
-            for (let y = startY; y < endY; y++) {
-                for (let x = startX; x < endX; x++) {
-                    const index = (y * canvasWidth + x) * 4;
-                    indices.push(index); // R index
+                for (let i = 0; i < 7; i++) {
+                    const lastMove = this.sequence[i];
+                    const newPos = transitions[lastMove];
+
+                    if (!newPos || newPos.length === 0) {
+                        console.log('No valid moves available, stopping');
+                        break;
+                    }
+
+                    nextState = newPos[Math.floor(costomRandom() * newPos.length)];
+                    this.sequence.push(nextState);
+                    this.directionValues.push(this.getTransitionValue(lastMove, nextState));
+                    this.currentState = nextState;
                 }
             }
 
-            return indices;
-        }
+            generateAllRectangles(startPositionX, startPositionY) {
+                const allRectangles = [];
+                const testCanvas = { width: 300, height: 300 };
 
-        function generateRandomRectangles(canvas, count, minSize = 2, maxSize = 60) {
-            const rectangles = [];
+                let currentRectangle = this.generateRectangle(startPositionX, startPositionY, testCanvas);
+                allRectangles.push({
+                    rectangle: currentRectangle,
+                    move: this.sequence[0] || 'start',
+                    direction: null
+                });
 
-            for (let i = 0; i < count; i++) {
-                // Generate random starting point
-                const x1 = Math.floor(costomRandom() * (canvas.width - maxSize));
-                const y1 = Math.floor(costomRandom() * (canvas.height - maxSize));
+                for (let i = 0; i < this.directionValues.length && i < this.sequence.length - 1; i++) {
+                    const direction = this.directionValues[i];
 
-                // Generate random width and height between min and max size
+                    // First generate the new rectangle with a temporary position
+                    const tempRectangle = this.generateRectangle(0, 0, testCanvas);
+                    const newWidth = tempRectangle[2] - tempRectangle[0];
+                    const newHeight = tempRectangle[3] - tempRectangle[1];
+
+                    // Now calculate the correct position based on the new rectangle's size
+                    const newStartPoint = this.getNewStartingPoint(currentRectangle, direction, newWidth, newHeight);
+
+                    currentRectangle = [
+                        newStartPoint.x,
+                        newStartPoint.y,
+                        newStartPoint.x + newWidth,
+                        newStartPoint.y + newHeight
+                    ];
+
+                    allRectangles.push({
+                        rectangle: currentRectangle,
+                        move: this.sequence[i + 1],
+                        direction: direction
+                    });
+                }
+
+                return allRectangles;
+            }
+
+            getNewStartingPoint(rectangle, direction, newWidth, newHeight) {
+                const [x1, y1, x2, y2] = rectangle;
+                const overlap = 2; // Amount of overlap with the previous rectangle
+
+                switch (direction) {
+                    case 1: // up - new rectangle goes above, overlapping at bottom
+                        return {
+                            x: Math.round(x1),
+                            y: Math.round(y1 - newHeight + overlap)
+                        };
+                    case 2: // right - new rectangle goes right, overlapping at left
+                        return {
+                            x: Math.round(x2 - overlap),
+                            y: Math.round(y1)
+                        };
+                    case 3: // down - new rectangle goes below, overlapping at top
+                        return {
+                            x: Math.round(x1),
+                            y: Math.round(y2 - overlap)
+                        };
+                    case 4: // left - new rectangle goes left, overlapping at right
+                        return {
+                            x: Math.round(x1 - newWidth + overlap),
+                            y: Math.round(y1)
+                        };
+                    default:
+                        return { x: Math.round(x1), y: Math.round(y1) };
+                }
+            }
+
+            generateRectangle(x1, y1, canvas, minSize = 20, maxSize = 40) {
+                // Ensure input coordinates are integers
+                x1 = Math.round(x1);
+                y1 = Math.round(y1);
+
                 const width = Math.floor(costomRandom() * (maxSize - minSize)) + minSize;
                 const height = Math.floor(costomRandom() * (maxSize - minSize)) + minSize;
 
-                // Ensure we don't exceed canvas bounds
-                const x2 = Math.min(x1 + width, canvas.width);
-                const y2 = Math.min(y1 + height, canvas.height);
+                const x2 = Math.round(Math.min(Math.max(x1 + width, 0), canvas.width));
+                const y2 = Math.round(Math.min(Math.max(y1 + height, 0), canvas.height));
+                const finalX1 = Math.round(Math.max(0, Math.min(x1, canvas.width - width)));
+                const finalY1 = Math.round(Math.max(0, Math.min(y1, canvas.height - height)));
 
-                rectangles.push({
-                    x1,
-                    y1,
-                    x2,
-                    y2
-                });
+                return [finalX1, finalY1, x2, y2];
             }
-
-            return rectangles;
         }
-
         /// svg convert function here
 
         function redBlackCanvasToSVG(canvas) {
@@ -646,47 +755,64 @@
             var lastPusherUpdate = 0;
             var lastCleanerUpdate = 0;
 
-            // // 1
-            // const FRAMES_PER_TURMITE_UPDATE = 1;    // Update every 50ms (faster)
-            // // 100
-            // const FRAMES_PER_PUSHER_UPDATE = 100;    // Update every 200ms (slower)
-            // //20
-            // const FRAMES_PER_CLEANER_UPDATE = 15;
-            // //50
-            // const RECTANGLE_PUSHER_NUMBER = 30;
-
-            // const newcleaner = new Cleaner(150, 0);
-
-
 
             // 1
             const FRAMES_PER_TURMITE_UPDATE = 1;    // Update every 50ms (faster)
             // 100
-            const FRAMES_PER_PUSHER_UPDATE = 9;    // Update every 200ms (slower)
+            const FRAMES_PER_PUSHER_UPDATE = 6;    // Update every 200ms (slower)
             //20
-            const FRAMES_PER_CLEANER_UPDATE = 1;
+            const FRAMES_PER_CLEANER_UPDATE = 2;
             //50
             const RECTANGLE_PUSHER_NUMBER = 30;
 
             const newcleaner = new Cleaner(150, 0);
 
 
-            var listofSelections = generateRandomRectangles(canvas, RECTANGLE_PUSHER_NUMBER);
-            var choice = ["up", "down", "left", "right", "downRight", "downLeft", "upLeft", "upRight"];
+            // var listofSelections = generateRandomRectangles(canvas, RECTANGLE_PUSHER_NUMBER);
+            // var choice = ["up", "down", "left", "right", "downRight", "downLeft", "upLeft", "upRight"];
 
-            listofSelections.forEach(rect => {
-                const pusher = new PixelPusher(rect, choice[Math.floor(costomRandom() * choice.length)], 70);
-                pixelPusher.push(pusher);
-            });
+            // listofSelections.forEach(rect => {
+            //     const pusher = new PixelPusher(rect, choice[Math.floor(costomRandom() * choice.length)], 70);
+            //     pixelPusher.push(pusher);
+            // });
+
+
+            function generateGenerator() {
+                const pixelPusher = []
+                const generator = new SequenceValidator();
+                generator.generateSequence();
+
+                // Start from a random position but ensure rectangles fit
+                const startX = costomRandom() * 300;
+                const startY = costomRandom() * 300;
+
+                const rectangles = generator.generateAllRectangles(startX, startY);
+
+                for (var i = 0; i < rectangles.length; i++) {
+                    //get choice
+                    var direction = generator.sequence[i];
+                    var area = {
+                        x1: rectangles[i].rectangle[0],
+                        y1: rectangles[i].rectangle[1],
+                        x2: rectangles[i].rectangle[2],
+                        y2: rectangles[i].rectangle[3],
+                    }
+                    const pusher = new PixelPusher(area, direction, Math.floor(costomRandom() * 50));
+                    pixelPusher.push(pusher);
+                }
+                return pixelPusher
+            }
+
+            const times = 3;
+            for (let i = 0; i < times; i++) {
+                var newrects = generateGenerator()
+                pixelPusher = [...pixelPusher, ...newrects]
+            }
+
+            console.log(pixelPusher)
+
 
             function animate(timestamp) {
-                //console.log(timestamp)
-                // if (timestamp > 35000 & timestamp < 35020) {
-                //   console.log("geth ehr")
-                //   exportAndDownloadSVG(canvas, redBlackCanvasToSVG);
-                //   //console.log(exportSVG);
-
-                // }
 
                 frameCount++;
 
@@ -708,15 +834,30 @@
                     });
 
                     if (pixelPusher.length == 0) {
-                        var listofSelections = generateRandomRectangles(canvas, RECTANGLE_PUSHER_NUMBER);
-                        var choice = ["up", "down", "left", "right", "downRight", "downLeft", "upLeft", "upRight"];
-                        var choice2 = [2, 20, 30, 40];
+                        // var listofSelections = generateRandomRectangles(canvas, RECTANGLE_PUSHER_NUMBER);
+                        // var choice = ["up", "down", "left", "right", "downRight", "downLeft", "upLeft", "upRight"];
+                        // var choice2 = [2, 20, 30, 40];
 
-                        listofSelections.forEach(rect => {
-                            // You can create a PixelPusher for each rectangle
-                            const pusher = new PixelPusher(rect, choice[Math.floor(costomRandom() * choice.length)], choice2[Math.floor(costomRandom() * choice2.length)]);
-                            pixelPusher.push(pusher)
-                        });
+                        // listofSelections.forEach(rect => {
+                        //     // You can create a PixelPusher for each rectangle
+                        //     const pusher = new PixelPusher(rect, choice[Math.floor(costomRandom() * choice.length)], choice2[Math.floor(costomRandom() * choice2.length)]);
+                        //     pixelPusher.push(pusher)
+
+                        // });
+                        // const times = 5;
+                        // for (let i = 0; i < times; i++) {
+                        //     var newrects = generateGenerator()
+                        //     pixelPusher.concat(newrects)
+                        // }
+
+
+                        //////
+                        const times = 3;
+                        for (let i = 0; i < times; i++) {
+                            var newrects = generateGenerator()
+                            pixelPusher = [...pixelPusher, ...newrects]
+                        }
+                        console.log("pixelPusher reset")
                     }
                     pixelPusher.forEach(pusher => {
                         const result = pusher.shift(currentPixels, canvas.width);
