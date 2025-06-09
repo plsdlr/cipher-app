@@ -340,52 +340,6 @@ const WalletPage = () => {
       )}
 
 
-      {/* Additional CSS for radio buttons */}
-      <style jsx>{`
-        .mode-selector {
-          display: flex;
-          gap: 20px;
-          margin-bottom: 20px;
-          padding: 10px 0;
-          border-bottom: 1px solid #ff0000;
-        }
-
-        .mode-option {
-          display: flex;
-          align-items: center;
-          cursor: pointer;
-          color: #ff0000;
-          font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
-          font-size: 18px;
-          transition: opacity 0.2s;
-        }
-
-        .mode-option:hover {
-          opacity: 0.8;
-        }
-
-        .mode-option.active {
-          color: #ffffff;
-          background: linear-gradient(0deg, rgba(255, 0, 0, 0.3) 0%, rgba(255, 0, 0, 0.1) 100%);
-          padding: 5px 10px;
-          border: 1px solid #ff0000;
-        }
-
-        .mode-option input[type="radio"] {
-          margin-right: 8px;
-          accent-color: #ff0000;
-        }
-
-        .wallet-form {
-          margin-top: 20px;
-        }
-
-        .form-description {
-          margin-bottom: 20px;
-          color: #ff0000;
-          opacity: 0.8;
-        }
-      `}</style>
     </div>
   );
 };

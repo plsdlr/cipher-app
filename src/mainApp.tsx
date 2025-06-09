@@ -100,16 +100,17 @@ function MainApp() {
                     <MainContent />
                 </div>
 
+                <div className="sidebar">
+                    <div className="wallet1">
+                        <WalletPage />
+                    </div>
+                    <div className="console">
+                        <ConsoleDisplay />
+                    </div>
+                </div>
+
                 <div className="footer">
                     <h4>Footer</h4>
-                </div>
-
-                <div className="wallet1">
-                    <WalletPage />
-                </div>
-
-                <div className="console">
-                    <ConsoleDisplay />
                 </div>
             </div>
         </BrowserRouter>

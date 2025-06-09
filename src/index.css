@@ -114,6 +114,12 @@ button {
     font-size: 20px;
 }
 
+.wallet-page .private-key-input {
+    width: 100%;
+    word-break: break-all;
+    font-size: 12px;
+    /* Smaller font for long keys */
+}
 
 
 /* .container {
@@ -132,25 +138,17 @@ button {
 .container {
     display: grid;
     grid-template-areas:
-        "menue menue menue menue menue wallet1 wallet1 wallet1"
-        "content content content content content wallet1 wallet1 wallet1"
-        "content content content content content console console console"
-        "footer footer footer footer footer console console console";
+        "menue menue menue menue menue menue menue menue"
+        "content content content content content sidebar sidebar sidebar"
+        "footer footer footer footer footer footer footer footer";
     grid-template-columns: repeat(8, 1fr);
-    /* Changed: Use min-content for the footer row instead of fixed 100px */
-    grid-template-rows: 50px 1fr minmax(100px, min-content);
+    grid-template-rows: 50px 1fr auto;
     background-color: var(--primary-background);
-    /* Changed: Use min-height instead of fixed height */
     min-height: 100vh;
-}
-
-.container>div {
-    background-color: rgba(255, 255, 255, 0.8);
 }
 
 .container>div.menue {
     grid-area: menue;
-    /* width: 100%; */
     text-align: left;
     background-color: var(--primary-color);
 }
@@ -161,15 +159,42 @@ button {
     width: 100%;
 }
 
-.container>div.wallet1 {
-    grid-area: wallet1;
+.container>div.footer {
+    grid-area: footer;
+    background-color: var(--primary-background);
+    border-top: 1px solid var(--primary-color);
+}
+
+/* New sidebar area that contains both wallet and console */
+.container>div.sidebar {
+    grid-area: sidebar;
+    background-color: var(--primary-background);
+    display: flex;
+    flex-direction: column;
     width: 100%;
+}
+
+.container>div.wallet1 {
+    flex-shrink: 0;
+    /* Don't shrink */
+    max-height: 400px;
+    /* Set your desired max height */
+    overflow-y: auto;
+    /* Scroll if content exceeds max height */
+    overflow-x: hidden;
+    /* Prevent horizontal overflow */
+    border-bottom: 1px solid var(--primary-color);
     background-color: var(--primary-background);
 }
 
+/* Console fills remaining space */
 .container>div.console {
-    grid-area: console;
-    width: 100%;
+    flex: 1;
+    /* Takes all remaining space */
+    min-height: 100px;
+    /* Minimum height */
+    overflow-y: auto;
+    /* Scroll if needed */
     background-color: var(--primary-background);
 }
 
@@ -450,6 +475,8 @@ input[type="radio"] {
 
 .form-group {
     margin-bottom: 15px;
+    overflow-x: hidden;
+    /* Prevent horizontal overflow */
 }
 
 .form-group label {
