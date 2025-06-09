@@ -8,6 +8,8 @@ import { poseidonDecrypt } from '@zk-kit/poseidon-cipher';
 import { generateProofTurmite } from '../ProofSystem/ProofSystem.tsx'
 import { MintNFT } from './MintConnector.tsx';
 
+import { ConsoleProvider, ConsoleDisplay, useConsole } from '../console/ConsoleContext.tsx';
+
 // Define turmite gene constants
 const BUILDER_GENES = [
     "ff0800ff0201ff0800000001",
@@ -56,12 +58,12 @@ const MintPage = () => {
     const {
         publicKey,
         privateKey,
-        isGenerated,
-        isBackedUp,
         generateEncryptionKey,
         poseidonEncryption,
         secretScalar
     } = useWallet();
+
+    const { addMessage } = useConsole();
 
     // Generate random coordinates between 0 and 256
     const generateRandomCoords = () => Array(20).fill().map(() => ({
@@ -94,6 +96,8 @@ const MintPage = () => {
         const numValue = parseInt(value) || 0;
         const boundedValue = Math.min(Math.max(numValue, 0), 256);
 
+        addMessage("coordinates change: " + String(newCoordinates[index].x) + "-" + String(newCoordinates[index].y), "info")
+
         newCoordinates[index] = {
             ...newCoordinates[index],
             [axis]: boundedValue
@@ -124,12 +128,6 @@ const MintPage = () => {
             // Include color in the proof generation
             const proof = await generateProofTurmite(privateKey, publicKey, encoded, secretScalar, cipherText, newEncryptionKey, currentTimestamp);
             setProofCalldata(proof.calldata);
-
-            //console.log(formatZKProofCalldata(proof.proof, proof.publicSignals));
-
-            //const testDecryption = poseidonDecrypt(cipherText, newEncryptionKey, currentTimestamp, 3)
-            // console.log(testDecryption)
-            /// test with decryption plz
         } else {
             console.log("not registerd")
         }
@@ -138,6 +136,7 @@ const MintPage = () => {
     // Generate random coordinates
     const generateRandomCoordinates = () => {
         setCoordinates(generateRandomCoords());
+        addMessage("randomize coordinates", "info")
     };
 
     // Load data from localStorage
@@ -149,11 +148,13 @@ const MintPage = () => {
         const newBuilderGenes = [...builderGenes];
         newBuilderGenes[index] = gene;
         setBuilderGenes(newBuilderGenes);
+        addMessage("new builder gene: " + String(gene), "info")
     };
 
     // Handle walker gene selection
     const handleWalkerGeneChange = (gene) => {
         setWalkerGene(gene);
+        addMessage("new walker gene: " + String(gene), "info")
     };
 
     return (

@@ -1,9 +1,10 @@
-// WalletPage.tsx - Refactored with radio button toggle
+// WalletPage.tsx - Enhanced with comprehensive console outputs
 import React, { useState, useEffect } from 'react';
 import { useWallet } from './cipherWallet/cipherWallet';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractABI/contractAbi';
 import EthWallet from './ETHWalletConnector/EthConnector';
+import { ConsoleProvider, ConsoleDisplay, useConsole } from './console/ConsoleContext.tsx';
 
 type WalletMode = 'create' | 'import';
 
@@ -18,6 +19,8 @@ const WalletPage = () => {
     resetWallet
   } = useWallet();
 
+  const { addMessage } = useConsole();
+
   // Form states
   const [walletMode, setWalletMode] = useState<WalletMode>('create');
   const [password, setPassword] = useState('');
@@ -30,6 +33,13 @@ const WalletPage = () => {
 
   const [hasRegisteredKey, setHasRegisteredKey] = useState(false);
   const [isETHConnected, setIsETHConnected] = useState(false);
+
+  // Track previous states to prevent duplicate messages
+  const [previousStates, setPreviousStates] = useState({
+    walletState: '',
+    accountStatus: '',
+    hasRegisteredKey: false
+  });
 
   const account = useAccount();
   const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
@@ -46,36 +56,79 @@ const WalletPage = () => {
     }
   });
 
+  // Separate useEffect for account status changes
   useEffect(() => {
-    if (account.status === 'connected') {
-      setIsETHConnected(true);
-    }
-    setHasRegisteredKey(!!addressRegistered);
-  }, [addressRegistered, account.status]);
+    if (account.status !== previousStates.accountStatus) {
+      if (account.status === 'connected' && previousStates.accountStatus !== 'connected') {
+        setIsETHConnected(true);
+        addMessage("Connected to Browser Wallet", "success");
+      } else if (account.status === 'disconnected' && previousStates.accountStatus !== 'disconnected') {
+        setIsETHConnected(false);
+        addMessage("Disconnected from Browser Wallet", "info");
+      }
 
-  // Show message helper
+      setPreviousStates(prev => ({ ...prev, accountStatus: account.status }));
+    }
+  }, [account.status, previousStates.accountStatus]);
+
+  // Separate useEffect for wallet state changes
+  useEffect(() => {
+    if (walletState !== previousStates.walletState && walletState) {
+      if (walletState === 'NEEDS_RESTORE') {
+        addMessage("Found CIPHER Wallet in Browser Storage - PLEASE UNLOCK", "info");
+      } else if (walletState === 'EMPTY') {
+        addMessage("Found no CIPHER Wallet in Browser Storage - Create one", "info");
+      } else if (walletState === 'ACTIVE') {
+        addMessage("CIPHER Wallet is now ACTIVE and ready to use", "success");
+      }
+
+      setPreviousStates(prev => ({ ...prev, walletState }));
+    }
+  }, [walletState, previousStates.walletState]);
+
+  // Separate useEffect for blockchain registration changes
+  useEffect(() => {
+    const currentHasRegisteredKey = !!addressRegistered;
+    setHasRegisteredKey(currentHasRegisteredKey);
+
+    if (currentHasRegisteredKey !== previousStates.hasRegisteredKey && addressRegistered && account.address) {
+      addMessage(`Public key found on blockchain for address: ${account.address.slice(0, 6)}...${account.address.slice(-4)}`, "info");
+      setPreviousStates(prev => ({ ...prev, hasRegisteredKey: currentHasRegisteredKey }));
+    }
+  }, [addressRegistered, account.address, previousStates.hasRegisteredKey]);
+
+  // Show message helper with console output
   const showMessage = (msg: string, type: 'success' | 'error' | 'info') => {
     setMessage(msg);
     setMessageType(type);
+    addMessage(msg, type);
     setTimeout(() => setMessage(''), 5000);
   };
 
-  // Validate password
+  // Validate password with console output
   const validatePassword = (pwd: string, confirmPwd: string): boolean => {
+    addMessage("Validating password requirements...", "info");
+
     if (pwd !== confirmPwd) {
       showMessage('Passwords do not match!', 'error');
+      addMessage("Password validation failed: passwords do not match", "error");
       return false;
     }
     if (pwd.length < 5) {
       showMessage('Password must be at least 5 characters!', 'error');
+      addMessage("Password validation failed: password too short", "error");
       return false;
     }
+
+    addMessage("Password validation successful", "success");
     return true;
   };
 
-  // Handle form submission based on mode
+  // Handle form submission based on mode with enhanced console output
   const handleWalletSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    addMessage(`Starting ${walletMode} wallet process...`, "info");
 
     if (!validatePassword(password, confirmPassword)) return;
 
@@ -84,19 +137,31 @@ const WalletPage = () => {
       let success = false;
 
       if (walletMode === 'create') {
+        addMessage("Generating new cryptographic keys...", "info");
         success = await createWallet(password);
         if (success) {
           showMessage('New wallet created and backed up successfully!', 'success');
+          addMessage("✓ New wallet created with encrypted backup", "success");
+          addMessage("✓ Private key secured in browser storage", "success");
+        } else {
+          addMessage("✗ Failed to create new wallet", "error");
         }
       } else {
         if (!privateKeyInput.trim()) {
           showMessage('Please enter a private key', 'error');
+          addMessage("Import failed: no private key provided", "error");
           setIsLoading(false);
           return;
         }
+
+        addMessage("Importing private key and deriving public key...", "info");
         success = await importWallet(privateKeyInput.trim(), password);
         if (success) {
           showMessage('Wallet imported and backed up successfully!', 'success');
+          addMessage("✓ Private key imported successfully", "success");
+          addMessage("✓ Public key derived and wallet backed up", "success");
+        } else {
+          addMessage("✗ Failed to import wallet - check private key format", "error");
         }
       }
 
@@ -105,56 +170,85 @@ const WalletPage = () => {
         setPassword('');
         setConfirmPassword('');
         setPrivateKeyInput('');
+        addMessage("Form cleared for security", "info");
       } else {
         showMessage(`Failed to ${walletMode} wallet. Please try again.`, 'error');
+        addMessage(`${walletMode} wallet operation failed`, "error");
       }
     } catch (error) {
-      showMessage(`Error: ${error.message}`, 'error');
+      const errorMsg = `Error: ${error.message}`;
+      showMessage(errorMsg, 'error');
+      addMessage(`Critical error during ${walletMode}: ${error.message}`, "error");
     } finally {
       setIsLoading(false);
+      addMessage(`${walletMode} wallet process completed`, "info");
     }
   };
 
-  // Handle restore wallet
+  // Handle restore wallet with enhanced console output
   const handleRestoreWallet = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    addMessage("Starting wallet restoration process...", "info");
+
     if (!restorePassword.trim()) {
       showMessage('Please enter your password', 'error');
+      addMessage("Restore failed: no password provided", "error");
       return;
     }
 
     setIsLoading(true);
     try {
+      addMessage("Attempting to decrypt wallet from storage...", "info");
       const success = await restoreWallet(restorePassword);
       if (success) {
         showMessage('Wallet restored successfully!', 'success');
+        addMessage("✓ Wallet successfully restored from encrypted backup", "success");
+        addMessage("✓ Private key decrypted and loaded into memory", "success");
         setRestorePassword('');
       } else {
         showMessage('Failed to restore wallet. Check your password.', 'error');
+        addMessage("✗ Wallet restore failed - incorrect password or corrupted backup", "error");
       }
     } catch (error) {
-      showMessage(`Error restoring wallet: ${error.message}`, 'error');
+      const errorMsg = `Error restoring wallet: ${error.message}`;
+      showMessage(errorMsg, 'error');
+      addMessage(`Critical error during restore: ${error.message}`, "error");
     } finally {
       setIsLoading(false);
+      addMessage("Wallet restoration process completed", "info");
     }
   };
 
-  // Handle reset wallet
+  // Handle reset wallet with enhanced console output
   const handleResetWallet = () => {
+    addMessage("User initiated wallet reset...", "info");
+
     if (window.confirm('Are you sure you want to reset your wallet? This will remove all wallet data permanently.')) {
+      addMessage("Wallet reset confirmed by user", "info");
+      addMessage("Clearing wallet data from memory...", "info");
+
       resetWallet();
+
       showMessage('Wallet reset successfully.', 'info');
+      addMessage("✓ Wallet data cleared from session storage", "success");
+      addMessage("✓ Private key removed from memory", "success");
+      addMessage("⚠ Encrypted backup remains in browser storage", "info");
+    } else {
+      addMessage("Wallet reset cancelled by user", "info");
     }
   };
 
-  // Handle mode change
+  // Handle mode change with console output
   const handleModeChange = (mode: WalletMode) => {
+    addMessage(`Switching to ${mode} mode`, "info");
     setWalletMode(mode);
+
     // Clear form when switching modes
     setPassword('');
     setConfirmPassword('');
     setPrivateKeyInput('');
+    addMessage("Form fields cleared for mode switch", "info");
   };
 
   // Format BigInt for display
@@ -171,6 +265,16 @@ const WalletPage = () => {
     return `${hex.substring(0, 8)}...${hex.substring(hex.length - 8)}`;
   };
 
+  // Log wallet state changes
+  useEffect(() => {
+    if (publicKey) {
+      addMessage(`Public key loaded: [${formatBigInt(publicKey[0])}, ${formatBigInt(publicKey[1])}]`, "info");
+    }
+    if (privateKey) {
+      addMessage(`Private key active in session: ${formatByteArray(privateKey)}`, "info");
+    }
+  }, [publicKey, privateKey]);
+
   return (
     <div className="wallet-page">
       <div className="upper-section">
@@ -179,14 +283,12 @@ const WalletPage = () => {
 
       <EthWallet />
 
-
       {/* Status Message */}
       {message && (
         <div className={`message ${messageType}`}>
           {message}
         </div>
       )}
-
 
       {/* Wallet State Display */}
       <div className="wallet-status">
@@ -252,7 +354,12 @@ const WalletPage = () => {
                   id="private-key"
                   placeholder="Enter private key (hex format, with or without 0x prefix)"
                   value={privateKeyInput}
-                  onChange={(e) => setPrivateKeyInput(e.target.value)}
+                  onChange={(e) => {
+                    setPrivateKeyInput(e.target.value);
+                    if (e.target.value.trim()) {
+                      addMessage("Private key input detected", "info");
+                    }
+                  }}
                   className="private-key-input"
                   required
                 />
@@ -308,7 +415,9 @@ const WalletPage = () => {
                 type="password"
                 id="restore-password"
                 value={restorePassword}
-                onChange={(e) => setRestorePassword(e.target.value)}
+                onChange={(e) => {
+                  setRestorePassword(e.target.value);
+                }}
                 required
                 placeholder="Enter your wallet password"
               />
@@ -338,8 +447,6 @@ const WalletPage = () => {
           </div>
         </div>
       )}
-
-
     </div>
   );
 };
