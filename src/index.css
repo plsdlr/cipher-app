@@ -15,193 +15,21 @@
 
 :root {
     /* --primary-color: #ff0000; */
-    --primary-color: rgb(255, 241, 232);
+    --primary-color: rgb(255, 255, 255);
     --primary-background: #000000;
-    --text-color: #ff0000;
 }
 
 
-
+/* Minimal reset */
 html,
 body {
-    background-color: var(--background-color);
     margin: 0;
     padding: 0;
-    min-height: 100%;
+    height: 100%;
     color: var(--primary-color);
+    background-color: var(--primary-background);
     font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
     font-size: 20px;
-}
-
-
-h1 {
-    margin: 0;
-    padding: 0;
-    color: var(--primary-color);
-    ;
-    font-family: 'oxy', system-ui, -apple-system, sans-serif;
-    font-size: 30px;
-    padding: 0px;
-
-}
-
-h2 {
-    margin: 0;
-    padding: 0;
-    color: var(--primary-color);
-    ;
-    font-family: 'oxy', system-ui, -apple-system, sans-serif;
-    font-size: 25px;
-    padding: 0px;
-}
-
-
-.wallet-page {
-    /* max-width: 400px; */
-    margin: 0 auto;
-    padding: 0;
-    background: var(--primary-background);
-    border: 1px solid var(--primary-color);
-    ;
-
-}
-
-.wallet-status {
-    background-color: var(--primary-background);
-    color: var(--primary-color);
-    ;
-    padding: 8px 8px;
-    border-bottom: 1px solid var(--primary-color);
-    ;
-    border-top: 1px solid var(--primary-color);
-    ;
-    /* border: 1px solid #ced4da; */
-}
-
-
-.upper-section {
-    /* background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(94, 0, 0, 0.8) 100%); */
-    padding: 8px 8px;
-    border-top: 2px solid var(--primary-color);
-    ;
-    /* box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5); */
-}
-
-.upper-section h1 {
-    margin: 0;
-    color: var(--primary-color);
-    ;
-    font-weight: bold;
-}
-
-.action-section {
-    margin-bottom: 30px;
-    padding: 10px;
-    color: var(--primary-color);
-    ;
-    padding: 8px 8px;
-    border-top: 1px solid var(--primary-color);
-}
-
-button {
-    padding: 6px 20px;
-    /* background: linear-gradient(0deg, rgb(255, 0, 0) 0%, rgba(135, 179, 207, 0.8) 100%); */
-    /* background: var(--primary-background); */
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
-    font-size: 20px;
-}
-
-.wallet-page .private-key-input {
-    width: 100%;
-    word-break: break-all;
-    font-size: 12px;
-    /* Smaller font for long keys */
-}
-
-
-/* .container {
-    display: grid;
-    grid-template-areas:
-        "menue menue menue menue menue wallet1 wallet1 wallet1"
-        "content content content content content wallet1 wallet1 wallet1"
-        "content content content content content console console console"
-        "footer footer footer footer footer console console console";
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: 50px 1fr 100px;
-    background-color: var(--primary-background);
-    height: 100vh;
-} */
-
-.container {
-    display: grid;
-    grid-template-areas:
-        "menue menue menue menue menue sidebar sidebar sidebar"
-        "content content content content content sidebar sidebar sidebar"
-        "footer footer footer footer footer footer footer footer";
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: 50px 1fr auto;
-    background-color: var(--primary-background);
-    min-height: 100vh;
-}
-
-.container>div.menue {
-    grid-area: menue;
-    text-align: left;
-    background-color: var(--primary-color);
-}
-
-.container>div.content {
-    grid-area: content;
-    background-color: var(--primary-background);
-    width: 100%;
-}
-
-.container>div.footer {
-    grid-area: footer;
-    background-color: var(--primary-background);
-    border-top: 1px solid var(--primary-color);
-}
-
-/* New sidebar area that contains both wallet and console */
-.container>div.sidebar {
-    grid-area: sidebar;
-    background-color: var(--primary-background);
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.container>div.wallet1 {
-    flex-shrink: 0;
-    /* Don't shrink */
-    max-height: 400px;
-    /* Set your desired max height */
-    overflow-y: auto;
-    /* Scroll if content exceeds max height */
-    overflow-x: hidden;
-    /* Prevent horizontal overflow */
-    border-bottom: 1px solid var(--primary-color);
-    background-color: var(--primary-background);
-}
-
-/* Console fills remaining space */
-.container>div.console {
-    flex: 1;
-    /* Takes all remaining space */
-    min-height: 100px;
-    /* Minimum height */
-    overflow-y: auto;
-    /* Scroll if needed */
-    background-color: var(--primary-background);
-}
-
-.container>div.footer {
-    grid-area: footer;
-    width: 100%;
-    background-color: var(--primary-background);
 }
 
 canvas {
@@ -211,84 +39,40 @@ canvas {
     /* Firefox */
 }
 
-
-
-.mint-page {
-    padding: 0;
-    color: var(--primary-color);
-}
-
-.mint-content {
-    padding: 10px;
-}
-
-.mint-grid {
+/* Main container - only grid essentials */
+.container {
     display: grid;
-    grid-template-columns: 1fr;
-    grid-gap: 20px;
+    grid-template-areas:
+        "menue menue menue menue menue sidebar sidebar sidebar"
+        "content content content content content sidebar sidebar sidebar"
+        "footer footer footer footer footer footer footer footer";
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: 50px 1fr 60px;
+    height: 100vh;
 }
 
-@media (min-width: 768px) {
-    .mint-grid {
-        grid-template-columns: 1fr 1fr;
-    }
+/* Grid areas - minimal styling */
+.container>div.menue {
+    grid-area: menue;
+    background-color: var(--primary-background);
+
 }
 
-.canvas-section {
-    display: flex;
-    flex-direction: column;
+.container>div.content {
+    grid-area: content;
 }
 
-.canvas-controls {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
+.container>div.sidebar {
+    grid-area: sidebar;
+    border-left: 1px solid var(--primary-background);
 }
 
-.coordinates-section {
-    border: 1px solid var(--primary-color);
-    padding: 10px;
-    max-height: 500px;
-    overflow-y: auto;
+.container>div.footer {
+    grid-area: footer;
+    border-top: 1px solid var(--primary-background);
 }
 
-.encryption-section {
-    border: 1px solid var(--primary-color);
-    padding: 10px;
-    max-height: 500px;
-    overflow-y: auto;
-}
-
-.coordinate-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-    justify-content: space-between;
-}
-
-.coordinate-label {
-    min-width: 80px;
-}
-
-.coordinate-inputs {
-    display: flex;
-    gap: 10px;
-}
-
-.coordinate-inputs input {
-    width: 60px;
-    padding: 5px;
-    background: var(--primary-background);
-    color: var(--primary-color);
-    border: 1px solid var(--primary-color);
-    text-align: center;
-}
-
-.more-indicator {
-    text-align: center;
-    margin-top: 10px;
-    font-style: italic;
-}
+/* buttons */
 
 button {
     background: var(--primary-background);
@@ -304,16 +88,37 @@ button:hover {
     color: var(--primary-background);
 }
 
-.toggle-btn {
-    margin-bottom: 15px;
+
+/* wallet section */
+
+.wallet-page {
+    /* max-width: 400px; */
+    background: var(--primary-background);
 }
+
+.wallet-status {
+    background-color: var(--primary-background);
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--primary-color);
+    border-top: 1px solid var(--primary-color);
+}
+
+.action-section {
+    color: var(--primary-color);
+    border-top: 1px solid var(--primary-color);
+}
+
+
+
+
+/* Miniting Section */
+
 
 
 .mint-page {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-    color: var(--primary-color);
 }
 
 .mint-grid {
@@ -329,7 +134,6 @@ button:hover {
 }
 
 .canvas-section {
-    background-color: var(--primary-background);
     border: 1px solid var(--primary-color);
     padding: 10px;
 }
@@ -339,6 +143,7 @@ button:hover {
     justify-content: space-between;
     margin-top: 10px;
 }
+
 
 .gene-selection,
 .coordinates-section {
@@ -426,199 +231,4 @@ input[type="radio"] {
 .color-select option {
     background-color: var(--primary-background);
     color: var(--primary-color);
-}
-
-
-
-.view-list-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.token-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-    border: 1px solid #ffffff;
-    color: #ffffff;
-    background-color: #000000;
-}
-
-.token-table th,
-.token-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #ffffff;
-}
-
-.token-row {
-    cursor: pointer;
-}
-
-.token-row:hover {
-    background-color: rgba(255, 0, 0, 0.1);
-}
-
-
-.send-form-container {
-    margin-top: 20px;
-    padding: 20px;
-    border: 1px solid #ffffff;
-    background-color: #000000;
-}
-
-.send-form h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-}
-
-.form-group {
-    margin-bottom: 15px;
-    overflow-x: hidden;
-    /* Prevent horizontal overflow */
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 8px;
-    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
-    background-color: #ffffff;
-}
-
-.form-actions {
-    display: flex;
-    gap: 10px;
-}
-
-
-/* Add this to your index.css - Works with your existing ConsoleContext */
-
-.console-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    /* Fill the grid area completely */
-    border: 1px solid var(--primary-color);
-    background-color: var(--primary-background);
-}
-
-
-/* Console Header */
-.console-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 4px 8px;
-    border-bottom: 1px solid var(--primary-color);
-    background-color: var(--primary-background);
-    flex-shrink: 0;
-    /* Don't shrink header */
-}
-
-.console-header h3 {
-    margin: 0;
-    font-size: 14px;
-    color: var(--primary-color);
-}
-
-.clear-btn {
-    background: none;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    padding: 2px 6px;
-    font-size: 10px;
-    cursor: pointer;
-    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
-}
-
-.clear-btn:hover {
-    background: var(--primary-color);
-    color: var(--primary-background);
-}
-
-/* Console Output - Scrollable Area */
-.console-output {
-    flex: 1;
-    /* Take remaining space */
-    overflow-y: auto;
-    /* Enable scrolling */
-    overflow-x: hidden;
-    padding: 8px;
-    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
-    font-size: 13px;
-    line-height: 1.3;
-
-    /* Smooth scrolling */
-    scroll-behavior: smooth;
-
-    /* Custom scrollbar */
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary-color) var(--primary-background);
-}
-
-/* Webkit browsers scrollbar styling */
-.console-output::-webkit-scrollbar {
-    width: 6px;
-}
-
-.console-output::-webkit-scrollbar-track {
-    background: var(--primary-background);
-}
-
-.console-output::-webkit-scrollbar-thumb {
-    background-color: var(--primary-color);
-    border-radius: 0px;
-    /* Keep angular for retro theme */
-}
-
-.console-output::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 0, 0, 0.8);
-}
-
-/* Console Messages */
-.console-line {
-    margin-bottom: 3px;
-    padding: 1px 0;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-    display: flex;
-    gap: 6px;
-    align-items: baseline;
-}
-
-.console-time {
-    color: rgba(255, 0, 0, 0.7);
-    font-size: 11px;
-    flex-shrink: 0;
-    /* Don't compress timestamp */
-}
-
-.console-source {
-    color: rgba(255, 255, 0, 0.8);
-    font-size: 11px;
-    flex-shrink: 0;
-}
-
-.console-text {
-    flex: 1;
-    word-break: break-word;
-}
-
-.console-empty {
-    color: rgba(255, 0, 0, 0.5);
-    font-style: italic;
-    text-align: center;
-    padding: 20px;
-}
-
-/* Grid layout adjustment for console area */
-.container>div.console {
-    position: relative;
-    background-color: var(--primary-background);
 }
