@@ -12,6 +12,49 @@
     font-style: normal;
 }
 
+@font-face {
+    font-family: 'chrono';
+    src: url('/src/fonts/ChronoType.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Kiwi';
+    src: url('/src/fonts/Lady Radical.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Geist';
+    src: url('/src/fonts/GeistMono-VariableFont_wght.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+@font-face {
+    font-family: 'Anon';
+    src: url('src/fonts/AnonymousPro-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Vera';
+    src: url('src/fonts/VeraMono.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Share';
+    src: url('src/fonts/ShareTechMono-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 
 :root {
     /* --primary-color: #ff0000; */
@@ -28,8 +71,8 @@ body {
     height: 100%;
     color: var(--primary-color);
     background-color: var(--primary-background);
-    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
-    font-size: 20px;
+    font-family: 'Geist', system-ui, -apple-system, sans-serif;
+    font-size: 15px;
 }
 
 canvas {
@@ -71,6 +114,8 @@ canvas {
 
 .container>div.sidebar {
     grid-area: sidebar;
+    padding-top: 20px;
+    padding-right: 20px;
     border-left: 1px solid var(--primary-background);
 }
 
@@ -87,8 +132,6 @@ button {
     border: 1px solid var(--primary-color);
     padding: 5px 10px;
     cursor: pointer;
-    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
-    font-size: 20px;
 }
 
 button:hover {
@@ -222,8 +265,6 @@ input[type="radio"] {
     color: var(--primary-color);
     border: 1px solid var(--primary-color);
     padding: 6px;
-    font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
-    font-size: 18px;
 }
 
 .color-select option {
@@ -275,7 +316,12 @@ input[type="radio"] {
 
 .terminal-fieldset legend {
     color: #ffffff;
-    font-size: 20px;
+    /* font-family: 'oxy', system-ui, -apple-system, sans-serif; */
+    font-size: 12px;
     font-weight: bold;
     padding: 0 8px;
+}
+
+.console-container {
+    padding-top: 20px;
 }

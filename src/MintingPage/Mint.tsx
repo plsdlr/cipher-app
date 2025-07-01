@@ -162,7 +162,7 @@ const MintPage = () => {
             <div className="mint-content">
 
                 <fieldset className="terminal-fieldset">
-                    <legend>mint page</legend>
+                    <legend>MINT PAGE</legend>
                     <div className="terminal-content">
 
                         <p>Set the starting coordinates and select genetic patterns for your turmites</p>
@@ -173,7 +173,7 @@ const MintPage = () => {
                 <div className="mint-grid">
 
                     <fieldset className="terminal-fieldset">
-                        <legend>minting preview</legend>
+                        <legend>MINTING PREVIEW</legend>
                         <CipherWrapperIframe
                             coordinates={coordinates}
                             builderTurmites={builderGenes}
@@ -189,7 +189,7 @@ const MintPage = () => {
                     </fieldset>
 
                     <fieldset className="terminal-fieldset">
-                        <legend>turmite genes</legend>
+                        <legend>TURMITE GENES</legend>
 
                         {/* Color Selection Dropdown */}
                         <div className="gene-section">
@@ -214,7 +214,7 @@ const MintPage = () => {
 
                         <div className="gene-section">
                             <fieldset className="terminal-fieldset">
-                                <legend>BUILDER TURMITES (3 types)</legend>
+                                <legend>BUILDER TURMITES (3 TYPES)</legend>
                                 {builderGenes.map((gene, index) => (
                                     <div key={`builder-${index}`} className="gene-selector">
                                         <p>Builder {index + 1}</p>
@@ -260,7 +260,7 @@ const MintPage = () => {
                     </fieldset>
 
                     <fieldset className="terminal-fieldset">
-                        <legend>turmites coordiates</legend>
+                        <legend>TURMITE COORDINATES</legend>
                         <div className="coordinates-list">
                             {coordinates.slice(0, 20).map((coord, index) => (
                                 <div key={index} className="coordinate-item">
@@ -289,7 +289,7 @@ const MintPage = () => {
                     </fieldset>
 
                     <fieldset className="terminal-fieldset">
-                        <legend>zk proof generation</legend>
+                        <legend>ZK PROOF GENERATION</legend>
                         <div className="encryption-section">
                             <h3>Encrypt & Mint</h3>
                             <button onClick={handleGenerateProof}>Generate Poof</button>

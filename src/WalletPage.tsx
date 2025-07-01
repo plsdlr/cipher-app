@@ -277,176 +277,177 @@ const WalletPage = () => {
 
   return (
     <div className="wallet-page">
-      <div className="upper-section">
-        <h1>CIPHER WALLET</h1>
-      </div>
+      <fieldset className="terminal-fieldset">
+        <legend>CIPHER WALLET</legend>
 
-      <EthWallet />
 
-      {/* Status Message */}
-      {message && (
-        <div className={`message ${messageType}`}>
-          {message}
-        </div>
-      )}
+        <EthWallet />
 
-      {/* Wallet State Display */}
-      <div className="wallet-status">
-        <h2>WALLET STATUS</h2>
-        <div className="status-item">
-          <strong>State:</strong> {walletState}
-        </div>
-        {publicKey && (
+        {/* Status Message */}
+        {message && (
+          <div className={`message ${messageType}`}>
+            {message}
+          </div>
+        )}
+
+        {/* Wallet State Display */}
+        <div className="wallet-status">
+          <h2>WALLET STATUS</h2>
           <div className="status-item">
-            <strong>Public Key:</strong> [{formatBigInt(publicKey[0])}, {formatBigInt(publicKey[1])}]
+            <strong>State:</strong> {walletState}
           </div>
-        )}
-        {privateKey && (
-          <div className="status-item private-key">
-            <strong>Private Key:</strong> {formatByteArray(privateKey)} (active in session)
-          </div>
-        )}
-      </div>
+          {publicKey && (
+            <div className="status-item">
+              <strong>Public Key:</strong> [{formatBigInt(publicKey[0])}, {formatBigInt(publicKey[1])}]
+            </div>
+          )}
+          {privateKey && (
+            <div className="status-item private-key">
+              <strong>Private Key:</strong> {formatByteArray(privateKey)} (active in session)
+            </div>
+          )}
+        </div>
 
-      {/* EMPTY State - Show wallet creation/import options */}
-      {walletState === 'EMPTY' && (
-        <div className="action-section">
-          <h2>SETUP WALLET</h2>
+        {/* EMPTY State - Show wallet creation/import options */}
+        {walletState === 'EMPTY' && (
+          <div className="action-section">
+            <h2>SETUP WALLET</h2>
 
-          {/* Radio buttons for mode selection */}
-          <div className="mode-selector">
-            <label className={`mode-option ${walletMode === 'create' ? 'active' : ''}`}>
-              <input
-                type="radio"
-                name="walletMode"
-                value="create"
-                checked={walletMode === 'create'}
-                onChange={() => handleModeChange('create')}
-              />
-              <span>CREATE NEW WALLET</span>
-            </label>
-            <label className={`mode-option ${walletMode === 'import' ? 'active' : ''}`}>
-              <input
-                type="radio"
-                name="walletMode"
-                value="import"
-                checked={walletMode === 'import'}
-                onChange={() => handleModeChange('import')}
-              />
-              <span>IMPORT EXISTING</span>
-            </label>
-          </div>
-
-          {/* Dynamic form based on selected mode */}
-          <form onSubmit={handleWalletSubmit} className="wallet-form">
-            <p className="form-description">
-              {walletMode === 'create'
-                ? 'Generate a new wallet with cryptographic keys'
-                : 'Import your wallet using a private key'}
-            </p>
-
-            {/* Show private key input only for import mode */}
-            {walletMode === 'import' && (
-              <div className="form-group">
-                <label htmlFor="private-key">Private Key:</label>
+            {/* Radio buttons for mode selection */}
+            <div className="mode-selector">
+              <label className={`mode-option ${walletMode === 'create' ? 'active' : ''}`}>
                 <input
-                  type="text"
-                  id="private-key"
-                  placeholder="Enter private key (hex format, with or without 0x prefix)"
-                  value={privateKeyInput}
-                  onChange={(e) => {
-                    setPrivateKeyInput(e.target.value);
-                    if (e.target.value.trim()) {
-                      addMessage("Private key input detected", "info");
-                    }
-                  }}
-                  className="private-key-input"
-                  required
+                  type="radio"
+                  name="walletMode"
+                  value="create"
+                  checked={walletMode === 'create'}
+                  onChange={() => handleModeChange('create')}
                 />
-                <div className="input-note">
-                  Your private key will be encrypted and backed up with your password.
+                <span>CREATE NEW WALLET</span>
+              </label>
+              <label className={`mode-option ${walletMode === 'import' ? 'active' : ''}`}>
+                <input
+                  type="radio"
+                  name="walletMode"
+                  value="import"
+                  checked={walletMode === 'import'}
+                  onChange={() => handleModeChange('import')}
+                />
+                <span>IMPORT EXISTING</span>
+              </label>
+            </div>
+
+            {/* Dynamic form based on selected mode */}
+            <form onSubmit={handleWalletSubmit} className="wallet-form">
+              <p className="form-description">
+                {walletMode === 'create'
+                  ? 'Generate a new wallet with cryptographic keys'
+                  : 'Import your wallet using a private key'}
+              </p>
+
+              {/* Show private key input only for import mode */}
+              {walletMode === 'import' && (
+                <div className="form-group">
+                  <label htmlFor="private-key">Private Key:</label>
+                  <input
+                    type="text"
+                    id="private-key"
+                    placeholder="Enter private key (hex format, with or without 0x prefix)"
+                    value={privateKeyInput}
+                    onChange={(e) => {
+                      setPrivateKeyInput(e.target.value);
+                      if (e.target.value.trim()) {
+                        addMessage("Private key input detected", "info");
+                      }
+                    }}
+                    className="private-key-input"
+                    required
+                  />
+                  <div className="input-note">
+                    Your private key will be encrypted and backed up with your password.
+                  </div>
                 </div>
+              )}
+
+              <div className="form-group">
+                <label htmlFor="password">Password:</label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={5}
+                  placeholder="At least 5 characters"
+                />
               </div>
-            )}
 
-            <div className="form-group">
-              <label htmlFor="password">Password:</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={5}
-                placeholder="At least 5 characters"
-              />
-            </div>
+              <div className="form-group">
+                <label htmlFor="confirm-password">Confirm Password:</label>
+                <input
+                  type="password"
+                  id="confirm-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={5}
+                  placeholder="Confirm your password"
+                />
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="confirm-password">Confirm Password:</label>
-              <input
-                type="password"
-                id="confirm-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={5}
-                placeholder="Confirm your password"
-              />
-            </div>
-
-            <button type="submit" className={walletMode === 'import' ? 'import-button' : ''} disabled={isLoading}>
-              {isLoading ? 'Processing...' : walletMode === 'create' ? 'Create Wallet' : 'Import Wallet'}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* NEEDS_RESTORE State - Show restore form */}
-      {walletState === 'NEEDS_RESTORE' && (
-        <div className="action-section">
-          <h2>RESTORE YOUR WALLET</h2>
-          <p>Enter your password to unlock your wallet</p>
-
-          <form onSubmit={handleRestoreWallet}>
-            <div className="form-group">
-              <label htmlFor="restore-password">Password:</label>
-              <input
-                type="password"
-                id="restore-password"
-                value={restorePassword}
-                onChange={(e) => {
-                  setRestorePassword(e.target.value);
-                }}
-                required
-                placeholder="Enter your wallet password"
-              />
-            </div>
-
-            <button type="submit" disabled={isLoading}>
-              {isLoading ? 'Restoring...' : 'Restore Wallet'}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* ACTIVE State - Show wallet controls */}
-      {walletState === 'ACTIVE' && (
-        <div className="action-section">
-          <h2>WALLET CONTROLS</h2>
-          <p>Your wallet is active and ready to use</p>
-
-          <div className="wallet-actions">
-            <button className="reset-button" onClick={handleResetWallet}>
-              Reset Wallet
-            </button>
+              <button type="submit" className={walletMode === 'import' ? 'import-button' : ''} disabled={isLoading}>
+                {isLoading ? 'Processing...' : walletMode === 'create' ? 'Create Wallet' : 'Import Wallet'}
+              </button>
+            </form>
           </div>
+        )}
 
-          <div className="wallet-info">
-            <p><strong>Security Note:</strong> Your wallet will remain active until you close this browser tab or the session expires.</p>
+        {/* NEEDS_RESTORE State - Show restore form */}
+        {walletState === 'NEEDS_RESTORE' && (
+          <div className="action-section">
+            <h2>RESTORE YOUR WALLET</h2>
+            <p>Enter your password to unlock your wallet</p>
+
+            <form onSubmit={handleRestoreWallet}>
+              <div className="form-group">
+                <label htmlFor="restore-password">Password:</label>
+                <input
+                  type="password"
+                  id="restore-password"
+                  value={restorePassword}
+                  onChange={(e) => {
+                    setRestorePassword(e.target.value);
+                  }}
+                  required
+                  placeholder="Enter your wallet password"
+                />
+              </div>
+
+              <button type="submit" disabled={isLoading}>
+                {isLoading ? 'Restoring...' : 'Restore Wallet'}
+              </button>
+            </form>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* ACTIVE State - Show wallet controls */}
+        {walletState === 'ACTIVE' && (
+          <div className="action-section">
+            <h2>WALLET CONTROLS</h2>
+            <p>Your wallet is active and ready to use</p>
+
+            <div className="wallet-actions">
+              <button className="reset-button" onClick={handleResetWallet}>
+                Reset Wallet
+              </button>
+            </div>
+
+            <div className="wallet-info">
+              <p><strong>Security Note:</strong> Your wallet will remain active until you close this browser tab or the session expires.</p>
+            </div>
+          </div>
+        )}
+      </fieldset>
     </div>
   );
 };

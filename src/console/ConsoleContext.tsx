@@ -85,33 +85,36 @@ export const ConsoleDisplay: React.FC = () => {
 
   return (
     <div className="console-container">
-      <div className="console-header">
-        <h3>CONSOLE</h3>
-        <button onClick={clearConsole} className="clear-btn">
-          CLEAR
-        </button>
-      </div>
+      <fieldset className="terminal-fieldset">
+        <legend>TERMINAL</legend>
+        <div className="console-header">
+          <h3>CONSOLE</h3>
+          <button onClick={clearConsole} className="clear-btn">
+            CLEAR
+          </button>
+        </div>
 
-      <div className="console-output">
-        {messages.length === 0 ? (
-          <div className="console-empty">Console ready...</div>
-        ) : (
-          messages.map((message) => (
-            <div key={message.id} className="console-line">
-              <span className="console-time">[{formatTime(message.timestamp)}]</span>
-              {message.source && (
-                <span className="console-source">{message.source}:</span>
-              )}
-              <span
-                className="console-text"
-                style={{ color: getMessageColor(message.type) }}
-              >
-                {message.text}
-              </span>
-            </div>
-          ))
-        )}
-      </div>
+        <div className="console-output">
+          {messages.length === 0 ? (
+            <div className="console-empty">Console ready...</div>
+          ) : (
+            messages.map((message) => (
+              <div key={message.id} className="console-line">
+                <span className="console-time">[{formatTime(message.timestamp)}]</span>
+                {message.source && (
+                  <span className="console-source">{message.source}:</span>
+                )}
+                <span
+                  className="console-text"
+                  style={{ color: getMessageColor(message.type) }}
+                >
+                  {message.text}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </fieldset>
 
     </div>
   );
