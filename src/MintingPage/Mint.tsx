@@ -160,11 +160,20 @@ const MintPage = () => {
     return (
         <div className="mint-page">
             <div className="mint-content">
-                <h2>MINT YOUR TURMITE</h2>
-                <p>Set the starting coordinates and select genetic patterns for your turmites</p>
+
+                <fieldset className="terminal-fieldset">
+                    <legend>mint page</legend>
+                    <div className="terminal-content">
+
+                        <p>Set the starting coordinates and select genetic patterns for your turmites</p>
+                    </div>
+                </fieldset>
+
 
                 <div className="mint-grid">
-                    <div className="canvas-section">
+
+                    <fieldset className="terminal-fieldset">
+                        <legend>minting preview</legend>
                         <CipherWrapperIframe
                             coordinates={coordinates}
                             builderTurmites={builderGenes}
@@ -177,77 +186,81 @@ const MintPage = () => {
                                 RANDOMIZE COORDINATES
                             </button>
                         </div>
-                    </div>
+                    </fieldset>
 
-                    <div className="gene-selection">
-                        <h3>TURMITE GENES</h3>
+                    <fieldset className="terminal-fieldset">
+                        <legend>turmite genes</legend>
 
                         {/* Color Selection Dropdown */}
                         <div className="gene-section">
-                            <h4>COLOR PALETTE</h4>
-                            <div className="color-selector">
-                                <p>Select Color Theme</p>
-                                <div className="color-dropdown">
-                                    <select
-                                        value={color}
-                                        onChange={handleColorChange}
-                                        className="color-select"
-                                    >
-                                        {COLOR_NAMES.map((name, index) => (
-                                            <option key={index} value={index}>
-                                                {name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+
+
+                            <p>Select Color Theme</p>
+                            <div className="color-dropdown">
+                                <select
+                                    value={color}
+                                    onChange={handleColorChange}
+                                    className="color-select"
+                                >
+                                    {COLOR_NAMES.map((name, index) => (
+                                        <option key={index} value={index}>
+                                            {name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
+
                         </div>
 
                         <div className="gene-section">
-                            <h4>BUILDER TURMITES (3 types)</h4>
-                            {builderGenes.map((gene, index) => (
-                                <div key={`builder-${index}`} className="gene-selector">
-                                    <p>Builder {index + 1}</p>
+                            <fieldset className="terminal-fieldset">
+                                <legend>BUILDER TURMITES (3 types)</legend>
+                                {builderGenes.map((gene, index) => (
+                                    <div key={`builder-${index}`} className="gene-selector">
+                                        <p>Builder {index + 1}</p>
+                                        <div className="gene-options">
+                                            {BUILDER_GENES.map((option, optionIndex) => (
+                                                <label key={`builder-${index}-option-${optionIndex}`} className="gene-option">
+                                                    <input
+                                                        type="radio"
+                                                        name={`builder-${index}`}
+                                                        checked={gene === option}
+                                                        onChange={() => handleBuilderGeneChange(index, option)}
+                                                    />
+                                                    <span className="gene-name">Type {optionIndex + 1}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </fieldset>
+                        </div>
+
+                        <div className="gene-section">
+                            <fieldset className="terminal-fieldset">
+                                <legend>WALKER TURMITES</legend>
+                                <div className="gene-selector">
+                                    <p>Walker Gene</p>
                                     <div className="gene-options">
-                                        {BUILDER_GENES.map((option, optionIndex) => (
-                                            <label key={`builder-${index}-option-${optionIndex}`} className="gene-option">
+                                        {WALKER_GENES.map((option, optionIndex) => (
+                                            <label key={`walker-option-${optionIndex}`} className="gene-option">
                                                 <input
                                                     type="radio"
-                                                    name={`builder-${index}`}
-                                                    checked={gene === option}
-                                                    onChange={() => handleBuilderGeneChange(index, option)}
+                                                    name="walker-gene"
+                                                    checked={walkerGene === option}
+                                                    onChange={() => handleWalkerGeneChange(option)}
                                                 />
                                                 <span className="gene-name">Type {optionIndex + 1}</span>
                                             </label>
                                         ))}
                                     </div>
                                 </div>
-                            ))}
+                            </fieldset>
                         </div>
+                    </fieldset>
 
-                        <div className="gene-section">
-                            <h4>WALKER TURMITE</h4>
-                            <div className="gene-selector">
-                                <p>Select Walker Gene</p>
-                                <div className="gene-options">
-                                    {WALKER_GENES.map((option, optionIndex) => (
-                                        <label key={`walker-option-${optionIndex}`} className="gene-option">
-                                            <input
-                                                type="radio"
-                                                name="walker-gene"
-                                                checked={walkerGene === option}
-                                                onChange={() => handleWalkerGeneChange(option)}
-                                            />
-                                            <span className="gene-name">Type {optionIndex + 1}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="coordinates-section">
-                        <h3>TURMITE COORDINATES</h3>
+                    <fieldset className="terminal-fieldset">
+                        <legend>turmites coordiates</legend>
                         <div className="coordinates-list">
                             {coordinates.slice(0, 20).map((coord, index) => (
                                 <div key={index} className="coordinate-item">
@@ -273,18 +286,21 @@ const MintPage = () => {
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </fieldset>
 
-                    <div className="encryption-section">
-                        <h3>Encrypt & Mint</h3>
-                        <button onClick={handleGenerateProof}>Generate Poof</button>
-                        {proofCalldata ? <MintNFT calldata={proofCalldata} /> : "generate Poof"}
+                    <fieldset className="terminal-fieldset">
+                        <legend>zk proof generation</legend>
+                        <div className="encryption-section">
+                            <h3>Encrypt & Mint</h3>
+                            <button onClick={handleGenerateProof}>Generate Poof</button>
+                            {proofCalldata ? <MintNFT calldata={proofCalldata} /> : "generate Poof"}
 
-                    </div>
+                        </div>
+                    </fieldset>
                 </div>
 
             </div>
-        </div>
+        </div >
     );
 };
 

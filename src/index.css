@@ -43,7 +43,7 @@ canvas {
 .container {
     display: grid;
     grid-template-areas:
-        "menue menue menue menue menue sidebar sidebar sidebar"
+        "menue menue menue menue menue menue menue menue"
         "content content content content content sidebar sidebar sidebar"
         "footer footer footer footer footer footer footer footer";
     grid-template-columns: repeat(8, 1fr);
@@ -56,6 +56,13 @@ canvas {
     grid-area: menue;
     background-color: var(--primary-background);
 
+}
+
+.menue-list {
+    color: var(--primary-color);
+    display: 'inline-block';
+    padding: '8px 15px';
+    cursor: 'pointer';
 }
 
 .container>div.content {
@@ -81,6 +88,7 @@ button {
     padding: 5px 10px;
     cursor: pointer;
     font-family: 'Reactor7', system-ui, -apple-system, sans-serif;
+    font-size: 20px;
 }
 
 button:hover {
@@ -122,6 +130,7 @@ button:hover {
 }
 
 .mint-grid {
+    padding-top: 20px;
     display: grid;
     grid-template-columns: 1fr;
     gap: 20px;
@@ -145,20 +154,13 @@ button:hover {
 }
 
 
-.gene-selection,
-.coordinates-section {
-    background-color: var(--primary-background);
-    border: 1px solid var(--primary-color);
-    padding: 15px;
-}
-
 .gene-section {
     margin-bottom: 20px;
 }
 
 .gene-selector {
     margin-bottom: 10px;
-    padding-bottom: 10px;
+    padding-bottom: 15px;
     border-bottom: 1px dashed var(--primary-color);
 }
 
@@ -208,14 +210,10 @@ input[type="radio"] {
 }
 
 
-.color-selector {
-    margin-bottom: 20px;
-    padding: 10px;
-    border-bottom: 1px solid var(--primary-color);
-}
 
 .color-dropdown {
     display: flex;
+    padding-bottom: 15px;
     align-items: center;
 }
 
@@ -231,4 +229,53 @@ input[type="radio"] {
 .color-select option {
     background-color: var(--primary-background);
     color: var(--primary-color);
+}
+
+
+.menu-list {
+    margin: 0;
+    padding: 0;
+    display: flex;
+
+    /* or keep as default if you want vertical list */
+}
+
+.menu-list li {
+    display: inline-block;
+    padding: 8px 15px;
+    cursor: pointer;
+    color: var(--primary-color);
+
+}
+
+.menu-list li:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
+.menu-list li.active {
+    background-color: var(--primary-color);
+    color: var(--primary-background);
+}
+
+
+/* from here container styling */
+
+.terminal-container {
+    position: relative;
+    padding-bottom: 12px;
+}
+
+.terminal-fieldset {
+    border: 1px solid #ffffff;
+    /* border-style: dashed dotted; */
+    border-radius: 5px;
+
+    padding: 16px;
+}
+
+.terminal-fieldset legend {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 0 8px;
 }

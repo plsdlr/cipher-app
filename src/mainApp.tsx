@@ -72,13 +72,7 @@ const Menu = () => {
                 <li
                     key={item.id}
                     className={activeMenu === item.id ? 'active' : ''}
-                    onClick={() => handleMenuSelect(item.path)}
-                    style={{
-                        display: 'inline-block',
-                        padding: '8px 15px',
-                        cursor: 'pointer',
-                        color: activeMenu === item.id ? '#ffffff' : '#000000'
-                    }}
+                    onClick={() => handleMenuSelect(item.id)}
                 >
                     {item.label}
                 </li>
