@@ -377,6 +377,16 @@ label[for="private-key"] {
     padding-top: 20px;
 }
 
+
+.console-line {
+    padding-top: 4px;
+}
+
+.console-time {
+    padding-right: 10px;
+}
+
+
 .mode-selector {
     padding: 10px 0px 10px;
 }

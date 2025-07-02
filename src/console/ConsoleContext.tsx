@@ -88,7 +88,6 @@ export const ConsoleDisplay: React.FC = () => {
       <fieldset className="terminal-fieldset">
         <legend>TERMINAL</legend>
         <div className="console-header">
-          <h3>CONSOLE</h3>
           <button onClick={clearConsole} className="clear-btn">
             CLEAR
           </button>
@@ -100,7 +99,7 @@ export const ConsoleDisplay: React.FC = () => {
           ) : (
             messages.map((message) => (
               <div key={message.id} className="console-line">
-                <span className="console-time">[{formatTime(message.timestamp)}]</span>
+                <span className="console-time">~[{formatTime(message.timestamp)}]</span>
                 {message.source && (
                   <span className="console-source">{message.source}:</span>
                 )}

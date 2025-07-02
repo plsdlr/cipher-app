@@ -71,10 +71,11 @@ const MintPage = () => {
         y: Math.floor(Math.random() * 256)
     }));
 
+
     // State for coordinates
     const [coordinates, setCoordinates] = useState(generateRandomCoords());
 
-    const [proofCalldata, setProofCalldata] = useState({});
+    const [proofCalldata, setProofCalldata] = useState(null);
 
     // State for selected genes
     const [builderGenes, setBuilderGenes] = useState([
@@ -293,7 +294,24 @@ const MintPage = () => {
                         <div className="encryption-section">
                             <h3>Encrypt & Mint</h3>
                             <button onClick={handleGenerateProof}>Generate Poof</button>
-                            {proofCalldata ? <MintNFT calldata={proofCalldata} /> : "generate Poof"}
+                            {proofCalldata ?
+                                <div>
+                                    <div className="input-note">
+                                        Proof Generated! Public Inputs:
+                                        <br></br>
+                                        {proofCalldata["publivInput"][0].substr(0, 7)}...
+                                        <br></br>
+                                        {proofCalldata["publivInput"][1].substr(0, 7)}...
+                                        <br></br>
+                                        {proofCalldata["publivInput"][2].substr(0, 7)}...
+                                        <br></br>
+                                        {proofCalldata["publivInput"][3].substr(0, 7)}...
+                                        <br></br>
+                                        {proofCalldata["publivInput"][4].substr(0, 7)}...
+                                    </div>
+                                    <MintNFT calldata={proofCalldata} />
+                                </div>
+                                : ""}
 
                         </div>
                     </fieldset>
