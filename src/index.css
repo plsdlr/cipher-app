@@ -260,6 +260,35 @@ input[type="radio"] {
     accent-color: var(--primary-color);
 }
 
+input {
+    padding: 4px;
+    background-color: rgb(0, 12, 18);
+    color: var(--primary-color);
+}
+
+input::placeholder {
+    color: var(--primary-color);
+}
+
+input[type="text"] {
+    width: 100%;
+
+}
+
+input[type="password"] {
+    width: 100%;
+
+}
+
+.input-note {
+    margin-top: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    border: 1px solid #00ff1e
+}
+
+
 
 
 .color-dropdown {
@@ -307,6 +336,9 @@ input[type="radio"] {
 }
 
 
+
+
+
 /* from here container styling */
 
 
@@ -330,4 +362,16 @@ input[type="radio"] {
 
 .console-container {
     padding-top: 20px;
+}
+
+.mode-selector {
+    padding: 10px 0px 10px;
+}
+
+.mode-option {
+    padding-left: 20px;
+}
+
+.form-group {
+    padding-bottom: 15px;
 }
