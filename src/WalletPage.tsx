@@ -265,6 +265,12 @@ const WalletPage = () => {
     return `${hex.substring(0, 8)}...${hex.substring(hex.length - 8)}`;
   };
 
+  const formatByteArrayFull = (array: Uint8Array): string => {
+    return Array.from(array)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  };
+
   // Log wallet state changes
   useEffect(() => {
     if (publicKey) {
@@ -278,7 +284,7 @@ const WalletPage = () => {
   return (
     <div className="wallet-page">
       <fieldset className="terminal-fieldset">
-        <legend>CIPHER WALLET</legend>
+        <legend>Wallets</legend>
 
 
         <div className='wallet-borders'>
@@ -312,6 +318,9 @@ const WalletPage = () => {
               {privateKey && (
                 <div className="status-item private-key">
                   <strong>Private Key:</strong> {formatByteArray(privateKey)} (active in session)
+                  <button onClick={() => navigator.clipboard.writeText(formatByteArrayFull(privateKey))}>
+                    Copy Private Key to clipboard for manual backup
+                  </button>
                 </div>
               )}
             </div>
@@ -357,8 +366,8 @@ const WalletPage = () => {
               <form onSubmit={handleWalletSubmit} className="wallet-form">
                 <p className="form-description">
                   {walletMode === 'create'
-                    ? 'Generate a new wallet with cryptographic keys'
-                    : 'Import your wallet using a private key'}
+                    ? 'Generate a new wallet with cryptographic keys:'
+                    : 'Import your wallet using a private key:'}
                 </p>
 
                 {/* Show private key input only for import mode */}
@@ -380,7 +389,7 @@ const WalletPage = () => {
                       required
                     />
                     <div className="input-note">
-                      Your private key will be encrypted and backed up with your password.
+                      Your cipher private key will be encrypted with your password and backed up in persistant storage of your browser. Still back it up.
                     </div>
                   </div>
                 )}

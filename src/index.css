@@ -271,12 +271,12 @@ input::placeholder {
 }
 
 input[type="text"] {
-    width: 100%;
+    width: 90%;
 
 }
 
 input[type="password"] {
-    width: 100%;
+    width: 90%;
 
 }
 
@@ -288,7 +288,20 @@ input[type="password"] {
     border: 1px solid #00ff1e
 }
 
+label[for="password"] {
+    display: block;
+    padding-bottom: 10px;
+}
 
+label[for="confirm-password"] {
+    display: block;
+    padding-bottom: 10px;
+}
+
+label[for="private-key"] {
+    display: block;
+    padding-bottom: 10px;
+}
 
 
 .color-dropdown {
@@ -370,6 +383,7 @@ input[type="password"] {
 
 .mode-option {
     padding-left: 20px;
+
 }
 
 .form-group {
