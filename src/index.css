@@ -86,7 +86,7 @@ canvas {
 .container {
     display: grid;
     grid-template-areas:
-        "menue menue menue menue menue menue menue menue"
+        "menue menue menue menue cipher cipher cipher cipher"
         "content content content content content sidebar sidebar sidebar"
         "footer footer footer footer footer footer footer footer";
     grid-template-columns: repeat(8, 1fr);
@@ -119,6 +119,12 @@ canvas {
     border-left: 1px solid var(--primary-background);
 }
 
+.container>div.cipher {
+    font-family: 'Kiwi', system-ui, -apple-system, sans-serif;
+    padding-top: 5px;
+    font-size: 40px;
+}
+
 .container>div.footer {
     grid-area: footer;
     border-top: 1px solid var(--primary-background);
@@ -131,6 +137,8 @@ button {
     color: var(--primary-color);
     border: 1px solid var(--primary-color);
     padding: 5px 10px;
+    margin-top: 15px;
+    margin-bottom: 15px;
     cursor: pointer;
 }
 
@@ -148,15 +156,11 @@ button:hover {
 }
 
 .wallet-status {
-    background-color: var(--primary-background);
     color: var(--primary-color);
-    border-bottom: 1px solid var(--primary-color);
-    border-top: 1px solid var(--primary-color);
 }
 
 .action-section {
     color: var(--primary-color);
-    border-top: 1px solid var(--primary-color);
 }
 
 
@@ -198,6 +202,10 @@ button:hover {
 
 
 .gene-section {
+    margin-bottom: 20px;
+}
+
+.wallet-borders {
     margin-bottom: 20px;
 }
 

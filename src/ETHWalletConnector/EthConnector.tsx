@@ -25,16 +25,12 @@ function EthWallet() {
   }, [account.address])
 
   return (
-    <div className="eth-wallet-container">
-      <div className="account-status">
-        <h2>ETH ACCOUNT</h2>
-
-        <div className="account-info">
-          <div><strong>Status:</strong> {account.status}</div>
-          {account.address && <div><strong>Address:</strong> {account.address}</div>}
-          {account.chainId && <div><strong>Chain ID:</strong> {account.chainId}</div>}
-        </div>
-
+    <fieldset className="terminal-fieldset">
+      <legend>ETH WALLET</legend>
+      <>
+        <div><strong>Status:</strong> {account.status}</div>
+        {account.address && <div><strong>Address:</strong> {account.address}</div>}
+        {account.chainId && <div><strong>Chain ID:</strong> {account.chainId}</div>}
         {account.status === 'connected' && (
           <button
             type="button"
@@ -44,11 +40,11 @@ function EthWallet() {
             Disconnect
           </button>
         )}
-      </div>
+      </>
 
       {account.status !== 'connected' && (
-        <div className="connect-wallet">
-          <h2>CONNECT</h2>
+        <>
+          <p>connect wallet:</p>
           <div className="connector-buttons">
             {connectors.map((connector) => (
               <button
@@ -63,10 +59,10 @@ function EthWallet() {
           </div>
           {status !== 'idle' && <div className="connect-status">{status}</div>}
           {error && <div className="connect-error">{error.message}</div>}
-        </div>
+        </>
       )}
 
-    </div>
+    </fieldset>
   )
 }
 

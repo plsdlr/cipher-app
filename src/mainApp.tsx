@@ -90,6 +90,10 @@ function MainApp() {
                     <Menu />
                 </div>
 
+                <div className="cipher">
+                    Cipher V.01
+                </div>
+
                 <div className="content">
                     <MainContent />
                 </div>
