@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useReadContract } from 'wagmi';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi.ts';
@@ -23,10 +23,9 @@ const ViewPage = () => {
         args: [tokenId]
     });
 
-    // Use our custom hook to decrypt the data
-    // const { data: decryptedData, isLoading: isDecrypting, error: decryptError } = useDecryptTurmite(
-    //     encryptedNote as [bigint, bigint, bigint, bigint, bigint]
-    // );
+    // useEffect(() => {
+    //     console.log()
+    // }) 
 
     const { data: decryptedToken, isLoading: isDecrypting, error: decryptError } = useDecryptToken(tokenId);
 
@@ -47,29 +46,42 @@ const ViewPage = () => {
 
     return (
         <div>
-            <h1>VIEW PAGE</h1>
-            Cipher #{tokenId}
+            <fieldset className="terminal-fieldset">
+                <legend>View Token</legend>
+                <h1>Cipher #{tokenId}</h1>
 
-            {decryptedToken ? (
-                <div>
-                    <CipherWrapperIframe
-                        coordinates={decryptedToken.decryptedData.positions}
-                        builderTurmites={decryptedToken.decryptedData.rules.slice(0, 3)}
-                        walkerTurmites={[decryptedToken.decryptedData.rules[3]]}
-                        speed={1}
-                        chaosNumbers={decryptedToken.decryptedData.additionalValues}
-                    />
+                {decryptedToken ? (
+                    <div>
+                        <div className='view-token'>
 
-                    <div className="turmite-details">
-                        <h3>Turmite Details</h3>
-                        <p>Color Palette: {decryptedToken.decryptedData.additionalValues[1]}</p>
-                        <p>Chaos Factor: {decryptedToken.decryptedData.additionalValues[0]}</p>
+                            <CipherWrapperIframe
+                                coordinates={decryptedToken.decryptedData.positions}
+                                builderTurmites={decryptedToken.decryptedData.rules.slice(0, 3)}
+                                walkerTurmites={[decryptedToken.decryptedData.rules[3]]}
+                                speed={1}
+                                chaosNumbers={decryptedToken.decryptedData.additionalValues}
+                            />
+                        </div>
+
+                        <fieldset className="terminal-fieldset">
+                            <legend>Cipher Details</legend>
+                            <div className="Cipher-Details">
+                                <p>Color Palette: {decryptedToken.decryptedData.additionalValues[1]}</p>
+                                <p>Walker Rule: {decryptedToken.decryptedData.rules[3]}</p>
+                                <p>Builder Rule: {decryptedToken.decryptedData.rules[0]},
+                                    {decryptedToken.decryptedData.rules[1]},
+                                    {decryptedToken.decryptedData.rules[2]}
+                                </p>
+
+                            </div>
+                        </fieldset>
                     </div>
-                </div>
-            ) : (
-                <div>No data available</div>
-            )}
-        </div>
+                ) : (
+                    <div>No data available</div>
+                )
+                }
+            </fieldset >
+        </div >
     );
 };
 

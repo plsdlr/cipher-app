@@ -428,3 +428,8 @@ td {
 .send-btn {
     margin-right: 15px;
 }
+
+.view-token {
+    width: 70%;
+    padding-bottom: 20px;
+}
