@@ -30,7 +30,6 @@ const MainContent = () => {
             <Route path="/mint" element={<MintPage />} />
             <Route path="/view" element={<ViewList />} />
             <Route path="/view/:tokenId" element={<ViewPage />} />
-            <Route path="/send" element={<div>Send Page Coming Soon</div>} />
             <Route path="/market" element={<div>Market Page Coming Soon</div>} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -56,9 +55,8 @@ const Menu = () => {
     const menuItems = [
         { id: 'home', label: 'HOME', path: '/' },
         { id: 'mint', label: 'MINT', path: '/mint' },
-        { id: 'view', label: 'VIEW', path: '/view' },
-        { id: 'send', label: 'SEND', path: '/send' },
-        { id: 'market', label: 'MARKET', path: '/market' }
+        { id: 'view', label: 'VIEW / SEND', path: '/view' },
+        { id: 'market', label: 'NIGHTMARKET', path: '/market' }
     ];
 
     // Function to handle menu item selection

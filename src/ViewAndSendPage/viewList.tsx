@@ -307,136 +307,48 @@ const ViewList = () => {
     const tokenList = tokenIds || [];
 
     return (
-        <div className="view-list-container">
-            <h1>VIEW PAGE</h1>
+        <>
+            <fieldset className="terminal-fieldset">
+                <legend>View / Send</legend>
+                <div className="view-list-container">
 
-            {tokenList.length === 0 ? (
-                <div className="no-tokens">
-                    <p>You don't own any Turmite NFTs yet.</p>
-                </div>
-            ) : (
-                <>
-                    <table className="token-table">
-                        <thead>
-                            <tr>
-                                <th>Token ID</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tokenList.map((tokenId) => (
-                                <tr
-                                    key={tokenId.toString()}
-                                    className="token-row"
-                                    onClick={() => handleTokenClick(tokenId)}
-                                >
-                                    <td>CIPHER #{tokenId.toString()}</td>
-                                    <td>
-                                        <button className="view-btn">View</button>
-                                        <button
-                                            className="send-btn"
-                                            onClick={(e) => handleSendClick(e, tokenId)}
-                                        >
-                                            Send
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    {/* Dynamic Send Form */}
-                    {selectedTokenForSend && (
-                        <div className="send-form-container">
-                            <form className="send-form" onSubmit={handleSendSubmit}>
-                                <h3>Send CIPHER #{selectedTokenForSend}</h3>
-
-                                {/* Transaction Status Display */}
-                                {transactionMessage && (
-                                    <div className={`transaction-status ${transactionStatus}`}>
-                                        <div className="status-indicator">
-                                            {transactionStatus === 'pending' && <div className="spinner"></div>}
-                                            {transactionStatus === 'preparing' && <div className="spinner"></div>}
-                                            {transactionStatus === 'success' && '✓'}
-                                            {transactionStatus === 'error' && '✗'}
-                                        </div>
-                                        <span className="status-message">{transactionMessage}</span>
-                                        {hash && (
-                                            <div className="transaction-hash">
-                                                <a
-                                                    href={`https://sepolia.etherscan.io/tx/${hash}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="hash-link"
-                                                >
-                                                    View on Etherscan
-                                                </a>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                <div className="form-group">
-                                    <label htmlFor="receiver-address">Receiver Address:</label>
-                                    <input
-                                        id="receiver-address"
-                                        type="text"
-                                        placeholder="0x..."
-                                        value={receiverAddress}
-                                        onChange={handleReceiverAddressChange}
-                                        required
-                                        className={addressError ? 'error' : ''}
-                                        disabled={isWritePending || transactionStatus === 'preparing'}
-                                    />
-                                    {addressError && (
-                                        <div className="error-message">{addressError}</div>
-                                    )}
-                                    {isLoadingKeys && (
-                                        <div className="loading-message">Loading recipient's public key...</div>
-                                    )}
-                                    {keyError && (
-                                        <div className="error-message">Error fetching recipient's public key</div>
-                                    )}
-                                    {calculatedEncryptionKey && transactionStatus !== 'preparing' && (
-                                        <div className="success-message">✓ Encryption key calculated</div>
-                                    )}
-                                </div>
-                                <div className="form-actions">
-                                    <button
-                                        type="submit"
-                                        className="confirm-send-btn"
-                                        disabled={
-                                            !calculatedEncryptionKey ||
-                                            !!addressError ||
-                                            isLoadingKeys ||
-                                            isWritePending ||
-                                            transactionStatus === 'preparing' ||
-                                            !generatedProof
-                                        }
-                                    >
-                                        {isWritePending
-                                            ? 'Sending...'
-                                            : transactionStatus === 'preparing'
-                                                ? 'Preparing...'
-                                                : 'Confirm Send'
-                                        }
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="cancel-send-btn"
-                                        onClick={handleCancelSend}
-                                        disabled={isWritePending}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
+                    {tokenList.length === 0 ? (
+                        <div className="no-tokens">
+                            <p>You don't own any Turmite NFTs yet.</p>
                         </div>
+                    ) : (
+                        <>
+                            <table className="token-table">
+                                <thead>
+                                    <tr>
+                                        <th>Token ID</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {tokenList.map((tokenId) => (
+                                        <tr
+                                            key={tokenId.toString()}
+                                            onClick={() => handleTokenClick(tokenId)}
+                                        >
+                                            <td>CIPHER #{tokenId.toString()}</td>
+                                            <td>
+                                                <button className="view-btn">View</button>
+                                                <button
+                                                    className="send-btn"
+                                                    onClick={(e) => handleSendClick(e, tokenId)}
+                                                >
+                                                    Send
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </>
                     )}
-                </>
-            )}
 
-            <style jsx>{`
+                    <style jsx>{`
                 .error {
                     border-color: #ff0000;
                 }
@@ -538,7 +450,103 @@ const ViewList = () => {
                     opacity: 0.8;
                 }
             `}</style>
-        </div>
+                </div>
+            </fieldset >
+            {/* Dynamic Send Form */}
+            {selectedTokenForSend && (
+                <div className='console-container'>
+                    <fieldset className="terminal-fieldset">
+                        <legend>Send Cipher</legend>
+                        <div className="send-form-container">
+                            <form className="send-form" onSubmit={handleSendSubmit}>
+                                <h3>Send CIPHER #{selectedTokenForSend}</h3>
+
+                                {/* Transaction Status Display */}
+                                {transactionMessage && (
+                                    <div className={`transaction-status ${transactionStatus}`}>
+                                        <div className="status-indicator">
+                                            {transactionStatus === 'pending' && <div className="spinner"></div>}
+                                            {transactionStatus === 'preparing' && <div className="spinner"></div>}
+                                            {transactionStatus === 'success' && '✓'}
+                                            {transactionStatus === 'error' && '✗'}
+                                        </div>
+                                        <span className="status-message">{transactionMessage}</span>
+                                        {hash && (
+                                            <div className="transaction-hash">
+                                                <a
+                                                    href={`https://sepolia.etherscan.io/tx/${hash}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="hash-link"
+                                                >
+                                                    View on Etherscan
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="form-group">
+                                    <label htmlFor="receiver-address">Receiver Address:</label>
+                                    <input
+                                        id="receiver-address"
+                                        type="text"
+                                        placeholder="0x..."
+                                        value={receiverAddress}
+                                        onChange={handleReceiverAddressChange}
+                                        required
+                                        className={addressError ? 'error' : ''}
+                                        disabled={isWritePending || transactionStatus === 'preparing'}
+                                    />
+                                    {addressError && (
+                                        <div className="error-message">{addressError}</div>
+                                    )}
+                                    {isLoadingKeys && (
+                                        <div className="loading-message">Loading recipient's public key...</div>
+                                    )}
+                                    {keyError && (
+                                        <div className="error-message">Error fetching recipient's public key</div>
+                                    )}
+                                    {calculatedEncryptionKey && transactionStatus !== 'preparing' && (
+                                        <div className="success-message">✓ Encryption key calculated</div>
+                                    )}
+                                </div>
+                                <div className="form-actions">
+                                    <button
+                                        type="submit"
+                                        className="confirm-send-btn"
+                                        disabled={
+                                            !calculatedEncryptionKey ||
+                                            !!addressError ||
+                                            isLoadingKeys ||
+                                            isWritePending ||
+                                            transactionStatus === 'preparing' ||
+                                            !generatedProof
+                                        }
+                                    >
+                                        {isWritePending
+                                            ? 'Sending...'
+                                            : transactionStatus === 'preparing'
+                                                ? 'Preparing...'
+                                                : 'Confirm Send'
+                                        }
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="cancel-send-btn"
+                                        onClick={handleCancelSend}
+                                        disabled={isWritePending}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </fieldset>
+                </div>
+            )}
+        </>
+
     );
 };
 

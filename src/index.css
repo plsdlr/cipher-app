@@ -110,6 +110,9 @@ canvas {
 
 .container>div.content {
     grid-area: content;
+    padding-top: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 .container>div.sidebar {
@@ -173,7 +176,6 @@ button:hover {
 .mint-page {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
 }
 
 .mint-grid {
@@ -344,7 +346,7 @@ label[for="private-key"] {
 }
 
 .menu-list li.active {
-    background-color: var(--primary-color);
+    background-color: ;
     color: var(--primary-background);
 }
 
@@ -357,7 +359,7 @@ label[for="private-key"] {
 
 
 .terminal-fieldset {
-    border: 1px solid #ffffff;
+    border: 1px solid var(--primary-color);
     /* border-style: dashed dotted; */
     border-radius: 5px;
     background-color: rgb(0, 12, 18);
@@ -398,4 +400,31 @@ label[for="private-key"] {
 
 .form-group {
     padding-bottom: 15px;
+}
+
+.token-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+
+tr {
+    text-align: left;
+}
+
+th {
+    padding-bottom: 15px;
+}
+
+td {
+    text-align: left;
+    border-top: 1px solid var(--primary-color);
+}
+
+.view-btn {
+    margin-right: 15px;
+}
+
+.send-btn {
+    margin-right: 15px;
 }
