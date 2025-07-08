@@ -3,6 +3,10 @@ import { useParams } from 'react-router-dom';
 import CipherWrapperIframe from '../canvasWrapper.tsx';
 import { useDecryptToken } from '../ViewAndSendPage/useDecryptToken.ts';
 import { ConsoleProvider, ConsoleDisplay, useConsole } from '../console/ConsoleContext.tsx';
+import { useWallet } from '../cipherWallet/cipherWallet.tsx';
+import { generateProofTurmite } from '../ProofSystem/ProofSystem.tsx'
+import encodeAll from '../utils/encodingUtils.js';
+import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from '../utils/encodingUtils.js';
 
 // Define turmite gene constants (same as Mint.tsx)
 const BUILDER_GENES = [
@@ -50,6 +54,15 @@ const EditTokenPage = () => {
     const [color, setColor] = useState<number>(0);
     const [chaosNumbers, setChaosNumbers] = useState<number[]>([0, 0, 0]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const [proofCalldata, setProofCalldata] = useState(null);
+
+    const {
+        publicKey,
+        privateKey,
+        generateEncryptionKey,
+        poseidonEncryption,
+        secretScalar
+    } = useWallet();
 
     // Load data from decrypted token when available
     useEffect(() => {
@@ -133,6 +146,28 @@ const EditTokenPage = () => {
             addMessage("Reset to original token data", "info");
         }
     };
+
+
+
+    const handleGenerateProof = async () => {
+        if (publicKey && privateKey && secretScalar) {
+            var allRules = builderGenes.concat(walkerGene)
+            const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers));
+            // console.log(encoded)
+            const newEncryptionKey = generateEncryptionKey();
+            const currentTimestamp = timeStamp()
+            const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
+            // console.log(cipherText)
+            console.log(publicKey[0]);
+            console.log(typeof (publicKey));
+
+            // Include color in the proof generation
+            const proof = await generateProofTurmite(privateKey, publicKey, encoded, secretScalar, cipherText, newEncryptionKey, currentTimestamp);
+            setProofCalldata(proof.calldata);
+        } else {
+            console.log("not registerd")
+        }
+    }
 
     // Render loading state
     if (isDecrypting) {
@@ -279,14 +314,27 @@ const EditTokenPage = () => {
                     <fieldset className="terminal-fieldset">
                         <legend>ACTIONS</legend>
                         <div className="encryption-section">
-                            <p>Editing complete! Future actions could include:</p>
-                            <ul>
-                                <li>• Generate new proof with modified data</li>
-                                <li>• Mint new NFT with updated parameters</li>
-                                <li>• Save modifications locally</li>
-                                <li>• Export configuration</li>
-                            </ul>
-                            <p><em>Onchain actions will be implemented in future versions.</em></p>
+                            <h3>Encrypt & Mint</h3>
+                            <button onClick={handleGenerateProof}>Generate Poof</button>
+                            {proofCalldata ?
+                                <div>
+                                    <div className="input-note">
+                                        Proof Generated! Public Inputs:
+                                        <br></br>
+                                        {proofCalldata["publivInput"][0].substr(0, 7)}...
+                                        <br></br>
+                                        {proofCalldata["publivInput"][1].substr(0, 7)}...
+                                        <br></br>
+                                        {proofCalldata["publivInput"][2].substr(0, 7)}...
+                                        <br></br>
+                                        {proofCalldata["publivInput"][3].substr(0, 7)}...
+                                        <br></br>
+                                        {proofCalldata["publivInput"][4].substr(0, 7)}...
+                                    </div>
+                                    {/* <MintNFT calldata={proofCalldata} /> */}
+                                </div>
+                                : ""}
+
                         </div>
                     </fieldset>
                 </div>
