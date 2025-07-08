@@ -6,6 +6,7 @@ import MintPage from './MintingPage/Mint';
 import ViewList from './ViewAndSendPage/viewList';
 import ViewPage from './ViewAndSendPage/view'; // Import the TokenView component
 import { ConsoleProvider, ConsoleDisplay, useConsole } from './console/ConsoleContext.tsx';
+import EditTokenPage from './ReCipher/recipher.tsx'
 
 // Main content component that handles routing
 const MainContent = () => {
@@ -30,11 +31,15 @@ const MainContent = () => {
             <Route path="/mint" element={<MintPage />} />
             <Route path="/view" element={<ViewList />} />
             <Route path="/view/:tokenId" element={<ViewPage />} />
+            <Route path="/recipher/:tokenId" element={<EditTokenPage />} />
             <Route path="/market" element={<div>Market Page Coming Soon</div>} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
 };
+
+
+// 
 
 // Menu component
 const Menu = () => {

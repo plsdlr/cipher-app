@@ -7,6 +7,7 @@ import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 import { generateProofTransfer } from '../ProofSystem/ProofSystem.tsx'
 import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from '../utils/encodingUtils.js';
 
+
 // Helper function to validate Ethereum address
 const isValidEthAddress = (address: string): boolean => {
     // Basic format check: starts with 0x and has 42 characters total
@@ -208,6 +209,11 @@ const ViewList = () => {
         navigate(`/view/${tokenId}`);
     };
 
+    const handleReCipher = (e, tokenId) => {
+        e.stopPropagation(); // Prevent the row click event from firing
+        navigate(`/recipher/${tokenId}`);
+    };
+
     // Handle showing the send form for a specific token
     const handleSendClick = (e, tokenId) => {
         e.stopPropagation(); // Prevent the row click event from firing
@@ -340,6 +346,13 @@ const ViewList = () => {
                                                 >
                                                     Send
                                                 </button>
+                                                <button
+                                                    className="send-btn"
+                                                    onClick={(e) => handleReCipher(e, tokenId)}
+                                                >
+                                                    ReCipher
+                                                </button>
+
                                             </td>
                                         </tr>
                                     ))}
