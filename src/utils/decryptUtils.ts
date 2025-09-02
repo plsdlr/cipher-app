@@ -43,6 +43,10 @@ export const decryptTurmiteData = async (
         const slot2 = decodeSlot2_withPadding(decrypted[1]);
         const slot3 = decodeSlot3_withPadding(decrypted[2]);
 
+        console.log(decrypted[0]);
+        console.log(decrypted[1]);
+        console.log(decrypted[2]);
+
         // Combine data from all slots
         const allPositions = slot1.positions.concat(slot2.positions).concat(slot3.positions);
         const allRules = slot2.rules.concat(slot3.rules);

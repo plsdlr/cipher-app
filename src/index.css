@@ -77,9 +77,7 @@ body {
 
 canvas {
     image-rendering: pixelated;
-    /* Chrome */
     image-rendering: crisp-edges;
-    /* Firefox */
 }
 
 /* Main container - only grid essentials */

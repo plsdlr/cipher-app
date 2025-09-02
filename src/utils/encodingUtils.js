@@ -103,9 +103,6 @@ function decodeSlot3(hexString) {
         value2: hexToByte(hexString[6] + hexString[7]),
         value1: hexToByte(hexString[8] + hexString[9])
     }
-    //console.log(additionalValues1)
-    // hexToByte(hexString[4] + hexString[5])
-    //console.log(additionalValues1)
     return { positions: positions, rules: rules, additionalValues: additionalValues1 }
 }
 

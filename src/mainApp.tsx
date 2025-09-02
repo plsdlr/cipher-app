@@ -94,7 +94,7 @@ function MainApp() {
                 </div>
 
                 <div className="cipher">
-                    Cipher V.01
+                    Cipher V0.1
                 </div>
 
                 <div className="content">

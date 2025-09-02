@@ -8,6 +8,9 @@ import { generateProofTurmite } from '../ProofSystem/ProofSystem.tsx'
 import encodeAll from '../utils/encodingUtils.js';
 import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from '../utils/encodingUtils.js';
 
+///to do: implement market in solidity + implement cipher function in solidity contract
+
+
 // Define turmite gene constants (same as Mint.tsx)
 const BUILDER_GENES = [
     "ff0800ff0201ff0800000001",
