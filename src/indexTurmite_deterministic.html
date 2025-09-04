@@ -97,6 +97,14 @@
             // This ensures it fills the container while maintaining aspect ratio
         }
 
+        // function setSinglePixelColor(x, y, pixel, r, g, b) {
+        //     const index = (y * canvas.width + x) * 4;
+        //     pixel[index] = r;
+        //     pixel[index + 1] = g;
+        //     pixel[index + 2] = b;
+        //     return pixel;
+        // }
+
         function drawOnIndices(pixels, indices, r, g, b) {
             for (let i = 0; i < indices.length; i++) {
                 pixels[indices[i]] = r;
@@ -545,25 +553,122 @@
             return rectangles;
         }
 
+        /// svg convert function here
+
+        function redBlackCanvasToSVG(canvas) {
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Create SVG element with black background
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+            // Add black background
+            const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            background.setAttribute('width', width);
+            background.setAttribute('height', height);
+            background.setAttribute('x', 0);
+            background.setAttribute('y', 0);
+            background.setAttribute('fill', 'black');
+            svg.appendChild(background);
+
+            // Get canvas image data
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+
+            // Check for red pixels and add them to SVG
+            // Red is roughly (255, 0, 0) in RGB
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+
+                    // Check if pixel is red (allowing some tolerance)
+                    if (r > 0) {
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', x);
+                        rect.setAttribute('y', y);
+                        rect.setAttribute('width', 1);
+                        rect.setAttribute('height', 1);
+                        rect.setAttribute('fill', `rgb(${r}, ${g}, ${b})`);
+                        svg.appendChild(rect);
+                    }
+                }
+            }
+
+            // Convert SVG to string
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svg);
+
+            return svgString;
+        }
+
+
+        function exportAndDownloadSVG(canvas, writefunction) {
+            const svgString = writefunction(canvas);
+
+            // Create a Blob from the SVG string
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            // Create a temporary link element
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = 'cipher.svg'; // Name of the downloaded file
+            downloadLink.style.display = 'none';     // Hide the link
+            document.body.appendChild(downloadLink);
+
+            // Trigger download and clean up
+            downloadLink.click();
+
+            // Clean up: remove link and revoke object URL after download starts
+            setTimeout(() => {
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+
+
+
         function main(turmites) {
             var pixelPusher = [];
+            var step = 0;
+            //var turmites = [];
 
-            // Fixed timestep configuration - smaller timestep for smoother updates
-            const FIXED_TIMESTEP = 8.333; // 120 logical FPS (8.333ms per step)
-            let lastTime = 0;
-            let simulationTime = 0;
+            var lastTurmiteUpdate = 0;
+            var lastPusherUpdate = 0;
+            var lastCleanerUpdate = 0;
 
-            // Convert frame-based intervals - making turmites faster
-            const TURMITE_UPDATE_INTERVAL = FIXED_TIMESTEP * 0.8; // Every half step (2x faster)
-            const PUSHER_UPDATE_INTERVAL = FIXED_TIMESTEP * 8;    // Every 9 steps (maintains 9 frame ratio)
-            const CLEANER_UPDATE_INTERVAL = FIXED_TIMESTEP * 0.7;   // Every step (was every frame)
+            // // 1
+            // const FRAMES_PER_TURMITE_UPDATE = 1;    // Update every 50ms (faster)
+            // // 100
+            // const FRAMES_PER_PUSHER_UPDATE = 100;    // Update every 200ms (slower)
+            // //20
+            // const FRAMES_PER_CLEANER_UPDATE = 15;
+            // //50
+            // const RECTANGLE_PUSHER_NUMBER = 30;
 
-            let lastTurmiteUpdate = 0;
-            let lastPusherUpdate = 0;
-            let lastCleanerUpdate = 0;
+            // const newcleaner = new Cleaner(150, 0);
 
+
+
+            // 1
+            const FRAMES_PER_TURMITE_UPDATE = 1;    // Update every 50ms (faster)
+            // 100
+            const FRAMES_PER_PUSHER_UPDATE = 11;    // 9
+            //20
+            const FRAMES_PER_CLEANER_UPDATE = 1;
+            //50
             const RECTANGLE_PUSHER_NUMBER = 30;
+
             const newcleaner = new Cleaner(150, 0);
+
 
             var listofSelections = generateRandomRectangles(canvas, RECTANGLE_PUSHER_NUMBER);
             var choice = ["up", "down", "left", "right", "downRight", "downLeft", "upLeft", "upRight"];
@@ -573,77 +678,78 @@
                 pixelPusher.push(pusher);
             });
 
-            function animate(currentTime) {
-                // Calculate delta time
-                const deltaTime = currentTime - lastTime;
+            function animate() {
+                //console.log(timestamp)
+                // if (timestamp > 35000 & timestamp < 35020) {
+                //   console.log("geth ehr")
+                //   exportAndDownloadSVG(canvas, redBlackCanvasToSVG);
+                //   //console.log(exportSVG);
 
-                // Only update if we've passed the fixed timestep
-                if (deltaTime >= FIXED_TIMESTEP) {
-                    simulationTime += FIXED_TIMESTEP;
+                // }
 
-                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    let currentPixels = imageData.data;
+                step++;
 
-                    // Turmite updates
-                    if (simulationTime - lastTurmiteUpdate >= TURMITE_UPDATE_INTERVAL) {
-                        turmites.forEach(turmite => {
-                            currentPixels = turmite.step(currentPixels);
-                        })
-                        lastTurmiteUpdate = simulationTime;
-                    }
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                let currentPixels = imageData.data;
 
-                    // Pixel pushers update
-                    if (simulationTime - lastPusherUpdate >= PUSHER_UPDATE_INTERVAL) {
-                        pixelPusher = pixelPusher.filter(pusher => {
-                            return pusher.currentSteps < pusher.steps;
-                        });
-
-                        if (pixelPusher.length == 0) {
-                            var listofSelections = generateRandomRectangles(canvas, RECTANGLE_PUSHER_NUMBER);
-                            var choice = ["up", "down", "left", "right", "downRight", "downLeft", "upLeft", "upRight"];
-                            var choice2 = [2, 20, 30, 40];
-
-                            listofSelections.forEach(rect => {
-                                const pusher = new PixelPusher(rect, choice[Math.floor(costomRandom() * choice.length)], choice2[Math.floor(costomRandom() * choice2.length)]);
-                                pixelPusher.push(pusher)
-                            });
-                        }
-                        pixelPusher.forEach(pusher => {
-                            const result = pusher.shift(currentPixels, canvas.width);
-                            currentPixels = result.pixels;
-                        });
-                        lastPusherUpdate = simulationTime;
-                    }
-
-                    imageData.data.set(currentPixels);
-                    ctx.putImageData(imageData, 0, 0);
-
-                    // Hash canvas every few frames to detect divergence
-                    // if (Math.floor(simulationTime/FIXED_TIMESTEP) % 5 === 0) {
-                    //     let hash = 0;
-                    //     for (let i = 0; i < currentPixels.length; i += 4) {
-                    //         hash = ((hash << 5) - hash + currentPixels[i]) & 0xffffffff;
-                    //     }
-                    //     console.log(`Webapp Frame ${Math.floor(simulationTime/FIXED_TIMESTEP)}: Canvas hash = ${hash}`);
-                    // }
-
-                    // Cleaner update
-                    if (simulationTime - lastCleanerUpdate >= CLEANER_UPDATE_INTERVAL) {
-                        newcleaner.step(currentPixels);
-                        lastCleanerUpdate = simulationTime;
-                    }
-
-                    lastTime = currentTime;
+                // Turmite updates more frequently
+                if (step % FRAMES_PER_TURMITE_UPDATE === 0) {
+                    turmites.forEach(turmite => {
+                        currentPixels = turmite.step(currentPixels);
+                    })
+                    lastTurmiteUpdate = step;
                 }
 
-                requestAnimationFrame(animate);
+                // Pixel pushers update less frequently
+                if (step % FRAMES_PER_PUSHER_UPDATE === 0) {
+                    pixelPusher = pixelPusher.filter(pusher => {
+                        return pusher.currentSteps < pusher.steps;
+                    });
+
+                    if (pixelPusher.length == 0) {
+                        var listofSelections = generateRandomRectangles(canvas, RECTANGLE_PUSHER_NUMBER);
+                        var choice = ["up", "down", "left", "right", "downRight", "downLeft", "upLeft", "upRight"];
+                        var choice2 = [2, 20, 30, 40]; //2, 20, 30, 40
+
+                        listofSelections.forEach(rect => {
+                            // You can create a PixelPusher for each rectangle
+                            const pusher = new PixelPusher(rect, choice[Math.floor(costomRandom() * choice.length)], choice2[Math.floor(costomRandom() * choice2.length)]);
+                            pixelPusher.push(pusher)
+                        });
+                    }
+                    pixelPusher.forEach(pusher => {
+                        const result = pusher.shift(currentPixels, canvas.width);
+                        currentPixels = result.pixels;
+                    });
+                    lastPusherUpdate = step;
+                }
+
+
+                imageData.data.set(currentPixels);
+                ctx.putImageData(imageData, 0, 0);
+
+                if (step % FRAMES_PER_CLEANER_UPDATE === 0) {
+                    newcleaner.step(currentPixels);
+                    lastCleanerUpdate = step;
+
+                }
+
             }
 
-            // Start the animation
-            animate(0);
+            async function runAnimation() {
+                while (true) {
+                    animate();
+                    //16
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+            }
+
+            runAnimation();
+
         }
 
         ///setup from here
+
 
         // Configuration object that will be updated by postMessage
         const config = {
@@ -653,6 +759,14 @@
             builderTurmites: null,
             chaosNumbers: null
         };
+
+
+
+        // const builders = ["ff0800ff0201ff0800000001", "ff0801000200000800ff0800", "ff0201000201ff0400000000", "ff0201000801ff0000000000", "ff0201000800ff0000000801", "ff0001000001ff0801000000", "ff0001000201ff0000000800"]
+
+        // const crawler = ["ff0000ff0801000000000200", "ff0000ff0801000201000000", "ff0000ff0801000201000200", "ff0000ff0801ff0400000200", "ff0001000200000200000200", "ff0001000200000200ff0000", "ff0001000801ff0000ff0200", "ff0001ff0201ff0000ff0800"]
+
+        // var allturmites = [];
 
         // 1. Initial random declaration (keep this)
         let random; // Don't initialize with a default value yet
@@ -727,7 +841,24 @@
                 buildStart();
             }
 
+            // ADD THIS NEW CASE:
+            if (event.data.type === 'EXPORT_SVG') {
+                console.log('Export SVG requested');
+                const svgString = redBlackCanvasToSVG(canvas);
+
+                // Send SVG data back to parent
+                window.parent.postMessage({
+                    type: 'SVG_READY',
+                    svgData: svgString
+                }, '*');
+            }
         });
+
+        // Start the animation when 
+        // if (config.walkerTurmites.length > 0) {
+        //     buildStart();
+        // }
+
 
 
     </script>
