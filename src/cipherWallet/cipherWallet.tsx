@@ -58,8 +58,7 @@ const keyGeneration = (): [PrivateKey, PublicKey] => {
 };
 
 const generateSessionEncryptionKey = (): string => {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
+  const array = crypto.getRandomValues(32);
   return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
 };
 
@@ -109,7 +108,7 @@ const genEcdhSharedKey = (privKey: PrivateKey, pubKey: PublicKey): EncryptionKey
 
 // Backup/restore functions
 async function deriveKeyFromPassword(password: string, salt?: Uint8Array): Promise<{ key: CryptoKey, salt: Uint8Array }> {
-  const useSalt = salt || crypto.getRandomValues(16);
+  const useSalt = salt ? new Uint8Array(salt) : new Uint8Array(crypto.getRandomValues(16));
   const passwordBuffer = encoder.encode(password);
   const keyMaterial = await window.crypto.subtle.importKey(
     'raw',
@@ -137,12 +136,12 @@ async function deriveKeyFromPassword(password: string, salt?: Uint8Array): Promi
 
 async function encryptPrivateKey(privateKey: PrivateKey, password: string): Promise<{ encryptedData: string, salt: string }> {
   const { key, salt } = await deriveKeyFromPassword(password);
-  const iv = crypto.getRandomValues(12);
+  const iv = new Uint8Array(crypto.getRandomValues(12));
 
   const encryptedBuffer = await window.crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
     key,
-    privateKey
+    new Uint8Array(privateKey)
   );
 
   const encryptedArray = new Uint8Array(iv.length + encryptedBuffer.byteLength);
