@@ -66,7 +66,7 @@ const MintPage = () => {
     const { addMessage } = useConsole();
 
     // Generate random coordinates between 0 and 256
-    const generateRandomCoords = () => Array(20).fill().map(() => ({
+    const generateRandomCoords = () => Array(20).fill(0).map(() => ({
         x: Math.floor(Math.random() * 256),
         y: Math.floor(Math.random() * 256)
     }));
@@ -91,7 +91,7 @@ const MintPage = () => {
 
 
     // Handle coordinate input changes
-    const handleCoordinateChange = (index, axis, value) => {
+    const handleCoordinateChange = (index: number, axis: 'x' | 'y', value: string) => {
         const newCoordinates = [...coordinates];
         // Ensure value is a number and within canvas bounds (0-256)
         const numValue = parseInt(value) || 0;
@@ -108,7 +108,7 @@ const MintPage = () => {
     };
 
     // Handle color selection change
-    const handleColorChange = (e) => {
+    const handleColorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedColor = parseInt(e.target.value);
         setChaosNumbers([0, selectedColor, 0]);
         setColor(selectedColor);
@@ -145,7 +145,7 @@ const MintPage = () => {
     }, []);
 
     // Handle builder gene selection
-    const handleBuilderGeneChange = (index, gene) => {
+    const handleBuilderGeneChange = (index: number, gene: string) => {
         const newBuilderGenes = [...builderGenes];
         newBuilderGenes[index] = gene;
         setBuilderGenes(newBuilderGenes);
@@ -153,7 +153,7 @@ const MintPage = () => {
     };
 
     // Handle walker gene selection
-    const handleWalkerGeneChange = (gene) => {
+    const handleWalkerGeneChange = (gene: string) => {
         setWalkerGene(gene);
         addMessage("new walker gene: " + String(gene), "info")
     };
