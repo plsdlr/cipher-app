@@ -1,5 +1,6 @@
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi';
 import { TransactionStatus, TransactionButton } from '../components';
+import { type ProofCalldata } from '../ProofSystem/ProofSystem.tsx';
 
 import {
     type BaseError,
@@ -8,9 +9,11 @@ import {
     useWriteContract
 } from 'wagmi';
 
+interface MintNFTProps {
+    calldata: ProofCalldata;
+}
 
-
-export function MintNFT({ calldata }) {
+export function MintNFT({ calldata }: MintNFTProps) {
     const {
         data: hash,
         error,

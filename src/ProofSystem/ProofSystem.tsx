@@ -5,10 +5,17 @@ import * as snarkjs from 'snarkjs';
 console.log("snarkjs structure:", Object.keys(snarkjs));
 console.log("groth16 available?", snarkjs.groth16);
 
+export interface ProofCalldata {
+    a: [string, string];
+    b: [[string, string], [string, string]];
+    c: [string, string];
+    publivInput: string[];
+}
+
 interface ProofResult {
     proof: any;
     publicSignals: any[];
-    calldata: any;
+    calldata: ProofCalldata;
 }
 
 export async function generateProofTransfer(

@@ -3,12 +3,12 @@ import CipherWrapperIframe from '../canvasWrapper.tsx';
 import encodeAll from '../utils/encodingUtils.js';
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 
-import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from '../utils/encodingUtils.js';
-import { poseidonDecrypt } from '@zk-kit/poseidon-cipher';
-import { generateProofTurmite } from '../ProofSystem/ProofSystem.tsx'
+import { timeStamp, toBigInts } from '../utils/encodingUtils.js';
+
+import { generateProofTurmite, type ProofCalldata } from '../ProofSystem/ProofSystem.tsx'
 import { MintNFT } from './MintConnector.tsx';
 
-import { ConsoleProvider, ConsoleDisplay, useConsole } from '../console/ConsoleContext.tsx';
+import { useConsole } from '../console/ConsoleContext.tsx';
 
 // Define turmite gene constants
 const BUILDER_GENES = [
@@ -75,7 +75,7 @@ const MintPage = () => {
     // State for coordinates
     const [coordinates, setCoordinates] = useState(generateRandomCoords());
 
-    const [proofCalldata, setProofCalldata] = useState(null);
+    const [proofCalldata, setProofCalldata] = useState<ProofCalldata | null>(null);
 
     // State for selected genes
     const [builderGenes, setBuilderGenes] = useState([
