@@ -1,10 +1,11 @@
 // WalletPage.tsx - Enhanced with comprehensive console outputs
 import React, { useState, useEffect } from 'react';
 import { useWallet } from './cipherWallet/cipherWallet';
-import { useAccount, useReadContract, useWriteContract } from 'wagmi';
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractABI/contractAbi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractABI/EncryptedERC721/contractAbi';
 import EthWallet from './ETHWalletConnector/EthConnector';
 import { ConsoleProvider, ConsoleDisplay, useConsole } from './console/ConsoleContext.tsx';
+import { TransactionStatus, TransactionButton } from './components';
 
 type WalletMode = 'create' | 'import';
 
@@ -44,6 +45,22 @@ const WalletPage = () => {
   const account = useAccount();
   const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
   const formattedAddress = contractAddress as `0x${string}`;
+
+  // Hook for writing to contract (registerPublicKey)
+  const {
+    data: registerHash,
+    error: registerError,
+    isPending: isRegisterPending,
+    writeContract
+  } = useWriteContract();
+
+  // Hook to wait for registration transaction confirmation
+  const {
+    isLoading: isRegisterConfirming,
+    isSuccess: isRegisterConfirmed
+  } = useWaitForTransactionReceipt({
+    hash: registerHash,
+  });
 
   // Check if the user's address is registered
   const { data: addressRegistered, isLoading: isLoadingContract, error: contractError, refetch } = useReadContract({
@@ -220,6 +237,32 @@ const WalletPage = () => {
     }
   };
 
+  // Handle register public key on-chain
+  const handleRegisterPublicKey = async () => {
+    if (!publicKey) {
+      showMessage('No public key available', 'error');
+      addMessage("Registration failed: no public key available", "error");
+      return;
+    }
+
+    addMessage("Starting public key registration on-chain...", "info");
+    addMessage(`Registering key: [${formatBigInt(publicKey[0])}, ${formatBigInt(publicKey[1])}]`, "info");
+
+    try {
+      writeContract({
+        address: formattedAddress,
+        abi: EncryptedNFTABI,
+        functionName: 'registerPublicKey',
+        args: [publicKey[0], publicKey[1]],
+      });
+      addMessage("Transaction submitted to blockchain", "info");
+    } catch (error) {
+      const errorMsg = `Error registering public key: ${error.message}`;
+      showMessage(errorMsg, 'error');
+      addMessage(`Registration error: ${error.message}`, "error");
+    }
+  };
+
   // Handle reset wallet with enhanced console output
   const handleResetWallet = () => {
     addMessage("User initiated wallet reset...", "info");
@@ -270,6 +313,30 @@ const WalletPage = () => {
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
   };
+
+  // Monitor registration transaction submission
+  useEffect(() => {
+    if (registerHash) {
+      showMessage(`Registration transaction submitted: ${registerHash}`, 'success');
+      addMessage(`✓ Registration transaction hash: ${registerHash}`, "success");
+      addMessage("Waiting for blockchain confirmation...", "info");
+    }
+    if (registerError) {
+      showMessage(`Registration failed: ${registerError.message}`, 'error');
+      addMessage(`✗ Registration error: ${registerError.message}`, "error");
+    }
+  }, [registerHash, registerError]);
+
+  // Monitor registration transaction confirmation
+  useEffect(() => {
+    if (isRegisterConfirmed) {
+      addMessage("✓ Registration transaction confirmed on-chain!", "success");
+      showMessage('Public key registered successfully!', 'success');
+
+      // Refetch registration status now that transaction is confirmed
+      refetch();
+    }
+  }, [isRegisterConfirmed, refetch]);
 
   // Log wallet state changes
   useEffect(() => {
@@ -462,6 +529,39 @@ const WalletPage = () => {
             <legend>Wallet Controls</legend>
             <div className="action-section">
               <p>Your wallet is active and ready to use</p>
+
+              {/* Show register button if ETH wallet connected but key not registered */}
+              {isETHConnected && !hasRegisteredKey && (
+                <div className="registration-section">
+                  <p><strong>⚠ Action Required:</strong> Register your CIPHER public key on-chain to receive NFTs</p>
+                  <TransactionButton
+                    className="register-button"
+                    onClick={handleRegisterPublicKey}
+                    isPending={isRegisterPending}
+                    isConfirming={isRegisterConfirming}
+                    idleText="Register Public Key On-Chain"
+                    pendingText="Submitting Transaction..."
+                    confirmingText="Confirming on Blockchain..."
+                  />
+                  <TransactionStatus
+                    isPending={isRegisterPending}
+                    isConfirming={isRegisterConfirming}
+                    isSuccess={isRegisterConfirmed}
+                    error={registerError?.message || null}
+                    txHash={registerHash}
+                    pendingMessage="Submitting registration transaction..."
+                    confirmingMessage="Waiting for blockchain confirmation..."
+                    successMessage="Public key registered successfully!"
+                  />
+                </div>
+              )}
+
+              {/* Show status if already registered */}
+              {isETHConnected && hasRegisteredKey && (
+                <div className="registration-section">
+                  <p><strong>✓ Public Key Registered:</strong> Your CIPHER wallet is registered on-chain</p>
+                </div>
+              )}
 
               <div className="wallet-actions">
                 <button className="reset-button" onClick={handleResetWallet}>

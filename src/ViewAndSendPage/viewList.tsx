@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi.ts';
-import { useAccount, useReadContract, useReadContracts, useWriteContract } from 'wagmi';
+import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi.ts';
+import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useDecryptToken } from './useDecryptToken.ts'
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 import { generateProofTransfer } from '../ProofSystem/ProofSystem.tsx'
 import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from '../utils/encodingUtils.js';
+import { TransactionStatus, TransactionButton } from '../components';
 
 
 // Helper function to validate Ethereum address
@@ -23,6 +24,14 @@ const ViewList = () => {
         isPending: isWritePending,
         writeContract
     } = useWriteContract()
+
+    // Hook to wait for transaction confirmation
+    const {
+        isLoading: isConfirming,
+        isSuccess: isConfirmed
+    } = useWaitForTransactionReceipt({
+        hash,
+    })
 
 
     const navigate = useNavigate();
@@ -90,15 +99,9 @@ const ViewList = () => {
         }
     });
 
-    // Monitor transaction state changes
+    // Monitor transaction confirmation
     useEffect(() => {
-        if (isWritePending) {
-            setTransactionStatus('pending');
-            setTransactionMessage('Transaction is being processed...');
-        } else if (hash) {
-            setTransactionStatus('success');
-            setTransactionMessage(`Transaction successful! Hash: ${hash}`);
-
+        if (isConfirmed) {
             // Refetch the NFT list after successful transaction
             refetchTokens();
 
@@ -108,11 +111,8 @@ const ViewList = () => {
                 setTransactionStatus('idle');
                 setTransactionMessage('');
             }, 3000);
-        } else if (writeError) {
-            setTransactionStatus('error');
-            setTransactionMessage(`Transaction failed: ${writeError.message}`);
         }
-    }, [isWritePending, hash, writeError, refetchTokens]);
+    }, [isConfirmed, refetchTokens]);
 
     // Calculate shared ECDH key when we have the receiver's public key
     useEffect(() => {
@@ -161,18 +161,19 @@ const ViewList = () => {
 
                         // Use await directly here
                         const generatedProof = await generateProofTransfer(
-                            privateKey,
-                            secretScalar,
-                            decryptedToken.lastOwnerPubKeys,
-                            toPublicKey,
-                            decryptedToken.usedEncryptionKey,
-                            encryptionKey,
-                            decryptedToken.decryptedData.rawDecryption,
-                            decryptedToken.decryptedData.rawDecryption,
-                            (decryptedToken.encryptedNote.slice(0, 4) as bigint[]),
-                            cipherText,
-                            ([decryptedToken.encryptedNote[4]]),
-                            currentTimestamp
+                            privateKey,                                          // 1. privateKey: Uint8Array
+                            secretScalar,                                        // 2. deriveSecretScalarPrivKey: bigint
+                            publicKey,                                           // 3. myPublicKey: bigint[] (current user's public key)
+                            decryptedToken.lastOwnerPubKeys,                    // 4. previosSenderPublicKey: bigint[] (previous owner's public key)
+                            toPublicKey,                                        // 5. nextReciverPublicKey: bigint[] (new receiver's public key)
+                            decryptedToken.usedEncryptionKey,                   // 6. oldEncryptionKey: bigint[]
+                            encryptionKey,                                      // 7. newEncryptionKey: bigint[]
+                            decryptedToken.decryptedData.rawDecryption,         // 8. oldMessage: bigint[]
+                            decryptedToken.decryptedData.rawDecryption,         // 9. newMessage: bigint[]
+                            (decryptedToken.encryptedNote.slice(0, 4) as bigint[]), // 10. oldComputedCipherText: bigint[]
+                            cipherText,                                         // 11. newComputedCipherText: bigint[]
+                            [decryptedToken.encryptedNote[4]],                  // 12. oldNonce: bigint[] (array)
+                            [currentTimestamp]                                  // 13. newNonce: bigint[] (array)
                         );
                         console.log(generatedProof);
 
@@ -475,29 +476,25 @@ const ViewList = () => {
                                 <h3>Send CIPHER #{selectedTokenForSend}</h3>
 
                                 {/* Transaction Status Display */}
-                                {transactionMessage && (
-                                    <div className={`transaction-status ${transactionStatus}`}>
+                                {transactionStatus === 'preparing' && transactionMessage && (
+                                    <div className={`transaction-status preparing`}>
                                         <div className="status-indicator">
-                                            {transactionStatus === 'pending' && <div className="spinner"></div>}
-                                            {transactionStatus === 'preparing' && <div className="spinner"></div>}
-                                            {transactionStatus === 'success' && '✓'}
-                                            {transactionStatus === 'error' && '✗'}
+                                            <div className="spinner"></div>
                                         </div>
                                         <span className="status-message">{transactionMessage}</span>
-                                        {hash && (
-                                            <div className="transaction-hash">
-                                                <a
-                                                    href={`https://sepolia.etherscan.io/tx/${hash}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="hash-link"
-                                                >
-                                                    View on Etherscan
-                                                </a>
-                                            </div>
-                                        )}
                                     </div>
                                 )}
+
+                                <TransactionStatus
+                                    isPending={isWritePending}
+                                    isConfirming={isConfirming}
+                                    isSuccess={isConfirmed}
+                                    error={writeError?.message || null}
+                                    txHash={hash}
+                                    pendingMessage="Submitting transfer transaction..."
+                                    confirmingMessage="Waiting for blockchain confirmation..."
+                                    successMessage="NFT sent successfully!"
+                                />
 
                                 <div className="form-group">
                                     <label htmlFor="receiver-address">Receiver Address:</label>
@@ -525,30 +522,27 @@ const ViewList = () => {
                                     )}
                                 </div>
                                 <div className="form-actions">
-                                    <button
+                                    <TransactionButton
                                         type="submit"
-                                        className="confirm-send-btn"
+                                        isPending={isWritePending}
+                                        isConfirming={isConfirming}
                                         disabled={
                                             !calculatedEncryptionKey ||
                                             !!addressError ||
                                             isLoadingKeys ||
-                                            isWritePending ||
                                             transactionStatus === 'preparing' ||
                                             !generatedProof
                                         }
-                                    >
-                                        {isWritePending
-                                            ? 'Sending...'
-                                            : transactionStatus === 'preparing'
-                                                ? 'Preparing...'
-                                                : 'Confirm Send'
-                                        }
-                                    </button>
+                                        className="confirm-send-btn"
+                                        idleText="Confirm Send"
+                                        pendingText="Submitting..."
+                                        confirmingText="Confirming..."
+                                    />
                                     <button
                                         type="button"
                                         className="cancel-send-btn"
                                         onClick={handleCancelSend}
-                                        disabled={isWritePending}
+                                        disabled={isWritePending || isConfirming}
                                     >
                                         Cancel
                                     </button>

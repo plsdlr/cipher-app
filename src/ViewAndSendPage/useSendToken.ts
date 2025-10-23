@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi.ts';
+import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi.ts';
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 
 

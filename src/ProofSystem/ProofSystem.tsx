@@ -11,62 +11,23 @@ import builder from './circuit_turmites/witness_calculator.js';
 // Import your existing crypto utilities
 import { generateEncryptionKey } from './cryptoUtils';
 
+
+
+///to do list:
+/// 1. change abi -> done
+/// 2. update wasm and vkey stuff -> done
+/// 3. update these functions
+
 interface ProofResult {
     proof: any;
     publicSignals: any[];
     calldata: any;
 }
 
-
-// const input2 = {
-//     myPrivateKey: deriveSecretScalarPrivKey1.toString(),
-//     oldSenderPublicKey: [
-//         key1[1][0].toString(), // x-coordinate
-//         key1[1][1].toString()  // y-coordinate
-//     ],
-//     newReciverPublicKey: [
-//         key2[1][0].toString(), // x-coordinate
-//         key2[1][1].toString()  // y-coordinate
-//     ],
-//     oldResultKey: [
-//         ecdhOld[0].toString(), // x-coordinate
-//         ecdhOld[1].toString()  // y-coordinate
-//     ],
-//     newResultKey: [
-//         ecdhNew[0].toString(), // x-coordinate
-//         ecdhNew[1].toString()  // y-coordinate
-//     ],
-//     oldMessage: [
-//         decryptedData[0].toString(),
-//         decryptedData[1].toString(),
-//         decryptedData[2].toString()
-//     ],
-//     newMessage: [
-//         decryptedData[0].toString(),
-//         decryptedData[1].toString(),
-//         decryptedData[2].toString(),
-//     ],
-//     oldComputedCipherText: [
-//         ciphertextOld[0].toString(),
-//         ciphertextOld[1].toString(),
-//         ciphertextOld[2].toString(),
-//         ciphertextOld[3].toString()
-//     ],
-//     newComputedCipherText: [
-//         ciphertextNew[0].toString(),
-//         ciphertextNew[1].toString(),
-//         ciphertextNew[2].toString(),
-//         ciphertextNew[3].toString()
-//     ],
-//     oldNonce: nonce1.toString(),
-//     newNonce: nonce2.toString(),
-
-// };
-
-
 export async function generateProofTransfer(
     privateKey: Uint8Array,
     deriveSecretScalarPrivKey: bigint,
+    myPublicKey: bigint[],
     previosSenderPublicKey: bigint[],
     nextReciverPublicKey: bigint[],
     oldEncryptionKey: bigint[],
@@ -121,6 +82,10 @@ export async function generateProofTransfer(
         ],
         oldNonce: oldNonce,
         newNonce: newNonce,
+        myPublicKey: [
+            myPublicKey[0],
+            myPublicKey[1]
+        ]
     };
 
     // console.log(input)
@@ -128,7 +93,7 @@ export async function generateProofTransfer(
 
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
         input,
-        '/circuit_transfer/ecdh-poseidon-cipher-transfer.wasm',
+        '/circuit_transfer/ecdh-poseidon-key-derivation-cipher-transfer.wasm',
         '/circuit_transfer/groth16_pkey.zkey'
     );
 

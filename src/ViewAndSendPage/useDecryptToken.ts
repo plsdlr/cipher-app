@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi.ts';
+import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi.ts';
 import { useReadContract, useReadContracts, useAccount } from 'wagmi';
 import { useDecryptTurmite } from '../utils/useDecryptTurmite';
 

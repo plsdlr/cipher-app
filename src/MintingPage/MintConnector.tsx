@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/contractAbi';
+import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi';
+import { TransactionStatus, TransactionButton } from '../components';
 
 import {
     type BaseError,
@@ -36,18 +37,13 @@ export function MintNFT({ calldata }) {
     // This is what TypeScript is expecting for the address
     const formattedAddress = contractAddress as `0x${string}`;
 
-    console.log(formattedAddress);
-
     async function submit() {
-        console.log(calldata);
-        ///encryptedERC721.mint(pA, pB, pC, pubSignals, alice);
-        console.log("get hererer")
-        console.log(calldata)
         writeContract({
             address: formattedAddress,
             abi: EncryptedNFTABI,
             functionName: 'mint',
             args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, address],
+            value: BigInt(100000000000000000), // 0.1 ether in wei
         })
     }
 
@@ -58,21 +54,25 @@ export function MintNFT({ calldata }) {
 
     return (
         <>
-            <button
-                disabled={isPending}
+            <TransactionButton
                 onClick={submit}
-            >
-                {isPending ? 'Confirming...' : 'Mint'}
-            </button>
-            {hash && <div>Transaction Hash: {hash}</div>}
-            {isConfirming && <div>Waiting for confirmation...</div>}
-            {isConfirmed && <div>Transaction confirmed.</div>}
-            {error && (
-                <div>Error: {(error as BaseError).shortMessage || error.message}</div>
-            )}
+                isPending={isPending}
+                isConfirming={isConfirming}
+                idleText="Mint"
+                pendingText="Submitting..."
+                confirmingText="Confirming..."
+            />
+            <TransactionStatus
+                isPending={isPending}
+                isConfirming={isConfirming}
+                isSuccess={isConfirmed}
+                error={error ? ((error as BaseError).shortMessage || error.message) : null}
+                txHash={hash}
+                pendingMessage="Submitting mint transaction..."
+                confirmingMessage="Waiting for blockchain confirmation..."
+                successMessage="NFT minted successfully!"
+            />
         </>
-
-
     )
 }
 
