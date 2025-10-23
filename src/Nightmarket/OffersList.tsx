@@ -30,7 +30,6 @@ const OffersList = () => {
     const [transactionStatus, setTransactionStatus] = useState<string>('idle');
     const [calculatedEncryptionKey, setCalculatedEncryptionKey] = useState<any>(null);
     const [isApproved, setIsApproved] = useState<boolean>(false);
-    const [checkingApproval, setCheckingApproval] = useState<boolean>(false);
 
     const {
         publicKey,
@@ -539,10 +538,10 @@ const OffersList = () => {
                                 disabled={!isApproved || !tokenIdToSell || !generatedProof || transactionStatus !== 'ready' || isFulfillPending || isFulfillConfirming}
                             >
                                 {transactionStatus === 'preparing' ? 'Generating Proof...' :
-                                 isFulfillPending ? 'Submitting...' :
-                                 isFulfillConfirming ? 'Confirming...' :
-                                 transactionStatus === 'ready' ? 'Fulfill Offer' :
-                                 'Generate Proof & Fulfill'}
+                                    isFulfillPending ? 'Submitting...' :
+                                        isFulfillConfirming ? 'Confirming...' :
+                                            transactionStatus === 'ready' ? 'Fulfill Offer' :
+                                                'Generate Proof & Fulfill'}
                             </button>
                             <button
                                 className="cancel-button"

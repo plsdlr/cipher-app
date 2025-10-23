@@ -5,19 +5,6 @@ import * as snarkjs from 'snarkjs';
 console.log("snarkjs structure:", Object.keys(snarkjs));
 console.log("groth16 available?", snarkjs.groth16);
 
-import { poseidonEncrypt } from "@zk-kit/poseidon-cipher";
-import builder from './circuit_turmites/witness_calculator.js';
-
-// Import your existing crypto utilities
-import { generateEncryptionKey } from './cryptoUtils';
-
-
-
-///to do list:
-/// 1. change abi -> done
-/// 2. update wasm and vkey stuff -> done
-/// 3. update these functions
-
 interface ProofResult {
     proof: any;
     publicSignals: any[];
@@ -87,8 +74,6 @@ export async function generateProofTransfer(
             myPublicKey[1]
         ]
     };
-
-    // console.log(input)
 
 
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(

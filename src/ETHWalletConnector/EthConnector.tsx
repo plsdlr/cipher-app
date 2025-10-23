@@ -1,28 +1,10 @@
-import { useAccount, useConnect, useDisconnect, useReadContract, useWriteContract } from 'wagmi'
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi';
-import { useWallet } from '../cipherWallet/cipherWallet.tsx';
-import { useState, useEffect } from 'react'
-
+import { useAccount, useConnect, useDisconnect } from 'wagmi'
 
 function EthWallet() {
   const account = useAccount()
   const { connectors, connect, status, error } = useConnect()
   const { disconnect } = useDisconnect()
 
-  // State for UI feedback
-  const [registrationStatus, setRegistrationStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
-  const [statusMessage, setStatusMessage] = useState('')
-
-  // Format contract address
-  const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111]
-  const formattedAddress = contractAddress as `0x${string}`
-
-
-  // Reset status when address changes
-  useEffect(() => {
-    setRegistrationStatus('idle')
-    setStatusMessage('')
-  }, [account.address])
 
   return (
     <fieldset className="terminal-fieldset">

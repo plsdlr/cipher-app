@@ -1,24 +1,14 @@
-import React, { useState } from 'react';
-
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi';
 import { TransactionStatus, TransactionButton } from '../components';
 
 import {
     type BaseError,
     useAccount,
-    useConnect,
     useWaitForTransactionReceipt,
     useWriteContract
 } from 'wagmi';
 
 
-// Define props interface for the component
-interface MintNFTProps {
-    calldata: [];
-    onMintStart?: () => void;
-    onMintSuccess?: (hash: `0x${string}`) => void;
-    onMintError?: (error: BaseError | Error) => void;
-}
 
 export function MintNFT({ calldata }) {
     const {
