@@ -448,3 +448,84 @@ td {
     width: 70%;
     padding-bottom: 20px;
 }
+
+/* ProofGenerator Component Styles */
+.proof-status {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin: 15px 0;
+    border-radius: 4px;
+    border: 1px solid;
+    font-size: 14px;
+}
+
+.proof-status-preparing {
+    background-color: rgba(255, 170, 0, 0.1);
+    border-color: #ffaa00;
+    color: #ffaa00;
+}
+
+.proof-status-generating {
+    background-color: rgba(0, 123, 255, 0.1);
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.proof-status-ready {
+    background-color: rgba(0, 255, 0, 0.1);
+    border-color: #00ff00;
+    color: #00ff00;
+}
+
+.proof-status-error {
+    background-color: rgba(255, 0, 0, 0.1);
+    border-color: #ff0000;
+    color: #ff0000;
+}
+
+.proof-status .status-indicator {
+    margin-right: 8px;
+    min-width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.proof-status .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: currentColor;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.proof-status .status-message {
+    flex: 1;
+}
+
+.proof-inputs-display {
+    margin: 15px 0;
+    padding: 12px;
+    background-color: rgba(0, 255, 0, 0.05);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    border-radius: 4px;
+}
+
+.proof-inputs-label {
+    color: #00ff00;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.proof-input-item {
+    color: #00ff00;
+    font-family: monospace;
+    font-size: 12px;
+    margin: 4px 0;
+}

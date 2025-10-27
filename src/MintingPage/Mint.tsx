@@ -5,10 +5,11 @@ import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 
 import { timeStamp, toBigInts } from '../utils/encodingUtils.js';
 
-import { generateProofTurmite, type ProofCalldata } from '../ProofSystem/ProofSystem.tsx'
+import { generateProofTurmite } from '../ProofSystem/ProofSystem.tsx'
 import { MintNFT } from './MintConnector.tsx';
 
 import { useConsole } from '../console/ConsoleContext.tsx';
+import { ProofGenerator } from '../components';
 
 // Define turmite gene constants
 const BUILDER_GENES = [
@@ -75,8 +76,6 @@ const MintPage = () => {
     // State for coordinates
     const [coordinates, setCoordinates] = useState(generateRandomCoords());
 
-    const [proofCalldata, setProofCalldata] = useState<ProofCalldata | null>(null);
-
     // State for selected genes
     const [builderGenes, setBuilderGenes] = useState([
         BUILDER_GENES[0],
@@ -113,26 +112,6 @@ const MintPage = () => {
         setChaosNumbers([0, selectedColor, 0]);
         setColor(selectedColor);
     };
-
-    const handleGenerateProof = async () => {
-        if (publicKey && privateKey && secretScalar) {
-            var allRules = builderGenes.concat(walkerGene)
-            const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers));
-            // console.log(encoded)
-            const newEncryptionKey = generateEncryptionKey();
-            const currentTimestamp = timeStamp()
-            const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
-            // console.log(cipherText)
-            console.log(publicKey[0]);
-            console.log(typeof (publicKey));
-
-            // Include color in the proof generation
-            const proof = await generateProofTurmite(privateKey, publicKey, encoded, secretScalar, cipherText, newEncryptionKey, currentTimestamp);
-            setProofCalldata(proof.calldata);
-        } else {
-            console.log("not registerd")
-        }
-    }
 
     // Generate random coordinates
     const generateRandomCoordinates = () => {
@@ -293,26 +272,46 @@ const MintPage = () => {
                         <legend>ZK PROOF GENERATION</legend>
                         <div className="encryption-section">
                             <h3>Encrypt & Mint</h3>
-                            <button onClick={handleGenerateProof}>Generate Poof</button>
-                            {proofCalldata ?
-                                <div>
-                                    <div className="input-note">
-                                        Proof Generated! Public Inputs:
-                                        <br></br>
-                                        {proofCalldata["publivInput"][0].substr(0, 7)}...
-                                        <br></br>
-                                        {proofCalldata["publivInput"][1].substr(0, 7)}...
-                                        <br></br>
-                                        {proofCalldata["publivInput"][2].substr(0, 7)}...
-                                        <br></br>
-                                        {proofCalldata["publivInput"][3].substr(0, 7)}...
-                                        <br></br>
-                                        {proofCalldata["publivInput"][4].substr(0, 7)}...
-                                    </div>
-                                    <MintNFT calldata={proofCalldata} />
-                                </div>
-                                : ""}
+                            <ProofGenerator
+                                onGenerateProof={async () => {
+                                    if (!publicKey || !privateKey || !secretScalar) {
+                                        throw new Error("Wallet not registered. Please register your public key first.");
+                                    }
 
+                                    const allRules = builderGenes.concat(walkerGene);
+                                    const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers));
+                                    const newEncryptionKey = generateEncryptionKey();
+                                    const currentTimestamp = timeStamp();
+                                    const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
+
+                                    console.log('Generating proof with public key:', publicKey[0]);
+
+                                    const proof = await generateProofTurmite(
+                                        privateKey,
+                                        publicKey,
+                                        encoded,
+                                        secretScalar,
+                                        cipherText,
+                                        newEncryptionKey,
+                                        currentTimestamp
+                                    );
+
+                                    return proof.calldata;
+                                }}
+                                autoGenerate={false}
+                                preparingMessage="Preparing proof generation..."
+                                generatingMessage="Generating zero-knowledge proof (this may take a moment)..."
+                                readyMessage="Proof generated successfully! Ready to mint."
+                            >
+                                {({ proofCalldata, status, generateManually }) => (
+                                    <>
+                                        {status === 'idle' && (
+                                            <button onClick={generateManually}>Generate Proof</button>
+                                        )}
+                                        {proofCalldata && <MintNFT calldata={proofCalldata} />}
+                                    </>
+                                )}
+                            </ProofGenerator>
                         </div>
                     </fieldset>
                 </div>

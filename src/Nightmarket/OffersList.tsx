@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useViewOffers, useCurrentOffers } from './useViewOffers';
 import { useCancelOffer } from './useCancelOffer';
 import { useFulfillOffer } from './useFulfillOffer';
-import { useAccount, useReadContract, useReadContracts, useWriteContract } from 'wagmi';
+import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useConsole } from '../console/ConsoleContext';
 import { formatEther } from 'viem';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi';
@@ -11,6 +11,7 @@ import { useWallet } from '../cipherWallet/cipherWallet';
 import { useDecryptToken } from '../ViewAndSendPage/useDecryptToken';
 import { generateProofTransfer } from '../ProofSystem/ProofSystem';
 import { timeStamp } from '../utils/encodingUtils';
+import { ProofGenerator } from '../components';
 
 interface FulfillmentState {
     offerId: bigint;
@@ -26,10 +27,13 @@ const OffersList = () => {
     const [tokenIdToSell, setTokenIdToSell] = useState<string>('');
     const [shouldFetchTokens, setShouldFetchTokens] = useState<boolean>(false);
     const [shouldFetchBuyerKey, setShouldFetchBuyerKey] = useState<boolean>(false);
-    const [generatedProof, setGeneratedProof] = useState<any>(null);
-    const [transactionStatus, setTransactionStatus] = useState<string>('idle');
     const [calculatedEncryptionKey, setCalculatedEncryptionKey] = useState<any>(null);
     const [isApproved, setIsApproved] = useState<boolean>(false);
+
+    // Refs to track processed transactions and prevent duplicate messages
+    const lastProcessedFulfillTx = useRef<string | null>(null);
+    const lastProcessedCancelTx = useRef<string | null>(null);
+    const hasProcessedApproval = useRef<boolean>(false);
 
     const {
         publicKey,
@@ -52,10 +56,19 @@ const OffersList = () => {
     // Hook for approving NFT
     const {
         writeContract: approveNFT,
+        data: approveTxHash,
         isPending: isApprovePending,
         isSuccess: isApproveSuccess,
         error: approveError
     } = useWriteContract();
+
+    // Wait for approval transaction to be confirmed
+    const {
+        isLoading: isApproveConfirming,
+        isSuccess: isApproveConfirmed
+    } = useWaitForTransactionReceipt({
+        hash: approveTxHash,
+    });
 
     const { currentOffers, isLoading: isLoadingCount, refetch: refetchCount } = useCurrentOffers();
 
@@ -138,7 +151,8 @@ const OffersList = () => {
 
     // Handle successful cancellation
     useEffect(() => {
-        if (isCancelSuccess) {
+        if (isCancelSuccess && cancelTxHash && lastProcessedCancelTx.current !== cancelTxHash) {
+            lastProcessedCancelTx.current = cancelTxHash;
             addMessage(`✓ Offer #${cancellingOfferId} cancelled successfully! TX: ${cancelTxHash}`, "success");
             setCancellingOfferId(null);
             // Refetch offers after successful cancellation
@@ -149,14 +163,14 @@ const OffersList = () => {
                 resetCancel();
             }, 3000);
         }
-    }, [isCancelSuccess, cancellingOfferId, cancelTxHash, refetch, refetchCount, resetCancel]);
+    }, [isCancelSuccess, cancellingOfferId, cancelTxHash, addMessage, refetch, refetchCount, resetCancel]);
 
     // Handle cancel errors
     useEffect(() => {
         if (cancelError) {
             addMessage(`✗ Error cancelling offer: ${cancelError}`, "error");
         }
-    }, [cancelError]);
+    }, [cancelError, addMessage]);
 
     // Refetch when component mounts or when offers are created
     useEffect(() => {
@@ -201,6 +215,7 @@ const OffersList = () => {
         setFulfillingOffer(null);
         setTokenIdToSell('');
         setShouldFetchTokens(false);
+        hasProcessedApproval.current = false; // Reset approval tracking
         addMessage("Fulfillment cancelled", "info");
     };
 
@@ -208,9 +223,8 @@ const OffersList = () => {
     const handleTokenSelect = (tokenId: string) => {
         setTokenIdToSell(tokenId);
         setShouldFetchBuyerKey(true);
-        setGeneratedProof(null);
         setCalculatedEncryptionKey(null);
-        setTransactionStatus('idle');
+        hasProcessedApproval.current = false; // Reset approval tracking when selecting new token
         addMessage(`Selected Token ID ${tokenId}`, "info");
         addMessage(`Fetching buyer public key...`, "info");
     };
@@ -218,77 +232,35 @@ const OffersList = () => {
     // Get first 10 tokens
     const displayTokens = ownedTokenIds ? (ownedTokenIds as bigint[]).slice(0, 10) : [];
 
-    // Generate proof when we have all required data
+    // Calculate encryption key when we have buyer's public key
     useEffect(() => {
-        const generateProof = async () => {
-            if (!buyerPublicKey || isLoadingBuyerKey || !genEcdhSharedKey || !shouldFetchBuyerKey ||
-                buyerPublicKey[0]?.result === undefined || buyerPublicKey[1]?.result === undefined ||
-                calculatedEncryptionKey || !decryptedToken || !privateKey || !secretScalar) {
-                return;
-            }
+        if (!buyerPublicKey || isLoadingBuyerKey || !genEcdhSharedKey || !shouldFetchBuyerKey ||
+            buyerPublicKey[0]?.result === undefined || buyerPublicKey[1]?.result === undefined ||
+            calculatedEncryptionKey) {
+            return;
+        }
 
-            try {
-                setTransactionStatus('preparing');
-                addMessage('Calculating encryption key for buyer...', "info");
+        const toPublicKey: [bigint, bigint] = [
+            buyerPublicKey[0].result as bigint,
+            buyerPublicKey[1].result as bigint
+        ];
 
-                const toPublicKey: [bigint, bigint] = [
-                    buyerPublicKey[0].result as bigint,
-                    buyerPublicKey[1].result as bigint
-                ];
+        // Validate buyer has registered public key
+        if (toPublicKey[0] === 0n && toPublicKey[1] === 0n) {
+            addMessage('Buyer has not registered their public key', "error");
+            return;
+        }
 
-                // Validate buyer has registered public key
-                if (toPublicKey[0] === 0n && toPublicKey[1] === 0n) {
-                    setTransactionStatus('error');
-                    addMessage('Buyer has not registered their public key', "error");
-                    return;
-                }
-
-                // Calculate shared encryption key
-                const encryptionKey = genEcdhSharedKey(toPublicKey);
-                setCalculatedEncryptionKey(encryptionKey);
-
-                addMessage('Generating ZK proof...', "info");
-
-                const currentTimestamp = timeStamp();
-                const cipherText = poseidonEncryption(
-                    currentTimestamp,
-                    encryptionKey,
-                    decryptedToken.decryptedData.rawDecryption
-                );
-
-                const proof = await generateProofTransfer(
-                    privateKey,
-                    secretScalar,
-                    publicKey,
-                    decryptedToken.lastOwnerPubKeys,
-                    toPublicKey,
-                    decryptedToken.usedEncryptionKey,
-                    encryptionKey,
-                    decryptedToken.decryptedData.rawDecryption,
-                    decryptedToken.decryptedData.rawDecryption,
-                    (decryptedToken.encryptedNote.slice(0, 4) as bigint[]),
-                    cipherText,
-                    [decryptedToken.encryptedNote[4]],
-                    [currentTimestamp]
-                );
-
-                setGeneratedProof(proof);
-                setTransactionStatus('ready');
-                addMessage('✓ Proof generated successfully! Ready to fulfill offer.', "success");
-
-            } catch (error: any) {
-                setTransactionStatus('error');
-                addMessage(`Error preparing transaction: ${error.message}`, "error");
-            }
-        };
-
-        generateProof();
-    }, [buyerPublicKey, isLoadingBuyerKey, genEcdhSharedKey, shouldFetchBuyerKey,
-        calculatedEncryptionKey, decryptedToken, privateKey, secretScalar, publicKey]);
+        // Calculate shared encryption key
+        const encryptionKey = genEcdhSharedKey(toPublicKey);
+        setCalculatedEncryptionKey(encryptionKey);
+        addMessage('✓ Encryption key calculated for buyer', "info");
+    }, [buyerPublicKey, isLoadingBuyerKey, genEcdhSharedKey, shouldFetchBuyerKey, calculatedEncryptionKey, addMessage]);
 
     // Handle successful fulfillment
     useEffect(() => {
-        if (isFulfillSuccess) {
+        if (isFulfillSuccess && fulfillTxHash && lastProcessedFulfillTx.current !== fulfillTxHash) {
+            lastProcessedFulfillTx.current = fulfillTxHash;
             addMessage(`✓ Offer fulfilled successfully! TX: ${fulfillTxHash}`, "success");
 
             // Refetch offers after successful fulfillment
@@ -301,20 +273,19 @@ const OffersList = () => {
                 setTokenIdToSell('');
                 setShouldFetchTokens(false);
                 setShouldFetchBuyerKey(false);
-                setGeneratedProof(null);
                 setCalculatedEncryptionKey(null);
-                setTransactionStatus('idle');
+                hasProcessedApproval.current = false; // Reset approval tracking
                 resetFulfill();
             }, 3000);
         }
-    }, [isFulfillSuccess, fulfillTxHash, refetch, refetchCount, resetFulfill]);
+    }, [isFulfillSuccess, fulfillTxHash, addMessage, refetch, refetchCount, resetFulfill]);
 
     // Handle fulfillment errors
     useEffect(() => {
         if (fulfillError) {
             addMessage(`✗ Error fulfilling offer: ${fulfillError}`, "error");
         }
-    }, [fulfillError]);
+    }, [fulfillError, addMessage]);
 
     // Check approval status when approved address changes
     useEffect(() => {
@@ -326,15 +297,18 @@ const OffersList = () => {
         }
     }, [approvedAddress, marketplaceAddress]);
 
-    // Handle successful approval
+    // Handle successful approval - wait for blockchain confirmation
     useEffect(() => {
-        if (isApproveSuccess) {
-            addMessage('✓ NFT approved! Checking approval status...', "success");
+        if (isApproveConfirmed && !hasProcessedApproval.current) {
+            hasProcessedApproval.current = true;
+            addMessage('✓ NFT approval confirmed on blockchain!', "success");
+
+            // Refetch approval status after confirmation
             setTimeout(() => {
                 refetchApproval();
-            }, 2000);
+            }, 1000);
         }
-    }, [isApproveSuccess, refetchApproval]);
+    }, [isApproveConfirmed, addMessage, refetchApproval]);
 
     // Handle approval button click
     const handleApprove = async () => {
@@ -494,77 +468,149 @@ const OffersList = () => {
                             />
                         </div>
 
-                        <div className="button-group">
-                            {/* Show Approve button if not approved */}
-                            {!isApproved && tokenIdToSell && (
-                                <button
-                                    className="approve-button"
-                                    onClick={handleApprove}
-                                    disabled={isApprovePending}
-                                >
-                                    {isApprovePending ? 'Approving...' : 'Approve NFT'}
-                                </button>
-                            )}
-
-                            {/* Show Fulfill button only if approved */}
-                            <button
-                                className="proceed-button"
-                                onClick={async () => {
-                                    if (!tokenIdToSell) {
-                                        addMessage("Please select a token ID", "error");
-                                        return;
+                        {calculatedEncryptionKey && decryptedToken && tokenIdToSell && (
+                            <ProofGenerator
+                                onGenerateProof={async () => {
+                                    if (!publicKey || !privateKey || !secretScalar) {
+                                        throw new Error("Wallet not registered. Please register your public key first.");
                                     }
 
-                                    if (!generatedProof) {
-                                        addMessage("Proof not generated yet. Please wait...", "error");
-                                        return;
+                                    if (!decryptedToken.lastOwnerPubKeys || !decryptedToken.usedEncryptionKey ||
+                                        !decryptedToken.decryptedData || !decryptedToken.encryptedNote) {
+                                        throw new Error("Token data incomplete");
                                     }
 
-                                    if (!fulfillingOffer) {
-                                        addMessage("No offer selected", "error");
-                                        return;
+                                    if (!buyerPublicKey || buyerPublicKey[0]?.result === undefined || buyerPublicKey[1]?.result === undefined) {
+                                        throw new Error("Buyer public key not available");
                                     }
 
-                                    addMessage(`Fulfilling offer #${fulfillingOffer.offerId}...`, "info");
+                                    // Extract buyer's public key
+                                    const toPublicKey: [bigint, bigint] = [
+                                        buyerPublicKey[0].result as bigint,
+                                        buyerPublicKey[1].result as bigint
+                                    ];
 
-                                    await fulfillOffer(
-                                        fulfillingOffer.offerId,
-                                        connectedAddress!,
-                                        fulfillingOffer.buyerAddress,
-                                        BigInt(tokenIdToSell),
-                                        generatedProof.calldata
+                                    const currentTimestamp = timeStamp();
+                                    const cipherText = poseidonEncryption(
+                                        currentTimestamp,
+                                        calculatedEncryptionKey,
+                                        decryptedToken.decryptedData.rawDecryption
                                     );
-                                }}
-                                disabled={!isApproved || !tokenIdToSell || !generatedProof || transactionStatus !== 'ready' || isFulfillPending || isFulfillConfirming}
-                            >
-                                {transactionStatus === 'preparing' ? 'Generating Proof...' :
-                                    isFulfillPending ? 'Submitting...' :
-                                        isFulfillConfirming ? 'Confirming...' :
-                                            transactionStatus === 'ready' ? 'Fulfill Offer' :
-                                                'Generate Proof & Fulfill'}
-                            </button>
-                            <button
-                                className="cancel-button"
-                                onClick={handleCancelFulfillment}
-                            >
-                                Cancel
-                            </button>
-                        </div>
 
-                        {/* Transaction Status Display */}
-                        {(transactionStatus !== 'idle' || isFulfillPending || isFulfillConfirming || !isApproved) && (
-                            <div className="transaction-status">
-                                {!isApproved && tokenIdToSell && transactionStatus === 'ready' && (
-                                    <p className="warning">⚠ Marketplace needs approval to transfer your NFT. Click "Approve NFT" first.</p>
+                                    console.log('Generating market fulfillment proof...');
+
+                                    const proof = await generateProofTransfer(
+                                        privateKey,
+                                        secretScalar,
+                                        publicKey,
+                                        decryptedToken.lastOwnerPubKeys,
+                                        toPublicKey,
+                                        decryptedToken.usedEncryptionKey,
+                                        calculatedEncryptionKey,
+                                        decryptedToken.decryptedData.rawDecryption,
+                                        decryptedToken.decryptedData.rawDecryption,
+                                        (decryptedToken.encryptedNote.slice(0, 4) as bigint[]),
+                                        cipherText,
+                                        [decryptedToken.encryptedNote[4]],
+                                        [currentTimestamp]
+                                    );
+
+                                    console.log('Market fulfillment proof generated:', proof);
+                                    return proof.calldata;
+                                }}
+                                autoGenerate={true}
+                                triggerDeps={[calculatedEncryptionKey, decryptedToken, tokenIdToSell]}
+                                preparingMessage="Preparing fulfillment proof..."
+                                generatingMessage="Generating zero-knowledge proof for marketplace sale..."
+                                readyMessage="Proof generated successfully! Ready to fulfill offer."
+                            >
+                                {({ proofCalldata, status }) => (
+                                    <>
+                                        {!isApproved && tokenIdToSell && status === 'ready' && (
+                                            <div className="warning-message">
+                                                <p>⚠ Marketplace needs approval to transfer your NFT first.</p>
+                                            </div>
+                                        )}
+
+                                        <div className="button-group">
+                                            {/* Single action button that changes based on approval state */}
+                                            {!isApproved && tokenIdToSell ? (
+                                                // Show Approve button when not approved
+                                                <button
+                                                    className="primary-action-button"
+                                                    onClick={handleApprove}
+                                                    disabled={isApprovePending || isApproveConfirming || status !== 'ready'}
+                                                >
+                                                    {isApprovePending ? 'Submitting Approval...' :
+                                                     isApproveConfirming ? 'Confirming Approval...' :
+                                                     status !== 'ready' ? 'Generating Proof...' :
+                                                     'Approve NFT'}
+                                                </button>
+                                            ) : (
+                                                // Show Fulfill button when approved
+                                                <button
+                                                    className="primary-action-button"
+                                                    onClick={async () => {
+                                                        if (!tokenIdToSell) {
+                                                            addMessage("Please select a token ID", "error");
+                                                            return;
+                                                        }
+
+                                                        if (!proofCalldata) {
+                                                            addMessage("Proof not generated yet. Please wait...", "error");
+                                                            return;
+                                                        }
+
+                                                        if (!fulfillingOffer) {
+                                                            addMessage("No offer selected", "error");
+                                                            return;
+                                                        }
+
+                                                        addMessage(`Fulfilling offer #${fulfillingOffer.offerId}...`, "info");
+
+                                                        await fulfillOffer(
+                                                            fulfillingOffer.offerId,
+                                                            connectedAddress!,
+                                                            fulfillingOffer.buyerAddress,
+                                                            BigInt(tokenIdToSell),
+                                                            proofCalldata
+                                                        );
+                                                    }}
+                                                    disabled={
+                                                        !tokenIdToSell ||
+                                                        !proofCalldata ||
+                                                        status !== 'ready' ||
+                                                        isFulfillPending ||
+                                                        isFulfillConfirming
+                                                    }
+                                                >
+                                                    {isFulfillPending ? 'Submitting Transaction...' :
+                                                        isFulfillConfirming ? 'Confirming on Blockchain...' :
+                                                            status !== 'ready' ? 'Generating Proof...' :
+                                                                'Fulfill Offer'}
+                                                </button>
+                                            )}
+
+                                            <button
+                                                className="cancel-button"
+                                                onClick={handleCancelFulfillment}
+                                                disabled={isFulfillPending || isFulfillConfirming || isApprovePending || isApproveConfirming}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+
+                                        {/* Transaction Status */}
+                                        {(isFulfillPending || isFulfillConfirming) && (
+                                            <div className="transaction-status">
+                                                {isFulfillPending && <p>Submitting transaction...</p>}
+                                                {isFulfillConfirming && <p>Confirming on blockchain...</p>}
+                                                {fulfillTxHash && <p>Transaction Hash: {fulfillTxHash}</p>}
+                                            </div>
+                                        )}
+                                    </>
                                 )}
-                                {transactionStatus === 'preparing' && <p>Generating proof...</p>}
-                                {transactionStatus === 'ready' && isApproved && !isFulfillPending && !isFulfillConfirming && (
-                                    <p className="success">✓ Proof ready! Click "Fulfill Offer" to complete the sale.</p>
-                                )}
-                                {isFulfillPending && <p>Submitting transaction...</p>}
-                                {isFulfillConfirming && <p>Confirming on blockchain...</p>}
-                                {fulfillTxHash && <p>Transaction Hash: {fulfillTxHash}</p>}
-                            </div>
+                            </ProofGenerator>
                         )}
 
                         <div className="fulfillment-note">

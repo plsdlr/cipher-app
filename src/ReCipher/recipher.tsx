@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import CipherWrapperIframe from '../canvasWrapper.tsx';
 import { useDecryptToken } from '../ViewAndSendPage/useDecryptToken.ts';
-import { ConsoleProvider, ConsoleDisplay, useConsole } from '../console/ConsoleContext.tsx';
+import { useConsole } from '../console/ConsoleContext.tsx';
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 import { generateProofTurmite } from '../ProofSystem/ProofSystem.tsx'
 import encodeAll from '../utils/encodingUtils.js';
-import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from '../utils/encodingUtils.js';
+import { timeStamp, toBigInts } from '../utils/encodingUtils.js';
 import { ReCipherNFT } from './ReCipherConnector.tsx';
+import { ProofGenerator } from '../components';
 
 ///to do: implement market in solidity + implement cipher function in solidity contract
 
@@ -58,7 +59,6 @@ const EditTokenPage = () => {
     const [color, setColor] = useState<number>(0);
     const [chaosNumbers, setChaosNumbers] = useState<number[]>([0, 0, 0]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
-    const [proofCalldata, setProofCalldata] = useState(null);
 
     const {
         publicKey,
@@ -150,28 +150,6 @@ const EditTokenPage = () => {
             addMessage("Reset to original token data", "info");
         }
     };
-
-
-
-    const handleGenerateProof = async () => {
-        if (publicKey && privateKey && secretScalar) {
-            var allRules = builderGenes.concat(walkerGene)
-            const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers));
-            // console.log(encoded)
-            const newEncryptionKey = generateEncryptionKey();
-            const currentTimestamp = timeStamp()
-            const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
-            // console.log(cipherText)
-            console.log(publicKey[0]);
-            console.log(typeof (publicKey));
-
-            // Include color in the proof generation
-            const proof = await generateProofTurmite(privateKey, publicKey, encoded, secretScalar, cipherText, newEncryptionKey, currentTimestamp);
-            setProofCalldata(proof.calldata);
-        } else {
-            console.log("not registerd")
-        }
-    }
 
     // Render loading state
     if (isDecrypting) {
@@ -318,27 +296,49 @@ const EditTokenPage = () => {
                     <fieldset className="terminal-fieldset">
                         <legend>ACTIONS</legend>
                         <div className="encryption-section">
-                            <h3>Encrypt & Mint</h3>
-                            <button onClick={handleGenerateProof}>Generate Poof</button>
-                            {proofCalldata ?
-                                <div>
-                                    <div className="input-note">
-                                        Proof Generated! Public Inputs:
-                                        <br></br>
-                                        {proofCalldata["publivInput"][0].substr(0, 7)}...
-                                        <br></br>
-                                        {proofCalldata["publivInput"][1].substr(0, 7)}...
-                                        <br></br>
-                                        {proofCalldata["publivInput"][2].substr(0, 7)}...
-                                        <br></br>
-                                        {proofCalldata["publivInput"][3].substr(0, 7)}...
-                                        <br></br>
-                                        {proofCalldata["publivInput"][4].substr(0, 7)}...
-                                    </div>
-                                    <ReCipherNFT calldata={proofCalldata} tokenId={tokenId || ''} />
-                                </div>
-                                : ""}
+                            <h3>Re-Encrypt & Update</h3>
+                            <ProofGenerator
+                                onGenerateProof={async () => {
+                                    if (!publicKey || !privateKey || !secretScalar) {
+                                        throw new Error("Wallet not registered. Please register your public key first.");
+                                    }
 
+                                    const allRules = builderGenes.concat(walkerGene);
+                                    const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers));
+                                    const newEncryptionKey = generateEncryptionKey();
+                                    const currentTimestamp = timeStamp();
+                                    const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
+
+                                    console.log('Generating re-cipher proof with public key:', publicKey[0]);
+
+                                    const proof = await generateProofTurmite(
+                                        privateKey,
+                                        publicKey,
+                                        encoded,
+                                        secretScalar,
+                                        cipherText,
+                                        newEncryptionKey,
+                                        currentTimestamp
+                                    );
+
+                                    return proof.calldata;
+                                }}
+                                autoGenerate={false}
+                                preparingMessage="Preparing re-cipher proof generation..."
+                                generatingMessage="Generating zero-knowledge proof for re-encryption..."
+                                readyMessage="Proof generated successfully! Ready to re-cipher."
+                            >
+                                {({ proofCalldata, status, generateManually }) => (
+                                    <>
+                                        {status === 'idle' && (
+                                            <button onClick={generateManually}>Generate Proof</button>
+                                        )}
+                                        {proofCalldata && tokenId && (
+                                            <ReCipherNFT calldata={proofCalldata} tokenId={tokenId} />
+                                        )}
+                                    </>
+                                )}
+                            </ProofGenerator>
                         </div>
                     </fieldset>
                 </div>

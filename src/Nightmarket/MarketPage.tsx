@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useMakeOffer } from './useMakeOffer';
 import { useConsole } from '../console/ConsoleContext';
 import OffersList from './OffersList';
@@ -8,6 +8,9 @@ const MarketPage = () => {
     const [showOfferForm, setShowOfferForm] = useState(false);
     const [offerAmount, setOfferAmount] = useState('');
     const { addMessage } = useConsole();
+
+    // Ref to track processed transactions and prevent duplicate messages
+    const lastProcessedTx = useRef<string | null>(null);
 
     const {
         makeOffer,
@@ -21,7 +24,8 @@ const MarketPage = () => {
 
     // Handle successful offer creation
     useEffect(() => {
-        if (isSuccess) {
+        if (isSuccess && txHash && lastProcessedTx.current !== txHash) {
+            lastProcessedTx.current = txHash;
             addMessage(`✓ Offer created successfully! TX: ${txHash}`, "success");
             setShowOfferForm(false);
             setOfferAmount('');
@@ -30,14 +34,14 @@ const MarketPage = () => {
                 reset();
             }, 3000);
         }
-    }, [isSuccess, txHash, reset]);
+    }, [isSuccess, txHash, addMessage, reset]);
 
     // Handle errors
     useEffect(() => {
         if (error) {
             addMessage(`✗ Error creating offer: ${error}`, "error");
         }
-    }, [error]);
+    }, [error, addMessage]);
 
     const handleMakeOfferClick = () => {
         setShowOfferForm(true);
