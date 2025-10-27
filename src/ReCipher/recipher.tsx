@@ -7,6 +7,7 @@ import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 import { generateProofTurmite } from '../ProofSystem/ProofSystem.tsx'
 import encodeAll from '../utils/encodingUtils.js';
 import { decodeSlot1, decodeSlot2, decodeSlot3, timeStamp, toBigInts } from '../utils/encodingUtils.js';
+import { ReCipherNFT } from './ReCipherConnector.tsx';
 
 ///to do: implement market in solidity + implement cipher function in solidity contract
 
@@ -334,7 +335,7 @@ const EditTokenPage = () => {
                                         <br></br>
                                         {proofCalldata["publivInput"][4].substr(0, 7)}...
                                     </div>
-                                    {/* <MintNFT calldata={proofCalldata} /> */}
+                                    <ReCipherNFT calldata={proofCalldata} tokenId={tokenId || ''} />
                                 </div>
                                 : ""}
 
