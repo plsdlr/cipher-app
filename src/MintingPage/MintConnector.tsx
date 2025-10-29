@@ -1,5 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi';
-import { TransactionStatus, TransactionButton } from '../components';
+import { TransactionStatus, TransactionButton, RequireWallets } from '../components';
 import { type ProofCalldata } from '../ProofSystem/ProofSystem.tsx';
 
 import {
@@ -11,9 +12,13 @@ import {
 
 interface MintNFTProps {
     calldata: ProofCalldata;
+    onSuccess?: () => void;
 }
 
-export function MintNFT({ calldata }: MintNFTProps) {
+export function MintNFT({ calldata, onSuccess }: MintNFTProps) {
+    // Ref to track processed transaction and prevent duplicate callbacks
+    const lastProcessedTx = useRef<string | null>(null);
+
     const {
         data: hash,
         error,
@@ -31,6 +36,11 @@ export function MintNFT({ calldata }: MintNFTProps) {
     const formattedAddress = contractAddress as `0x${string}`;
 
     async function submit() {
+        if (!address) {
+            console.error("Ethereum wallet not connected");
+            return;
+        }
+
         writeContract({
             address: formattedAddress,
             abi: EncryptedNFTABI,
@@ -45,8 +55,16 @@ export function MintNFT({ calldata }: MintNFTProps) {
             hash,
         })
 
+    // Call onSuccess callback when mint is confirmed (only once per transaction)
+    useEffect(() => {
+        if (isConfirmed && hash && lastProcessedTx.current !== hash && onSuccess) {
+            lastProcessedTx.current = hash;
+            onSuccess();
+        }
+    }, [isConfirmed, hash, onSuccess]);
+
     return (
-        <>
+        <RequireWallets>
             <TransactionButton
                 onClick={submit}
                 isPending={isPending}
@@ -65,7 +83,7 @@ export function MintNFT({ calldata }: MintNFTProps) {
                 confirmingMessage="Waiting for blockchain confirmation..."
                 successMessage="NFT minted successfully!"
             />
-        </>
+        </RequireWallets>
     )
 }
 

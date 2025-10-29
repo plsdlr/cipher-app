@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CipherWrapperIframe from '../canvasWrapper.tsx';
 import encodeAll from '../utils/encodingUtils.js';
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
@@ -9,7 +10,7 @@ import { generateProofTurmite } from '../ProofSystem/ProofSystem.tsx'
 import { MintNFT } from './MintConnector.tsx';
 
 import { useConsole } from '../console/ConsoleContext.tsx';
-import { ProofGenerator } from '../components';
+import { ProofGenerator, RequireWallets } from '../components';
 
 // Define turmite gene constants
 const BUILDER_GENES = [
@@ -55,6 +56,7 @@ const COLOR_NAMES = [
 
 const MintPage = () => {
 
+    const navigate = useNavigate();
 
     const {
         publicKey,
@@ -65,6 +67,14 @@ const MintPage = () => {
     } = useWallet();
 
     const { addMessage } = useConsole();
+
+    // Handle successful mint
+    const handleMintSuccess = useCallback(() => {
+        addMessage("NFT minted successfully! Redirecting to View page...", "success");
+        setTimeout(() => {
+            navigate('/view');
+        }, 2000);
+    }, [addMessage, navigate]);
 
     // Generate random coordinates between 0 and 256
     const generateRandomCoords = () => Array(20).fill(0).map(() => ({
@@ -272,46 +282,54 @@ const MintPage = () => {
                         <legend>ZK PROOF GENERATION</legend>
                         <div className="encryption-section">
                             <h3>Encrypt & Mint</h3>
-                            <ProofGenerator
-                                onGenerateProof={async () => {
-                                    if (!publicKey || !privateKey || !secretScalar) {
-                                        throw new Error("Wallet not registered. Please register your public key first.");
-                                    }
+                            <RequireWallets>
+                                <ProofGenerator
+                                    onGenerateProof={async () => {
+                                        if (!publicKey || !privateKey || !secretScalar) {
+                                            throw new Error("Wallet not registered. Please register your public key first.");
+                                        }
 
-                                    const allRules = builderGenes.concat(walkerGene);
-                                    const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers));
-                                    const newEncryptionKey = generateEncryptionKey();
-                                    const currentTimestamp = timeStamp();
-                                    const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
+                                        const allRules = builderGenes.concat(walkerGene);
+                                        const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers));
+                                        const newEncryptionKey = generateEncryptionKey();
+                                        const currentTimestamp = timeStamp();
+                                        const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
 
-                                    console.log('Generating proof with public key:', publicKey[0]);
+                                        console.log('Generating proof with public key:', publicKey[0]);
 
-                                    const proof = await generateProofTurmite(
-                                        privateKey,
-                                        publicKey,
-                                        encoded,
-                                        secretScalar,
-                                        cipherText,
-                                        newEncryptionKey,
-                                        currentTimestamp
-                                    );
+                                        const proof = await generateProofTurmite(
+                                            privateKey,
+                                            publicKey,
+                                            encoded,
+                                            secretScalar,
+                                            cipherText,
+                                            newEncryptionKey,
+                                            currentTimestamp
+                                        );
 
-                                    return proof.calldata;
-                                }}
-                                autoGenerate={false}
-                                preparingMessage="Preparing proof generation..."
-                                generatingMessage="Generating zero-knowledge proof (this may take a moment)..."
-                                readyMessage="Proof generated successfully! Ready to mint."
-                            >
-                                {({ proofCalldata, status, generateManually }) => (
-                                    <>
-                                        {status === 'idle' && (
-                                            <button onClick={generateManually}>Generate Proof</button>
-                                        )}
-                                        {proofCalldata && <MintNFT calldata={proofCalldata} />}
-                                    </>
-                                )}
-                            </ProofGenerator>
+                                        return proof.calldata;
+                                    }}
+                                    autoGenerate={false}
+                                    triggerDeps={[coordinates, builderGenes, walkerGene, chaosNumbers]}
+                                    preparingMessage="Preparing proof generation..."
+                                    generatingMessage="Generating zero-knowledge proof (this may take a moment)..."
+                                    readyMessage="Proof generated successfully! Ready to mint."
+                                >
+                                    {({ proofCalldata, status, generateManually }) => (
+                                        <>
+                                            {status === 'idle' && (
+                                                <button onClick={generateManually}>Generate Proof</button>
+                                            )}
+                                            {proofCalldata && (
+                                                <MintNFT
+                                                    calldata={proofCalldata}
+                                                    onSuccess={handleMintSuccess}
+                                                />
+                                            )}
+                                        </>
+                                    )}
+                                </ProofGenerator>
+                            </RequireWallets>
                         </div>
                     </fieldset>
                 </div>

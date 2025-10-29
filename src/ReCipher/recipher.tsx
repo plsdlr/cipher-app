@@ -8,7 +8,7 @@ import { generateProofTurmite } from '../ProofSystem/ProofSystem.tsx'
 import encodeAll from '../utils/encodingUtils.js';
 import { timeStamp, toBigInts } from '../utils/encodingUtils.js';
 import { ReCipherNFT } from './ReCipherConnector.tsx';
-import { ProofGenerator } from '../components';
+import { ProofGenerator, RequireWallets } from '../components';
 
 ///to do: implement market in solidity + implement cipher function in solidity contract
 
@@ -297,7 +297,8 @@ const EditTokenPage = () => {
                         <legend>ACTIONS</legend>
                         <div className="encryption-section">
                             <h3>Re-Encrypt & Update</h3>
-                            <ProofGenerator
+                            <RequireWallets>
+                                <ProofGenerator
                                 onGenerateProof={async () => {
                                     if (!publicKey || !privateKey || !secretScalar) {
                                         throw new Error("Wallet not registered. Please register your public key first.");
@@ -338,7 +339,8 @@ const EditTokenPage = () => {
                                         )}
                                     </>
                                 )}
-                            </ProofGenerator>
+                                </ProofGenerator>
+                            </RequireWallets>
                         </div>
                     </fieldset>
                 </div>

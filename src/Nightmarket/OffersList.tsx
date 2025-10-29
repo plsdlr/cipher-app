@@ -11,7 +11,7 @@ import { useWallet } from '../cipherWallet/cipherWallet';
 import { useDecryptToken } from '../ViewAndSendPage/useDecryptToken';
 import { generateProofTransfer } from '../ProofSystem/ProofSystem';
 import { timeStamp } from '../utils/encodingUtils';
-import { ProofGenerator } from '../components';
+import { ProofGenerator, RequireWallets } from '../components';
 
 interface FulfillmentState {
     offerId: bigint;
@@ -99,13 +99,13 @@ const OffersList = () => {
                 abi: EncryptedNFTABI,
                 address: formattedAddress,
                 functionName: 'userPublicKeys',
-                args: [fulfillingOffer?.buyerAddress as `0x${string}`, 0],
+                args: fulfillingOffer?.buyerAddress ? [fulfillingOffer.buyerAddress as `0x${string}`, 0] : undefined,
             },
             {
                 abi: EncryptedNFTABI,
                 address: formattedAddress,
                 functionName: 'userPublicKeys',
-                args: [fulfillingOffer?.buyerAddress as `0x${string}`, 1],
+                args: fulfillingOffer?.buyerAddress ? [fulfillingOffer.buyerAddress as `0x${string}`, 1] : undefined,
             }
         ],
         query: {
@@ -172,15 +172,47 @@ const OffersList = () => {
         }
     }, [cancelError, addMessage]);
 
-    // Refetch when component mounts or when offers are created
+    // Refetch when component mounts - poll every 10 seconds
     useEffect(() => {
-        const interval = setInterval(() => {
-            refetchCount();
-            refetch();
-        }, 10000); // Refresh every 10 seconds
+        // Only run polling when component is visible
+        let interval: NodeJS.Timeout | null = null;
 
-        return () => clearInterval(interval);
-    }, [refetch, refetchCount]);
+        const startPolling = () => {
+            interval = setInterval(() => {
+                refetchCount();
+                refetch();
+            }, 10000); // Refresh every 10 seconds
+        };
+
+        // Check if page is visible
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                // Page is hidden, stop polling to save resources
+                if (interval) {
+                    clearInterval(interval);
+                    interval = null;
+                }
+            } else {
+                // Page is visible again, resume polling
+                if (!interval) {
+                    startPolling();
+                }
+            }
+        };
+
+        // Start polling initially
+        startPolling();
+
+        // Listen for visibility changes
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            if (interval) {
+                clearInterval(interval);
+            }
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []); // Empty deps - only set up once on mount
 
     // Handle cancel button click
     const handleCancelOffer = async (offerId: bigint) => {
@@ -469,7 +501,8 @@ const OffersList = () => {
                         </div>
 
                         {calculatedEncryptionKey && decryptedToken && tokenIdToSell && (
-                            <ProofGenerator
+                            <RequireWallets>
+                                <ProofGenerator
                                 onGenerateProof={async () => {
                                     if (!publicKey || !privateKey || !secretScalar) {
                                         throw new Error("Wallet not registered. Please register your public key first.");
@@ -610,7 +643,8 @@ const OffersList = () => {
                                         )}
                                     </>
                                 )}
-                            </ProofGenerator>
+                                </ProofGenerator>
+                            </RequireWallets>
                         )}
 
                         <div className="fulfillment-note">

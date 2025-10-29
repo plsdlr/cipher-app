@@ -6,7 +6,7 @@ import { useDecryptToken } from './useDecryptToken.ts'
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 import { generateProofTransfer } from '../ProofSystem/ProofSystem.tsx'
 import { timeStamp } from '../utils/encodingUtils.js';
-import { TransactionStatus, TransactionButton, ProofGenerator } from '../components';
+import { TransactionStatus, TransactionButton, ProofGenerator, WalletConnectionWarning, RequireWallets } from '../components';
 
 
 // Helper function to validate Ethereum address
@@ -67,7 +67,10 @@ const ViewList = () => {
         abi: EncryptedNFTABI,
         address: formattedAddress,
         functionName: 'returnTokenIdsOfOwner',
-        args: ["0", "200", address]
+        args: ["0", "200", address],
+        query: {
+            enabled: !!address
+        }
     });
 
     // Use our custom hook at the component level
@@ -186,6 +189,16 @@ const ViewList = () => {
         setCalculatedEncryptionKey(null);
     };
 
+    // Check wallet connection first
+    if (!address) {
+        return (
+            <fieldset className="terminal-fieldset">
+                <legend>View / Send</legend>
+                <WalletConnectionWarning message="Please connect your Ethereum wallet to view your NFTs." />
+            </fieldset>
+        );
+    }
+
     // Loading state
     if (isLoadingTokens) {
         return <div>Loading user owned NFT's...</div>;
@@ -220,26 +233,29 @@ const ViewList = () => {
                                 </thead>
                                 <tbody>
                                     {tokenList.map((tokenId) => (
-                                        <tr
-                                            key={tokenId.toString()}
-                                            onClick={() => handleTokenClick(tokenId)}
-                                        >
+                                        <tr key={tokenId.toString()}>
                                             <td>CIPHER #{tokenId.toString()}</td>
                                             <td>
-                                                <button className="view-btn">View</button>
-                                                <button
-                                                    className="send-btn"
-                                                    onClick={(e) => handleSendClick(e, tokenId)}
-                                                >
-                                                    Send
-                                                </button>
-                                                <button
-                                                    className="send-btn"
-                                                    onClick={(e) => handleReCipher(e, tokenId)}
-                                                >
-                                                    ReCipher
-                                                </button>
-
+                                                <RequireWallets>
+                                                    <button
+                                                        className="view-btn"
+                                                        onClick={() => handleTokenClick(tokenId)}
+                                                    >
+                                                        View
+                                                    </button>
+                                                    <button
+                                                        className="send-btn"
+                                                        onClick={(e) => handleSendClick(e, tokenId)}
+                                                    >
+                                                        Send
+                                                    </button>
+                                                    <button
+                                                        className="send-btn"
+                                                        onClick={(e) => handleReCipher(e, tokenId)}
+                                                    >
+                                                        ReCipher
+                                                    </button>
+                                                </RequireWallets>
                                             </td>
                                         </tr>
                                     ))}
@@ -398,7 +414,8 @@ const ViewList = () => {
                             </div>
 
                             {calculatedEncryptionKey && decryptedToken && (
-                                <ProofGenerator
+                                <RequireWallets>
+                                    <ProofGenerator
                                     onGenerateProof={async () => {
                                         if (!publicKey || !privateKey || !secretScalar) {
                                             throw new Error("Wallet not registered. Please register your public key first.");
@@ -493,7 +510,8 @@ const ViewList = () => {
                                             </button>
                                         </div>
                                     )}
-                                </ProofGenerator>
+                                    </ProofGenerator>
+                                </RequireWallets>
                             )}
                         </div>
                     </fieldset>

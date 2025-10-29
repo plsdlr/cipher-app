@@ -32,7 +32,14 @@ export const ConsoleProvider: React.FC<{ children: ReactNode }> = ({ children })
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => {
+      // Keep only the last 100 messages to prevent memory leak
+      const updated = [...prev, newMessage];
+      if (updated.length > 100) {
+        return updated.slice(-100);
+      }
+      return updated;
+    });
   };
 
   const clearConsole = () => {

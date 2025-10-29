@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMakeOffer } from './useMakeOffer';
 import { useConsole } from '../console/ConsoleContext';
 import OffersList from './OffersList';
-import { TransactionStatus, TransactionButton } from '../components';
+import { TransactionStatus, TransactionButton, RequireWallets } from '../components';
 
 const MarketPage = () => {
     const [showOfferForm, setShowOfferForm] = useState(false);
@@ -84,54 +84,56 @@ const MarketPage = () => {
 
                     {/* Show offer form when button is clicked */}
                     {showOfferForm && (
-                        <div className="offer-form">
-                            <fieldset className="terminal-fieldset">
-                                <legend>Create Offer</legend>
+                        <RequireWallets requireCipher={false}>
+                            <div className="offer-form">
+                                <fieldset className="terminal-fieldset">
+                                    <legend>Create Offer</legend>
 
-                                <div className="form-group">
-                                    <label htmlFor="offer-amount">Offer Amount (ETH):</label>
-                                    <input
-                                        type="number"
-                                        id="offer-amount"
-                                        placeholder="0.1"
-                                        step="0.001"
-                                        min="0"
-                                        value={offerAmount}
-                                        onChange={(e) => setOfferAmount(e.target.value)}
-                                        disabled={isPending || isConfirming}
-                                    />
-                                </div>
+                                    <div className="form-group">
+                                        <label htmlFor="offer-amount">Offer Amount (ETH):</label>
+                                        <input
+                                            type="number"
+                                            id="offer-amount"
+                                            placeholder="0.1"
+                                            step="0.001"
+                                            min="0"
+                                            value={offerAmount}
+                                            onChange={(e) => setOfferAmount(e.target.value)}
+                                            disabled={isPending || isConfirming}
+                                        />
+                                    </div>
 
-                                <div className="button-group">
-                                    <TransactionButton
-                                        onClick={handleDepositClick}
+                                    <div className="button-group">
+                                        <TransactionButton
+                                            onClick={handleDepositClick}
+                                            isPending={isPending}
+                                            isConfirming={isConfirming}
+                                            disabled={!offerAmount}
+                                            className="deposit-button"
+                                            idleText="Deposit"
+                                        />
+                                        <button
+                                            className="cancel-button"
+                                            onClick={handleCancel}
+                                            disabled={isPending || isConfirming}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+
+                                    <TransactionStatus
                                         isPending={isPending}
                                         isConfirming={isConfirming}
-                                        disabled={!offerAmount}
-                                        className="deposit-button"
-                                        idleText="Deposit"
+                                        isSuccess={isSuccess}
+                                        error={error}
+                                        txHash={txHash}
+                                        pendingMessage="Submitting offer transaction..."
+                                        confirmingMessage="Waiting for blockchain confirmation..."
+                                        successMessage="Offer created successfully!"
                                     />
-                                    <button
-                                        className="cancel-button"
-                                        onClick={handleCancel}
-                                        disabled={isPending || isConfirming}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-
-                                <TransactionStatus
-                                    isPending={isPending}
-                                    isConfirming={isConfirming}
-                                    isSuccess={isSuccess}
-                                    error={error}
-                                    txHash={txHash}
-                                    pendingMessage="Submitting offer transaction..."
-                                    confirmingMessage="Waiting for blockchain confirmation..."
-                                    successMessage="Offer created successfully!"
-                                />
-                            </fieldset>
-                        </div>
+                                </fieldset>
+                            </div>
+                        </RequireWallets>
                     )}
 
                     {/* Show status during transaction */}

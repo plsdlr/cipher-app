@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useReadContract } from 'wagmi';
+import { useReadContract, useAccount } from 'wagmi';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi.ts';
 import CipherWrapperIframe from '../canvasWrapper';
-import { useDecryptToken } from './useDecryptToken.ts'
+import { useDecryptToken } from './useDecryptToken.ts';
+import { WalletConnectionWarning } from '../components';
 
 type TokenParams = {
     tokenId?: string;
@@ -11,6 +12,7 @@ type TokenParams = {
 
 const ViewPage = () => {
     const { tokenId } = useParams<TokenParams>();
+    const { address, isConnected } = useAccount();
 
     const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
     const formattedAddress = contractAddress as `0x${string}`;
@@ -20,7 +22,10 @@ const ViewPage = () => {
         abi: EncryptedNFTABI,
         address: formattedAddress,
         functionName: 'getEncryptedNote',
-        args: [tokenId]
+        args: [tokenId],
+        query: {
+            enabled: !!tokenId && isConnected
+        }
     });
 
 
@@ -33,6 +38,18 @@ const ViewPage = () => {
             }, 2))
         }
     }, [decryptedToken]);
+
+    // Check wallet connection first
+    if (!isConnected) {
+        return (
+            <div>
+                <fieldset className="terminal-fieldset">
+                    <legend>View Token</legend>
+                    <WalletConnectionWarning message="Please connect your Ethereum wallet to view this token." />
+                </fieldset>
+            </div>
+        );
+    }
 
     // Render loading state
     if (isLoadingContract || isDecrypting) {

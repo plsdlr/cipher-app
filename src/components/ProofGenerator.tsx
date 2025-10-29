@@ -99,6 +99,13 @@ export const ProofGenerator: React.FC<ProofGeneratorProps> = ({
         }
     }, [autoGenerate, ...triggerDeps]);
 
+    // Reset proof when dependencies change in manual mode (after proof is ready)
+    useEffect(() => {
+        if (!autoGenerate && (status === 'ready' || status === 'error')) {
+            reset();
+        }
+    }, [...triggerDeps]);
+
     return (
         <>
             {/* Status Display */}

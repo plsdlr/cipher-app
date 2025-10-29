@@ -58,13 +58,13 @@ export const useDecryptToken = (tokenId: string | null): UseDecryptTokenResult =
                 abi: EncryptedNFTABI,
                 address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
                 functionName: 'userPublicKeys',
-                args: [lastAddress, 0],
+                args: lastAddress ? [lastAddress, 0] : undefined,
             },
             {
                 abi: EncryptedNFTABI,
                 address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
                 functionName: 'userPublicKeys',
-                args: [lastAddress, 1],
+                args: lastAddress ? [lastAddress, 1] : undefined,
             },
         ],
         query: {
