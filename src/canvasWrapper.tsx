@@ -21,6 +21,7 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const fullscreenButtonRef = useRef<HTMLButtonElement>(null);
+    const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Update the key when props change significantly, causing a reload
     useEffect(() => {
@@ -31,6 +32,28 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
         JSON.stringify(builderTurmites),
         JSON.stringify(chaosNumbers)
     ]); // Reload on major configuration changes
+
+    // Cleanup iframe when key changes or component unmounts
+    useEffect(() => {
+        const iframe = iframeRef.current;
+
+        return () => {
+            // Force cleanup of iframe content
+            if (iframe && iframe.contentWindow) {
+                try {
+                    // Stop any animations or timers in the iframe
+                    iframe.contentWindow.postMessage({ type: 'CLEANUP' }, '*');
+                } catch (e) {
+                    // Ignore errors if iframe is already being removed
+                }
+            }
+
+            // Clear the iframe src to help garbage collection
+            if (iframe) {
+                iframe.src = 'about:blank';
+            }
+        };
+    }, [iframeKey]); // Run cleanup when key changes
 
     // Send data to the iframe after it loads
     useEffect(() => {
@@ -126,15 +149,31 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
 
                 downloadLink.click();
 
-                setTimeout(() => {
-                    document.body.removeChild(downloadLink);
+                // Clear any existing timeout
+                if (cleanupTimeoutRef.current) {
+                    clearTimeout(cleanupTimeoutRef.current);
+                }
+
+                cleanupTimeoutRef.current = setTimeout(() => {
+                    if (document.body.contains(downloadLink)) {
+                        document.body.removeChild(downloadLink);
+                    }
                     URL.revokeObjectURL(url);
+                    cleanupTimeoutRef.current = null;
                 }, 100);
             }
         };
 
         window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
+
+        return () => {
+            window.removeEventListener('message', handleMessage);
+            // Clean up any pending timeout
+            if (cleanupTimeoutRef.current) {
+                clearTimeout(cleanupTimeoutRef.current);
+                cleanupTimeoutRef.current = null;
+            }
+        };
     }, []);
 
     // Add this function to trigger SVG export
