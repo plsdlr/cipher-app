@@ -10,9 +10,24 @@ function EthWallet() {
     <fieldset className="terminal-fieldset">
       <legend>ETH WALLET</legend>
       <>
-        <div><strong>Status:</strong> {account.status}</div>
-        {account.address && <div><strong>Address:</strong> {account.address}</div>}
-        {account.chainId && <div><strong>Chain ID:</strong> {account.chainId}</div>}
+        <div className="wallet-info-table">
+          <div className="wallet-info-row">
+            <div className="wallet-info-label">Status:</div>
+            <div className="wallet-info-value">{account.status}</div>
+          </div>
+          {account.address && (
+            <div className="wallet-info-row">
+              <div className="wallet-info-label">Address:</div>
+              <div className="wallet-info-value">{account.address}</div>
+            </div>
+          )}
+          {account.chainId && (
+            <div className="wallet-info-row">
+              <div className="wallet-info-label">Chain ID:</div>
+              <div className="wallet-info-value">{account.chainId}</div>
+            </div>
+          )}
+        </div>
         {account.status === 'connected' && (
           <button
             type="button"

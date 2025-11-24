@@ -373,21 +373,26 @@ const WalletPage = () => {
           <fieldset className="terminal-fieldset">
             <legend>CIPHER WALLET</legend>
 
-            <div className="wallet-status">
-              <div className="status-item">
-                <strong>State:</strong> {walletState}
+            <div className="wallet-info-table">
+              <div className="wallet-info-row">
+                <div className="wallet-info-label">State:</div>
+                <div className="wallet-info-value">{walletState}</div>
               </div>
               {publicKey && (
-                <div className="status-item">
-                  <strong>Public Key:</strong> [{formatBigInt(publicKey[0])}, {formatBigInt(publicKey[1])}]
+                <div className="wallet-info-row">
+                  <div className="wallet-info-label">Public Key:</div>
+                  <div className="wallet-info-value">[{formatBigInt(publicKey[0])}, {formatBigInt(publicKey[1])}]</div>
                 </div>
               )}
               {privateKey && (
-                <div className="status-item private-key">
-                  <strong>Private Key:</strong> {formatByteArray(privateKey)} (active in session)
-                  <button onClick={() => navigator.clipboard.writeText(formatByteArrayFull(privateKey))}>
-                    Copy Private Key to clipboard for manual backup
-                  </button>
+                <div className="wallet-info-row private-key">
+                  <div className="wallet-info-label">Private Key:</div>
+                  <div className="wallet-info-value">
+                    {formatByteArray(privateKey)} (active in session)
+                    <button onClick={() => navigator.clipboard.writeText(formatByteArrayFull(privateKey))}>
+                      Copy Private Key to clipboard for manual backup
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

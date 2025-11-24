@@ -422,21 +422,25 @@ const OffersList = () => {
                                         <td>{parseFloat(priceInEth).toFixed(4)} ETH</td>
                                         <td>
                                             {myOffer && offerId !== undefined && offerId !== null ? (
-                                                <button
-                                                    className="cancel-offer-button"
-                                                    onClick={() => handleCancelOffer(offerId)}
-                                                    disabled={isCancelling}
-                                                >
-                                                    {isCancelling ? (isCancelPending ? 'Cancelling...' : 'Confirming...') : 'Cancel'}
-                                                </button>
+                                                <RequireWallets renderMode="inline">
+                                                    <button
+                                                        className="cancel-offer-button"
+                                                        onClick={() => handleCancelOffer(offerId)}
+                                                        disabled={isCancelling}
+                                                    >
+                                                        {isCancelling ? (isCancelPending ? 'Cancelling...' : 'Confirming...') : 'Cancel'}
+                                                    </button>
+                                                </RequireWallets>
                                             ) : (!myOffer && offerId !== undefined && offerId !== null && connectedAddress) ? (
-                                                <button
-                                                    className="fulfill-offer-button"
-                                                    onClick={() => handleFulfillOfferClick(offerId, offer.buyer, offer.price)}
-                                                    disabled={!!fulfillingOffer}
-                                                >
-                                                    Fulfill Offer
-                                                </button>
+                                                <RequireWallets renderMode="inline">
+                                                    <button
+                                                        className="fulfill-offer-button"
+                                                        onClick={() => handleFulfillOfferClick(offerId, offer.buyer, offer.price)}
+                                                        disabled={!!fulfillingOffer}
+                                                    >
+                                                        Fulfill Offer
+                                                    </button>
+                                                </RequireWallets>
                                             ) : null}
                                         </td>
                                     </tr>

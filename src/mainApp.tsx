@@ -8,6 +8,7 @@ import ViewPage from './ViewAndSendPage/view'; // Import the TokenView component
 import { ConsoleProvider, ConsoleDisplay, useConsole } from './console/ConsoleContext.tsx';
 import EditTokenPage from './ReCipher/recipher.tsx';
 import MarketPage from './Nightmarket/MarketPage';
+import { Home } from './components';
 
 // Main content component that handles routing
 const MainContent = () => {
@@ -22,13 +23,7 @@ const MainContent = () => {
 
     return (
         <Routes>
-            <Route path="/" element={
-                <div>
-                    <h3>Welcome to Cipher Wallet</h3>
-                    <p>Your secure, decentralized solution for managing digital assets.
-                        Use the menu above to navigate through different sections of the application.</p>
-                </div>
-            } />
+            <Route path="/" element={<Home />} />
             <Route path="/mint" element={<MintPage />} />
             <Route path="/view" element={<ViewList />} />
             <Route path="/view/:tokenId" element={<ViewPage />} />
@@ -99,7 +94,7 @@ function MainApp() {
                 </div>
 
                 <div className="logo">
-                    <img src="/laughingManFinalCompressed.svg" alt="Laughing Man" className="laughing-man-logo" />
+                    <img src="/laughingManNoAnimation.svg" alt="Laughing Man" className="laughing-man-logo" />
                 </div>
 
                 <div className="content">
@@ -116,10 +111,15 @@ function MainApp() {
                 </div>
 
                 <div className="footer">
-                    <h4>Footer</h4>
+                    <fieldset className="terminal-fieldset">
+
+                        <p>Ciper is supported by <a href='https://www.justopensource.io/'>JUST Open Source</a>.
+                            Cipher is an artwork by <a href='https://plsdlr.net/'>Paul Seidler</a>. All original code © GNU Affero General Public License. Third-party libraries and dependencies retain their original licenses.
+                        </p>
+                    </fieldset>
                 </div>
             </div>
-        </BrowserRouter>
+        </BrowserRouter >
     );
 }
 

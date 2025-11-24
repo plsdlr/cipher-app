@@ -3,6 +3,7 @@ import React from 'react';
 interface WalletConnectionWarningProps {
     message?: string;
     title?: string;
+    compact?: boolean;
 }
 
 /**
@@ -10,19 +11,21 @@ interface WalletConnectionWarningProps {
  */
 export const WalletConnectionWarning: React.FC<WalletConnectionWarningProps> = ({
     message = "Please connect your wallet to continue.",
-    title = "⚠ Wallet Not Connected"
+    title = "⚠ Wallet Not Connected",
+    compact = false
 }) => {
+    if (compact) {
+        return (
+            <div className="wallet-warning-compact">
+                {message}
+            </div>
+        );
+    }
+
     return (
-        <div style={{
-            color: 'red',
-            marginBottom: '10px',
-            padding: '10px',
-            border: '1px solid red',
-            borderRadius: '4px',
-            backgroundColor: 'rgba(255, 0, 0, 0.05)'
-        }}>
-            <strong>{title}</strong>
-            <p style={{ margin: '5px 0 0 0' }}>{message}</p>
+        <div className="wallet-warning">
+            <strong className="wallet-warning-title">{title}</strong>
+            <p className="wallet-warning-message">{message}</p>
         </div>
     );
 };

@@ -5,3 +5,4 @@ export { ProofGenerator } from './ProofGenerator';
 export type { ProofGenerationStatus } from './ProofGenerator';
 export { WalletConnectionWarning } from './WalletConnectionWarning';
 export { RequireWallets } from './RequireWallets';
+export { default as Home } from './Home';

@@ -33,10 +33,10 @@ export const ConsoleProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     setMessages(prev => {
-      // Keep only the last 100 messages to prevent memory leak
+      // Keep only the last 25 messages to prevent memory leak
       const updated = [...prev, newMessage];
-      if (updated.length > 100) {
-        return updated.slice(-100);
+      if (updated.length > 25) {
+        return updated.slice(-25);
       }
       return updated;
     });

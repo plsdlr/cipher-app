@@ -6,6 +6,7 @@ interface RequireWalletsProps {
     children: React.ReactNode;
     requireEth?: boolean;
     requireCipher?: boolean;
+    renderMode?: 'full' | 'inline';
 }
 
 /**
@@ -22,11 +23,18 @@ interface RequireWalletsProps {
  * <RequireWallets requireEth>
  *   <button onClick={handleTransaction}>Send Transaction</button>
  * </RequireWallets>
+ *
+ * @example
+ * // Use inline mode (for table cells or compact spaces)
+ * <RequireWallets renderMode="inline">
+ *   <button onClick={handleAction}>Action</button>
+ * </RequireWallets>
  */
 export const RequireWallets: React.FC<RequireWalletsProps> = ({
     children,
     requireEth = true,
-    requireCipher = true
+    requireCipher = true,
+    renderMode = 'full'
 }) => {
     const { isEthConnected, isCipherConnected, getMissingWalletMessage } = useWalletStatus();
 
@@ -40,8 +48,18 @@ export const RequireWallets: React.FC<RequireWalletsProps> = ({
         return <>{children}</>;
     }
 
-    // Otherwise, show appropriate warning
+    // Otherwise, show appropriate warning based on render mode
     const message = getMissingWalletMessage();
 
-    return message ? <WalletConnectionWarning message={message} /> : null;
+    if (!message) return null;
+
+    if (renderMode === 'inline') {
+        return (
+            <span className="wallet-warning-inline">
+                {message}
+            </span>
+        );
+    }
+
+    return <WalletConnectionWarning message={message} compact={renderMode === 'inline'} />;
 };

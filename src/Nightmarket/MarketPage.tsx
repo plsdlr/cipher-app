@@ -74,17 +74,19 @@ const MarketPage = () => {
 
                     {/* Show "Make Offer" button when form is hidden */}
                     {!showOfferForm && !isPending && !isConfirming && (
-                        <button
-                            className="make-offer-button"
-                            onClick={handleMakeOfferClick}
-                        >
-                            Make Offer
-                        </button>
+                        <RequireWallets>
+                            <button
+                                className="make-offer-button"
+                                onClick={handleMakeOfferClick}
+                            >
+                                Make Offer
+                            </button>
+                        </RequireWallets>
                     )}
 
                     {/* Show offer form when button is clicked */}
                     {showOfferForm && (
-                        <RequireWallets requireCipher={false}>
+                        <RequireWallets>
                             <div className="offer-form">
                                 <fieldset className="terminal-fieldset">
                                     <legend>Create Offer</legend>
