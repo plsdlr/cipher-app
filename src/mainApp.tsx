@@ -113,7 +113,7 @@ function MainApp() {
                 <div className="footer">
                     <fieldset className="terminal-fieldset">
 
-                        <p>Ciper is supported by <a href='https://www.justopensource.io/'>JUST Open Source</a>.
+                        <p>Cipher is supported by <a href='https://www.justopensource.io/'>JUST Open Source</a>.
                             Cipher is an artwork by <a href='https://plsdlr.net/'>Paul Seidler</a>. All original code © GNU Affero General Public License. Third-party libraries and dependencies retain their original licenses.
                         </p>
                     </fieldset>

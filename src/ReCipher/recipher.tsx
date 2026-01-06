@@ -92,8 +92,14 @@ const EditTokenPage = () => {
     // Handle coordinate input changes
     const handleCoordinateChange = (index: number, axis: 'x' | 'y', value: string) => {
         const newCoordinates = [...coordinates];
-        const numValue = parseInt(value) || 0;
-        const boundedValue = Math.min(Math.max(numValue, 0), 256);
+        // Allow empty string for editing, otherwise parse and bound the value
+        let boundedValue: number;
+        if (value === '' || value === '-') {
+            boundedValue = 0;
+        } else {
+            const numValue = parseInt(value);
+            boundedValue = Math.min(Math.max(numValue, 0), 256);
+        }
 
         addMessage(`Coordinate change: Turmite ${index + 1} ${axis.toUpperCase()} = ${boundedValue}`, "info");
 
@@ -277,6 +283,7 @@ const EditTokenPage = () => {
                                             max="256"
                                             value={coord.x}
                                             onChange={(e) => handleCoordinateChange(index, 'x', e.target.value)}
+                                            onFocus={(e) => e.target.select()}
                                             placeholder="X"
                                         />
                                         <input
@@ -285,6 +292,7 @@ const EditTokenPage = () => {
                                             max="256"
                                             value={coord.y}
                                             onChange={(e) => handleCoordinateChange(index, 'y', e.target.value)}
+                                            onFocus={(e) => e.target.select()}
                                             placeholder="Y"
                                         />
                                     </div>
@@ -325,6 +333,7 @@ const EditTokenPage = () => {
                                     return proof.calldata;
                                 }}
                                 autoGenerate={false}
+                                triggerDeps={[coordinates, builderGenes, walkerGene, chaosNumbers, color]}
                                 preparingMessage="Preparing re-cipher proof generation..."
                                 generatingMessage="Generating zero-knowledge proof for re-encryption..."
                                 readyMessage="Proof generated successfully! Ready to re-cipher."

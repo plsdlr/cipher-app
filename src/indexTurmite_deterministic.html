@@ -610,6 +610,68 @@
         }
 
 
+        function fullColorCanvasToSVG(canvas) {
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Create SVG element with black background
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+            // Add black background
+            const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            background.setAttribute('width', width);
+            background.setAttribute('height', height);
+            background.setAttribute('x', 0);
+            background.setAttribute('y', 0);
+            background.setAttribute('fill', 'black');
+            svg.appendChild(background);
+
+            // Get canvas image data
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+
+            // Export all pixels with their actual colors (including alpha channel)
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+                    const a = data[index + 3];
+
+                    // Check if pixel has any color or alpha value (not completely transparent black)
+                    if (r > 0 || g > 0 || b > 0 || a > 0) {
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', x);
+                        rect.setAttribute('y', y);
+                        rect.setAttribute('width', 1);
+                        rect.setAttribute('height', 1);
+
+                        // Include alpha channel in the color
+                        if (a < 255) {
+                            rect.setAttribute('fill', `rgba(${r}, ${g}, ${b}, ${a / 255})`);
+                        } else {
+                            rect.setAttribute('fill', `rgb(${r}, ${g}, ${b})`);
+                        }
+
+                        svg.appendChild(rect);
+                    }
+                }
+            }
+
+            // Convert SVG to string
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svg);
+
+            return svgString;
+        }
+
+
         function exportAndDownloadSVG(canvas, writefunction) {
             const svgString = writefunction(canvas);
 
@@ -663,9 +725,9 @@
             // 100
             const FRAMES_PER_PUSHER_UPDATE = 11;    // 9
             //20
-            const FRAMES_PER_CLEANER_UPDATE = 1;
+            const FRAMES_PER_CLEANER_UPDATE = 1;  ///maybe test 2
             //50
-            const RECTANGLE_PUSHER_NUMBER = 30;
+            const RECTANGLE_PUSHER_NUMBER = 30;   ///maybe test 20
 
             const newcleaner = new Cleaner(150, 0);
 
