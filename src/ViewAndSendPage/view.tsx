@@ -81,7 +81,12 @@ const ViewPage = () => {
                                 builderTurmites={decryptedToken.decryptedData.rules.slice(0, 3)}
                                 walkerTurmites={[decryptedToken.decryptedData.rules[3]]}
                                 speed={1}
-                                chaosNumbers={decryptedToken.decryptedData.additionalValues}
+                                chaosNumbers={[
+                                    decryptedToken.decryptedData.additionalValues.value1,
+                                    decryptedToken.decryptedData.additionalValues.value2,
+                                    decryptedToken.decryptedData.additionalValues.value3
+                                ]}
+                                color={decryptedToken.decryptedData.color - 1}  // Convert from 1-16 to 0-15 for UI
                             />
                         </div>
 
@@ -189,18 +194,22 @@ const ViewPage = () => {
                                             <td>{decryptedToken.lastOwnerPubKeys[1].toString()}</td>
                                         </tr>
 
-                                        {/* Additional Values */}
+                                        {/* Animation Parameters */}
                                         <tr>
-                                            <td>Additional Value 1</td>
-                                            <td>{decryptedToken.decryptedData.additionalValues[0]}</td>
+                                            <td>Color Palette</td>
+                                            <td>{decryptedToken.decryptedData.color}</td>
                                         </tr>
                                         <tr>
-                                            <td>Additional Value 2</td>
-                                            <td>{decryptedToken.decryptedData.additionalValues[1]}</td>
+                                            <td>Pusher Slowness</td>
+                                            <td>{decryptedToken.decryptedData.additionalValues.value1}</td>
                                         </tr>
                                         <tr>
-                                            <td>Additional Value 3</td>
-                                            <td>{decryptedToken.decryptedData.additionalValues[2]}</td>
+                                            <td>Cleaner Slowness</td>
+                                            <td>{decryptedToken.decryptedData.additionalValues.value2}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Rectangle Count</td>
+                                            <td>{decryptedToken.decryptedData.additionalValues.value3}</td>
                                         </tr>
                                     </tbody>
                                 </table>

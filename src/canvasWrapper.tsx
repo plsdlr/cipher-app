@@ -5,7 +5,8 @@ interface CipherWrapperProps {
     speed?: number;
     walkerTurmites?: string[];
     builderTurmites?: string[];
-    chaosNumbers?: number[];
+    chaosNumbers?: number[];  // [pusherSlowness, cleanerSlowness, rectangleCount]
+    color?: number;           // Color index (0-15)
 }
 
 const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
@@ -13,7 +14,8 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
     speed = 1,
     walkerTurmites = [],
     builderTurmites = [],
-    chaosNumbers = []
+    chaosNumbers = [],
+    color = 0
 }) => {
     // Add a key state that changes whenever props change significantly
     const [iframeKey, setIframeKey] = useState(0);
@@ -30,7 +32,8 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
         JSON.stringify(coordinates),
         JSON.stringify(walkerTurmites),
         JSON.stringify(builderTurmites),
-        JSON.stringify(chaosNumbers)
+        JSON.stringify(chaosNumbers),
+        color
     ]); // Reload on major configuration changes
 
     // Cleanup iframe when key changes or component unmounts
@@ -70,7 +73,8 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
                         speed,
                         walkerTurmites,
                         builderTurmites,
-                        chaosNumbers
+                        chaosNumbers,  // [pusherSlowness, cleanerSlowness, rectangleCount]
+                        color          // Color index (0-15)
                     }
                 }, '*');
             }
@@ -84,6 +88,7 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
         walkerTurmites,
         builderTurmites,
         chaosNumbers,
+        color,
         iframeKey
     ]);
 

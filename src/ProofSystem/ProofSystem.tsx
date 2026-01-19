@@ -112,58 +112,72 @@ export async function generateProofTransfer(
 }
 
 /**
- * Generates a ZK proof for turmite data
- * 
- * @param privateKey The private key as Uint8Array
- * @param publicKey The public key as [BigInt, BigInt]
- * @param turmiteSlots Array of turmite slot data as hex strings
- * @param nonce BigInt nonce for encryption (default: 5n)
+ * General ZK proof generation for AddNewDataEncryptWithOptionalCheck circuit
+ * Used for both minting and recipher operations
+ *
+ * @param myPrivateKey Derived secret scalar from private key
+ * @param oldSenderPublicKey Public key of the old sender (for verification)
+ * @param newReciverPublicKey Public key of the new receiver
+ * @param oldResultKey Old ECDH encryption key (2 elements)
+ * @param newResultKey New ECDH encryption key (2 elements)
+ * @param oldMessage Old message (3 slots)
+ * @param newMessage New message (3 slots)
+ * @param oldComputedCipherText Old computed ciphertext (4 elements)
+ * @param newComputedCipherText New computed ciphertext (4 elements)
+ * @param oldNonce Old nonce for encryption
+ * @param newNonce New nonce for encryption
+ * @param myPublicKey Current user's public key (2 elements)
+ * @param enableOneValueCheck "0" for minting (no check), "1" for recipher (enables check)
  * @returns Promise resolving to proof result
  */
 export async function generateProofTurmite(
-    privateKey: Uint8Array,
-    publicKey: bigint[],
-    turmiteSlots: bigint[],
-    deriveSecretScalarPrivKey: bigint,
-    ciphertext: bigint[],
-    encryptionKey: bigint[],
-    nonce: bigint[]
+    myPrivateKey: bigint,
+    oldSenderPublicKey: bigint[],
+    newReciverPublicKey: bigint[],
+    oldResultKey: bigint[],
+    newResultKey: bigint[],
+    oldMessage: bigint[],
+    newMessage: bigint[],
+    oldComputedCipherText: bigint[],
+    newComputedCipherText: bigint[],
+    oldNonce: bigint,
+    newNonce: bigint,
+    myPublicKey: bigint[],
+    enableOneValueCheck: "0" | "1"
 ): Promise<ProofResult> {
 
     try {
-
-        // console.log("ALL LOGS______>>>")
-        // console.log("turmiteSlots:", turmiteSlots);
-        // console.log("deriveSecretScalarPrivKey:", deriveSecretScalarPrivKey);
-        // console.log("publicKey:", publicKey);
-        // console.log("encryptionKey:", encryptionKey);
-        // console.log("nonce:", nonce);
-        // console.log("ciphertext:", ciphertext);
-
-
-
-        // Prepare circuit input
+        // Prepare circuit input for AddNewDataEncryptWithOptionalCheck
         const input = {
-            slot1: turmiteSlots[0],
-            slot2: turmiteSlots[1],
-            slot3: turmiteSlots[2],
-            myPrivateKey: deriveSecretScalarPrivKey,
-            myPublicKey: [
-                publicKey[0],
-                publicKey[1]
+            myPrivateKey: myPrivateKey,
+            oldSenderPublicKey: [oldSenderPublicKey[0], oldSenderPublicKey[1]],
+            newReciverPublicKey: [newReciverPublicKey[0], newReciverPublicKey[1]],
+            oldResultKey: [oldResultKey[0], oldResultKey[1]],
+            newResultKey: [newResultKey[0], newResultKey[1]],
+            oldMessage: [oldMessage[0], oldMessage[1], oldMessage[2]],
+            newMessage: [newMessage[0], newMessage[1], newMessage[2]],
+            oldComputedCipherText: [
+                oldComputedCipherText[0],
+                oldComputedCipherText[1],
+                oldComputedCipherText[2],
+                oldComputedCipherText[3]
             ],
-            resultKey: [encryptionKey[0], encryptionKey[1]],
-            nonce: nonce,
-            computedCipherText: ciphertext
+            newComputedCipherText: [
+                newComputedCipherText[0],
+                newComputedCipherText[1],
+                newComputedCipherText[2],
+                newComputedCipherText[3]
+            ],
+            oldNonce: oldNonce,
+            newNonce: newNonce,
+            myPublicKey: [myPublicKey[0], myPublicKey[1]],
+            enableOneValueCheck: enableOneValueCheck
         };
 
-        // console.log("get here")
-
-
-        // Use fullProve which handles witness calculation internally
+        // Use the circuit with optional check feature
         const { proof, publicSignals } = await snarkjs.groth16.fullProve(
             input,
-            '/circuit_turmites/verification-encoded-data-add.wasm',
+            '/circuit_turmites/add-new-data-encrypt-with-check.wasm',
             '/circuit_turmites/groth16_pkey.zkey'
         );
 
@@ -179,10 +193,6 @@ export async function generateProofTurmite(
             c: parsed[2],        // c points (2 elements)
             publivInput: parsed[3]     // public inputs (variable length)
         }
-
-        // console.log("Proof generated successfully:", proof);
-
-
 
         return { proof: proof, publicSignals: publicSignals, calldata: strucuredCalldata };
     } catch (err: any) {

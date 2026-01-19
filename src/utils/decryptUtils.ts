@@ -6,7 +6,12 @@ export type EncryptionKey = [bigint, bigint];
 export type DecryptedTurmiteData = {
     positions: { x: number, y: number }[];
     rules: string[];
-    additionalValues: number[];
+    additionalValues: {
+        value1: number;  // pusherSlowness
+        value2: number;  // cleanerSlowness
+        value3: number;  // rectangleCount
+    };
+    color: number;  // Color index (1-16 from encoding)
     rawDecryption?: bigint[];
 };
 
@@ -50,16 +55,12 @@ export const decryptTurmiteData = async (
         // Combine data from all slots
         const allPositions = slot1.positions.concat(slot2.positions).concat(slot3.positions);
         const allRules = slot2.rules.concat(slot3.rules);
-        const additionalValues = [
-            slot3.additionalValues.value1,
-            slot3.additionalValues.value2,
-            slot3.additionalValues.value3
-        ];
 
         return {
             positions: allPositions,
             rules: allRules,
-            additionalValues: additionalValues,
+            additionalValues: slot3.additionalValues,
+            color: slot3.color,  // Color from new encoding (1-16)
             rawDecryption: decrypted
         };
     } catch (error) {

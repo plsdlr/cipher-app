@@ -698,7 +698,7 @@
 
 
 
-        function main(turmites) {
+        function main(turmites, pusherFrames, cleanerFrames, rectangleCount) {
             var pixelPusher = [];
             var step = 0;
             //var turmites = [];
@@ -707,27 +707,11 @@
             var lastPusherUpdate = 0;
             var lastCleanerUpdate = 0;
 
-            // // 1
-            // const FRAMES_PER_TURMITE_UPDATE = 1;    // Update every 50ms (faster)
-            // // 100
-            // const FRAMES_PER_PUSHER_UPDATE = 100;    // Update every 200ms (slower)
-            // //20
-            // const FRAMES_PER_CLEANER_UPDATE = 15;
-            // //50
-            // const RECTANGLE_PUSHER_NUMBER = 30;
-
-            // const newcleaner = new Cleaner(150, 0);
-
-
-
-            // 1
-            const FRAMES_PER_TURMITE_UPDATE = 1;    // Update every 50ms (faster)
-            // 100
-            const FRAMES_PER_PUSHER_UPDATE = 11;    // 9
-            //20
-            const FRAMES_PER_CLEANER_UPDATE = 1;  ///maybe test 2
-            //50
-            const RECTANGLE_PUSHER_NUMBER = 30;   ///maybe test 20
+            // Animation parameters from encoded data
+            const FRAMES_PER_TURMITE_UPDATE = 1;    // Keep constant
+            const FRAMES_PER_PUSHER_UPDATE = pusherFrames;    // From additionalValues[0]
+            const FRAMES_PER_CLEANER_UPDATE = cleanerFrames;  // From additionalValues[2]
+            const RECTANGLE_PUSHER_NUMBER = rectangleCount;   // Test parameter (not encoded yet)
 
             const newcleaner = new Cleaner(150, 0);
 
@@ -819,7 +803,8 @@
             speed: null,
             walkerTurmites: null,
             builderTurmites: null,
-            chaosNumbers: null
+            chaosNumbers: null,  // [pusherSlowness, cleanerSlowness, rectangleCount]
+            color: null          // Color index (0-15)
         };
 
 
@@ -835,21 +820,16 @@
 
         // 2. In buildStart function, modify to:
         const buildStart = () => {
-            // Only proceed if we have the necessary configuration
-            if (!config.chaosNumbers || !config.chaosNumbers.length) {
-                console.log("Missing chaosNumbers, cannot start animation deterministically");
-                return;
-            }
-
-            // Set the random generator with the provided seed (no fallback)
-            costomRandom = seededRandom(config.chaosNumbers[0]);
-            console.log("Using seed:", config.chaosNumbers[0]);
-
             // Make sure coordinates are properly set
             if (!config.coordinates || !config.coordinates.length || config.coordinates.length < 20) {
                 console.log("Missing coordinates, cannot start animation");
                 return;
             }
+
+            // Derive seed from coordinates for deterministic but unique-per-token randomness
+            const derivedSeed = (config.coordinates[0].x * 256 + config.coordinates[0].y) * 31337;
+            costomRandom = seededRandom(derivedSeed);
+            console.log("Using derived seed:", derivedSeed);
 
             // Make sure turmite rules are provided
             if (!config.builderTurmites || !config.builderTurmites.length ||
@@ -862,6 +842,9 @@
             var allturmites = [];
 
             // Create turmites without defaults
+            // Use config.color (0-15) for turmite color
+            const turmiteColor = config.color !== null ? config.color : 0;
+
             for (var a = 0; a < 15; a++) {
                 var gene = config.builderTurmites[a % config.builderTurmites.length];
                 const turmiteData = {
@@ -871,7 +854,7 @@
                     state: 0,
                     direction: 1
                 };
-                const turmiteobjNew = new turmiteobj(turmiteData, config.chaosNumbers[1]);
+                const turmiteobjNew = new turmiteobj(turmiteData, turmiteColor);
                 allturmites.push(turmiteobjNew);
             }
 
@@ -884,11 +867,16 @@
                     state: 0,
                     direction: 1
                 };
-                const turmiteobjNew = new turmiteobj(turmiteData, config.chaosNumbers[1]);
+                const turmiteobjNew = new turmiteobj(turmiteData, turmiteColor);
                 allturmites.push(turmiteobjNew);
             }
 
-            main(allturmites);
+            // Extract animation parameters: chaosNumbers = [pusherSlowness, cleanerSlowness, rectangleCount]
+            const pusherFrames = config.chaosNumbers[0] === 0 ? 11 : config.chaosNumbers[0];
+            const cleanerFrames = config.chaosNumbers[1] === 0 ? 1 : config.chaosNumbers[1];
+            const rectangleCount = config.chaosNumbers[2] === 0 ? 30 : config.chaosNumbers[2];
+
+            main(allturmites, pusherFrames, cleanerFrames, rectangleCount);
         }
 
         // Listen for messages from the parent window
@@ -898,8 +886,8 @@
             if (event.data.type === 'UPDATE_ANIMATION' && event.data.data) {
                 // Update the configuration
                 Object.assign(config, event.data.data);
-                // If needed, restart or update the animation with new values
-                console.log
+                console.log('Config updated:', config);
+                // Restart the animation with new values
                 buildStart();
             }
 

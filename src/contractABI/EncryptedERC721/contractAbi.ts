@@ -10,7 +10,7 @@ export const EncryptedNFTABI = EncryptedNFT.abi as Abi;
 // Export the contract address for different networks
 export const EncryptedNFT_CONTRACT_ADDRESS = {
     1: '.', // Mainnet
-    11155111: '0x0d1a812cd0609BcFc018819a7775b4B163e395e9', // Sepolia
+    11155111: '0xA4AEf609fDB5E30B32a0039883458BBB945f4100', // Sepolia
 };
 
 // Default export for more convenient imports

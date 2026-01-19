@@ -1,10 +1,16 @@
 // REVISED ENCODING SCHEME FOR CIRCOM (254-bit field):
 // Slot 1: 15 position pairs (30 uint8 values) = 240 bits
 // Slot 2: 3 position pairs (48 bits) + ruleset 1 (96 bits) + ruleset 2 (96 bits) = 240 bits
-// Slot 3: 2 position pairs (32 bits) + ruleset 3 (96 bits) + ruleset 4 (96 bits) + 3 additional values (24 bits) = 248 bits
+// Slot 3: 2 position pairs (32 bits) + ruleset 3 (96 bits) + ruleset 4 (96 bits) + 3 additional values (24 bits) + color (4 bits) = 252 bits
 
-// Total capacity: 20 position pairs, 3 additional values, 4 rulesets
+// Total capacity: 20 position pairs, 3 additional values, 4 rulesets, 1 color value
 // All slots are under the 254-bit field limit for Circom
+
+// Additional values encoding (3 uint8 values):
+// additionalValues[0]: FRAMES_PER_PUSHER_UPDATE (pusher slowness, default 11 if 0)
+// additionalValues[1]: FRAMES_PER_CLEANER_UPDATE (cleaner slowness, default 1 if 0)
+// additionalValues[2]: Rectangle count
+// Color: Encoded as separate nibble (4 bits), value 1-16, selects from pico8 palette
 
 
 function byteToHex(number) {
@@ -98,12 +104,17 @@ function decodeSlot3(hexString) {
     //console.log(hexString.substring(58, 67))
     var positions = decodePositionsInt(hexString.substring(58, 67)).reverse();
     var rules = [hexString.substring(34, 58), hexString.substring(10, 34)]
+
+    // Extract color from bits 248-251 (nibble after padding zeros)
+    // In hex string 0x060f0a05..., color is at position 3
+    var color = parseInt(hexString[3], 16);
+
     var additionalValues1 = {
         value3: hexToByte(hexString[4] + hexString[5]),
         value2: hexToByte(hexString[6] + hexString[7]),
         value1: hexToByte(hexString[8] + hexString[9])
     }
-    return { positions: positions, rules: rules, additionalValues: additionalValues1 }
+    return { positions: positions, rules: rules, additionalValues: additionalValues1, color: color }
 }
 
 function decodeSlot3_withPadding(intNumber) {
@@ -111,13 +122,22 @@ function decodeSlot3_withPadding(intNumber) {
     return decodeSlot3(paddedData);
 }
 
-function encodeSlot3(rule3, rule4, posPairs, additionalValues) {
+function encodeSlot3(rule3, rule4, posPairs, additionalValues, color) {
+    // Validate color is between 1-16
+    if (color < 1 || color > 16 || !Number.isInteger(color)) {
+        throw new Error(`Color must be an integer between 1 and 16, got: ${color}`);
+    }
+
     var thepositions = encodePositionsHexString(posPairs);
     // smol endian stuff
     // console.log(thepositions)
     var additionalValuesString = byteToHex(additionalValues[2]) + byteToHex(additionalValues[1]) + byteToHex(additionalValues[0])
     // console.log(additionalValuesString)
-    var fullEncoding = additionalValuesString + rule4 + rule3 + thepositions;
+
+    // Encode color as a nibble (4 bits) at bits 248-251
+    const colorHex = color.toString(16);
+
+    var fullEncoding = colorHex + additionalValuesString + rule4 + rule3 + thepositions;
     var fullPaddingHex = "0x" + String(fullEncoding).padStart(64, '0');
     return fullPaddingHex;
 }
@@ -127,10 +147,10 @@ function toBigInts(hexArray) {
 }
 
 
-function encodeAll(positions, rulesets, additionalValues) {
+function encodeAll(positions, rulesets, additionalValues, color) {
     var slot1Encoded = encodeSlot1(positions.slice(0, 15))
     var slot2Encoded = encodeSlot2(rulesets[0], rulesets[1], positions.slice(15, 18))
-    var slot3Encoded = encodeSlot3(rulesets[2], rulesets[3], positions.slice(18, 20), additionalValues)
+    var slot3Encoded = encodeSlot3(rulesets[2], rulesets[3], positions.slice(18, 20), additionalValues, color)
     return [slot1Encoded, slot2Encoded, slot3Encoded]
 
 }

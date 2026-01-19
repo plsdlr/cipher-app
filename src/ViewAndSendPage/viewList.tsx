@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi.ts';
-import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt, useConfig } from 'wagmi';
+import { readContract } from 'wagmi/actions';
 import { useDecryptToken } from './useDecryptToken.ts'
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 import { generateProofTransfer } from '../ProofSystem/ProofSystem.tsx'
@@ -38,6 +39,7 @@ const ViewList = () => {
     const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
     const formattedAddress = contractAddress as `0x${string}`;
     const { address } = useAccount();
+    const config = useConfig();
     const {
         publicKey,
         privateKey,
@@ -75,6 +77,24 @@ const ViewList = () => {
 
     // Use our custom hook at the component level
     const { data: decryptedToken } = useDecryptToken(selectedTokenForSend);
+
+    // Prepare tokenList
+    const tokenList = (tokenIds as bigint[]) || [];
+
+    // State for tracking registration check error
+    const [registrationError, setRegistrationError] = useState<string | null>(null);
+    const [recipherError, setRecipherError] = useState<string | null>(null);
+
+    // Check if sender's public key is registered on-chain
+    const { data: senderKeyRegistered } = useReadContract({
+        abi: EncryptedNFTABI,
+        address: formattedAddress,
+        functionName: 'userPublicKeys',
+        args: [address as `0x${string}`, 0],
+        query: {
+            enabled: !!address
+        }
+    });
 
     // Fetch public keys for the receiver address (only when needed)
     const { data: newPublicKey, isLoading: isLoadingKeys, error: keyError } = useReadContracts({
@@ -140,22 +160,71 @@ const ViewList = () => {
 
     // Navigate to token detail view
     const handleTokenClick = (tokenId) => {
+        // Clear any errors when viewing a token
+        setRegistrationError(null);
+        setRecipherError(null);
         navigate(`/view/${tokenId}`);
     };
 
-    const handleReCipher = (e, tokenId) => {
+    const handleReCipher = async (e, tokenId) => {
         e.stopPropagation(); // Prevent the row click event from firing
-        navigate(`/recipher/${tokenId}`);
+        setRecipherError(null); // Reset recipher error
+        setRegistrationError(null); // Clear send error
+
+        // Fetch the cipher flag for this specific token using contract call
+        try {
+            const cipherFlag = await readContract(config, {
+                abi: EncryptedNFTABI,
+                address: formattedAddress,
+                functionName: 'getFlag',
+                args: [tokenId],
+            });
+
+            console.log(`Token ${tokenId}: cipherFlag=${cipherFlag}`);
+
+            // flag == true -> Poseidon Cipher with own keypair (cannot ReCipher)
+            // flag == false -> Poseidon Cipher with ECDH with previous sender (can ReCipher)
+            if (cipherFlag === true) {
+                setRecipherError('⚠️ ReCipher only allowed once after transfer. This token is encrypted with your own keypair.');
+                return; // Don't navigate
+            }
+
+            // Check passed, navigate to recipher page
+            navigate(`/recipher/${tokenId}`);
+        } catch (error) {
+            console.error('Error checking cipher flag:', error);
+            setRecipherError('⚠️ Error checking token status. Please try again.');
+        }
     };
 
     // Handle showing the send form for a specific token
-    const handleSendClick = (e, tokenId) => {
+    const handleSendClick = async (e, tokenId) => {
         e.stopPropagation(); // Prevent the row click event from firing
-        setSelectedTokenForSend(tokenId.toString());
-        setReceiverAddress(''); // Reset receiver address when opening a new form
-        setAddressError(null); // Reset any previous errors
-        setShouldFetchKeys(false); // Reset key fetching state
-        setCalculatedEncryptionKey(null); // Reset calculated key
+
+        // Check if sender is registered before opening send form
+        setRegistrationError(null); // Reset registration error
+        setRecipherError(null); // Clear recipher error
+
+        try {
+            // Check if user's public key is registered on-chain
+            if (!senderKeyRegistered || senderKeyRegistered === 0n) {
+                setRegistrationError('⚠️ You must register your Public Cipher Key before sending tokens. Please register your key in the cipher wallet on the right side ->.');
+                return; // Don't open the form
+            }
+
+            console.log('Registration check passed - key is registered on-chain');
+
+            // Registration check passed, open the send form
+            setSelectedTokenForSend(tokenId.toString());
+            setReceiverAddress(''); // Reset receiver address when opening a new form
+            setAddressError(null); // Reset any previous errors
+            setShouldFetchKeys(false); // Reset key fetching state
+            setCalculatedEncryptionKey(null); // Reset calculated key
+            setRegistrationError(null); // Clear any previous registration errors
+        } catch (error) {
+            console.error('Error checking registration:', error);
+            setRegistrationError('⚠️ Error checking registration status. Please try again.');
+        }
     };
 
     // Handle receiver address input change with validation
@@ -187,6 +256,8 @@ const ViewList = () => {
         setAddressError(null);
         setShouldFetchKeys(false);
         setCalculatedEncryptionKey(null);
+        setRegistrationError(null);
+        setRecipherError(null);
     };
 
     // Check wallet connection first
@@ -208,9 +279,6 @@ const ViewList = () => {
     if (tokensError) {
         return <div>Error loading data: {tokensError.message}</div>;
     }
-
-    // Format token data for display
-    const tokenList = tokenIds || [];
 
     return (
         <>
@@ -261,10 +329,36 @@ const ViewList = () => {
                                     ))}
                                 </tbody>
                             </table>
+
+                            {/* Error Messages */}
+                            {registrationError && (
+                                <div style={{
+                                    marginTop: '20px',
+                                    padding: '15px',
+                                    border: '1px solid #ff0000',
+                                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                                    color: '#ff0000',
+                                    borderRadius: '4px'
+                                }}>
+                                    {registrationError}
+                                </div>
+                            )}
+                            {recipherError && (
+                                <div style={{
+                                    marginTop: '20px',
+                                    padding: '15px',
+                                    border: '1px solid #ff0000',
+                                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                                    color: '#ff0000',
+                                    borderRadius: '4px'
+                                }}>
+                                    {recipherError}
+                                </div>
+                            )}
                         </>
                     )}
 
-                    <style jsx>{`
+                    <style>{`
                 .error {
                     border-color: #ff0000;
                 }
@@ -416,100 +510,100 @@ const ViewList = () => {
                             {calculatedEncryptionKey && decryptedToken && (
                                 <RequireWallets>
                                     <ProofGenerator
-                                    onGenerateProof={async () => {
-                                        if (!publicKey || !privateKey || !secretScalar) {
-                                            throw new Error("Wallet not registered. Please register your public key first.");
-                                        }
+                                        onGenerateProof={async () => {
+                                            if (!publicKey || !privateKey || !secretScalar) {
+                                                throw new Error("Wallet not registered. Please register your public key first.");
+                                            }
 
-                                        if (!decryptedToken.lastOwnerPubKeys || !decryptedToken.usedEncryptionKey ||
-                                            !decryptedToken.decryptedData || !decryptedToken.encryptedNote) {
-                                            throw new Error("Token data incomplete");
-                                        }
+                                            if (!decryptedToken.lastOwnerPubKeys || !decryptedToken.usedEncryptionKey ||
+                                                !decryptedToken.decryptedData || !decryptedToken.encryptedNote) {
+                                                throw new Error("Token data incomplete");
+                                            }
 
-                                        // Extract receiver's public key
-                                        const toPublicKey: [bigint, bigint] = [
-                                            newPublicKey![0].result as bigint,
-                                            newPublicKey![1].result as bigint
-                                        ];
+                                            // Extract receiver's public key
+                                            const toPublicKey: [bigint, bigint] = [
+                                                newPublicKey![0].result as bigint,
+                                                newPublicKey![1].result as bigint
+                                            ];
 
-                                        const currentTimestamp = timeStamp();
-                                        const cipherText = poseidonEncryption(
-                                            currentTimestamp,
-                                            calculatedEncryptionKey,
-                                            decryptedToken.decryptedData.rawDecryption
-                                        );
+                                            const currentTimestamp = timeStamp();
+                                            const cipherText = poseidonEncryption(
+                                                currentTimestamp,
+                                                calculatedEncryptionKey,
+                                                decryptedToken.decryptedData.rawDecryption
+                                            );
 
-                                        console.log('Generating transfer proof...');
+                                            console.log('Generating transfer proof...');
 
-                                        const proof = await generateProofTransfer(
-                                            privateKey,
-                                            secretScalar,
-                                            publicKey,
-                                            decryptedToken.lastOwnerPubKeys,
-                                            toPublicKey,
-                                            decryptedToken.usedEncryptionKey,
-                                            calculatedEncryptionKey,
-                                            decryptedToken.decryptedData.rawDecryption,
-                                            decryptedToken.decryptedData.rawDecryption,
-                                            (decryptedToken.encryptedNote.slice(0, 4) as bigint[]),
-                                            cipherText,
-                                            [decryptedToken.encryptedNote[4]],
-                                            [currentTimestamp]
-                                        );
+                                            const proof = await generateProofTransfer(
+                                                privateKey,
+                                                secretScalar,
+                                                publicKey,
+                                                decryptedToken.lastOwnerPubKeys,
+                                                toPublicKey,
+                                                decryptedToken.usedEncryptionKey,
+                                                calculatedEncryptionKey,
+                                                decryptedToken.decryptedData.rawDecryption,
+                                                decryptedToken.decryptedData.rawDecryption,
+                                                (decryptedToken.encryptedNote.slice(0, 4) as bigint[]),
+                                                cipherText,
+                                                [decryptedToken.encryptedNote[4]],
+                                                [currentTimestamp]
+                                            );
 
-                                        console.log('Transfer proof generated:', proof);
-                                        return proof.calldata;
-                                    }}
-                                    autoGenerate={true}
-                                    triggerDeps={[calculatedEncryptionKey, decryptedToken]}
-                                    preparingMessage="Preparing transfer proof..."
-                                    generatingMessage="Generating zero-knowledge proof for transfer..."
-                                    readyMessage="Proof generated successfully! Ready to send."
-                                >
-                                    {({ proofCalldata, status }) => (
-                                        <div className="form-actions">
-                                            <TransactionButton
-                                                onClick={() => {
-                                                    if (proofCalldata) {
-                                                        writeContract({
-                                                            address: formattedAddress,
-                                                            abi: EncryptedNFTABI,
-                                                            functionName: 'verifiedTransferFrom',
-                                                            args: [
-                                                                address,
-                                                                receiverAddress,
-                                                                selectedTokenForSend,
-                                                                proofCalldata.a,
-                                                                proofCalldata.b,
-                                                                proofCalldata.c,
-                                                                proofCalldata.publivInput
-                                                            ],
-                                                        });
+                                            console.log('Transfer proof generated:', proof);
+                                            return proof.calldata;
+                                        }}
+                                        autoGenerate={true}
+                                        triggerDeps={[calculatedEncryptionKey, decryptedToken]}
+                                        preparingMessage="Preparing transfer proof..."
+                                        generatingMessage="Generating zero-knowledge proof for transfer..."
+                                        readyMessage="Proof generated successfully! Ready to send."
+                                    >
+                                        {({ proofCalldata, status }) => (
+                                            <div className="form-actions">
+                                                <TransactionButton
+                                                    onClick={() => {
+                                                        if (proofCalldata) {
+                                                            writeContract({
+                                                                address: formattedAddress,
+                                                                abi: EncryptedNFTABI,
+                                                                functionName: 'verifiedTransferFrom',
+                                                                args: [
+                                                                    address,
+                                                                    receiverAddress,
+                                                                    selectedTokenForSend,
+                                                                    proofCalldata.a,
+                                                                    proofCalldata.b,
+                                                                    proofCalldata.c,
+                                                                    proofCalldata.publivInput
+                                                                ],
+                                                            });
+                                                        }
+                                                    }}
+                                                    isPending={isWritePending}
+                                                    isConfirming={isConfirming}
+                                                    disabled={
+                                                        !proofCalldata ||
+                                                        status !== 'ready' ||
+                                                        !!addressError ||
+                                                        isLoadingKeys
                                                     }
-                                                }}
-                                                isPending={isWritePending}
-                                                isConfirming={isConfirming}
-                                                disabled={
-                                                    !proofCalldata ||
-                                                    status !== 'ready' ||
-                                                    !!addressError ||
-                                                    isLoadingKeys
-                                                }
-                                                className="confirm-send-btn"
-                                                idleText="Confirm Send"
-                                                pendingText="Submitting..."
-                                                confirmingText="Confirming..."
-                                            />
-                                            <button
-                                                type="button"
-                                                className="cancel-send-btn"
-                                                onClick={handleCancelSend}
-                                                disabled={isWritePending || isConfirming}
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    )}
+                                                    className="confirm-send-btn"
+                                                    idleText="Confirm Send"
+                                                    pendingText="Submitting..."
+                                                    confirmingText="Confirming..."
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="cancel-send-btn"
+                                                    onClick={handleCancelSend}
+                                                    disabled={isWritePending || isConfirming}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        )}
                                     </ProofGenerator>
                                 </RequireWallets>
                             )}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import CipherWrapperIframe from '../canvasWrapper.tsx';
 import encodeAll from '../utils/encodingUtils.js';
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
+import AnimationParameterSelector from '../components/AnimationParameterSelector.tsx';
 
 import { timeStamp, toBigInts } from '../utils/encodingUtils.js';
 
@@ -12,26 +13,64 @@ import { MintNFT } from './MintConnector.tsx';
 import { useConsole } from '../console/ConsoleContext.tsx';
 import { ProofGenerator, RequireWallets } from '../components';
 
+// Type for gene structure
+type GeneType = {
+    rule: string;
+    name: string;
+};
+
 // Define turmite gene constants
+// const BUILDER_GENES = [
+//     "ff0800ff0201ff0800000001",
+//     "ff0801000200000800ff0800",
+//     "ff0201000201ff0400000000",
+//     "ff0201000801ff0000000000",
+//     "ff0201000800ff0000000801",
+//     "ff0001000001ff0801000000",
+//     "ff0001000201ff0000000800"
+// ];
+
+
+// const WALKER_GENES = [
+//     "ff0000ff0801000000000200",
+//     "ff0000ff0801000201000000",
+//     "ff0000ff0801000201000200",
+//     "ff0000ff0801ff0400000200",
+//     "ff0001000200000200000200",
+//     "ff0001000200000200ff0000",
+//     "ff0001000801ff0000ff0200",
+//     "ff0001ff0201ff0000ff0800"
+// ];
+
 const BUILDER_GENES = [
-    "ff0800ff0201ff0800000001",
-    "ff0801000200000800ff0800",
-    "ff0201000201ff0400000000",
-    "ff0201000801ff0000000000",
-    "ff0201000800ff0000000801",
-    "ff0001000001ff0801000000",
-    "ff0001000201ff0000000800"
+    { rule: "ff0201ff0201ff0000ff0001", name: "Trails" },
+    { rule: "ff0801000200000800ff0800", name: "Ornament" },
+    { rule: "ff0201000201ff0400000000", name: "Cave" },
+    { rule: "ff0201000801ff0000000000", name: "Cross" },
+    { rule: "ff0201ff0000ff0000000800", name: "Crystal" },
+    { rule: "ff0201000800ff0000000801", name: "Motion" },
+    { rule: "ff0001000001ff0801000000", name: "Twisted" },
+    { rule: "ff0001000201ff0000000800", name: "Swift" },
+    { rule: "ff0201ff0800000000000801", name: "Lamp" },
+    { rule: "ff0200000801ff0800000201", name: "Guwoz" },
+    { rule: "ff0800ff0201000200000801", name: "Crown" },
+    { rule: "ff0201ff0000000200ff0400", name: "Snow" },
+    { rule: "ff0801ff0200000200ff0001", name: "Wolf (r)" },
+    { rule: "ff0201ff0201ff0400000000", name: "Vermin" },
+    { rule: "ff0400000401ff0200ff0801", name: "Ibis" }
 ];
 
+
 const WALKER_GENES = [
-    "ff0000ff0801000000000200",
-    "ff0000ff0801000201000000",
-    "ff0000ff0801000201000200",
-    "ff0000ff0801ff0400000200",
-    "ff0001000200000200000200",
-    "ff0001000200000200ff0000",
-    "ff0001000801ff0000ff0200",
-    "ff0001ff0201ff0000ff0800"
+    { rule: "ff0000ff0801000000000200", name: "Paragon" },
+    { rule: "ff0801ff0200000200ff0001", name: "Aurora (r)" },
+    { rule: "ff0001ff0800000000ff0001", name: "Peregrine (r]" },
+    { rule: "ff0000ff0801ff0400000200", name: "Flock" },
+    { rule: "ff0801ff0200000200ff0001", name: "Wolf (r)" },
+    { rule: "ff0001000801ff0000ff0200", name: "Ant" }, //// this one needs to stay
+    { rule: "ff0001ff0201ff0000ff0800", name: "Epitome" },
+    { rule: "ff0400000401ff0200ff0801", name: "Vermicular" },
+    { rule: "ff0200000001000000ff0801", name: "terra" }
 ];
 
 // Color palette names for dropdown display
@@ -96,7 +135,10 @@ const MintPage = () => {
 
     // New state for color selection (0-15)
     const [color, setColor] = useState(0);
-    const [chaosNumbers, setChaosNumbers] = useState([0, 0, 0]);
+    const [pusherFrames, setPusherFrames] = useState(11);
+    const [cleanerFrames, setCleanerFrames] = useState(1);
+    const [rectangleCount, setRectangleCount] = useState(5); // Default to valid combo
+    const [chaosNumbers, setChaosNumbers] = useState([11, 1, 5]); // [pusherSlowness, cleanerSlowness, rectangleCount]
 
 
     // Handle coordinate input changes
@@ -124,8 +166,25 @@ const MintPage = () => {
     // Handle color selection change
     const handleColorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedColor = parseInt(e.target.value);
-        setChaosNumbers([0, selectedColor, 0]);
         setColor(selectedColor);
+    };
+
+    // Keep chaosNumbers synchronized with individual parameter changes
+    useEffect(() => {
+        setChaosNumbers([pusherFrames, cleanerFrames, rectangleCount]);
+    }, [pusherFrames, cleanerFrames, rectangleCount]);
+
+    // Handle animation parameter changes
+    const handlePusherChange = (value: number) => {
+        setPusherFrames(value);
+    };
+
+    const handleCleanerChange = (value: number) => {
+        setCleanerFrames(value);
+    };
+
+    const handleRectangleChange = (value: number) => {
+        setRectangleCount(value);
     };
 
     // Generate random coordinates
@@ -139,17 +198,17 @@ const MintPage = () => {
     }, []);
 
     // Handle builder gene selection
-    const handleBuilderGeneChange = (index: number, gene: string) => {
+    const handleBuilderGeneChange = (index: number, gene: GeneType) => {
         const newBuilderGenes = [...builderGenes];
         newBuilderGenes[index] = gene;
         setBuilderGenes(newBuilderGenes);
-        addMessage("new builder gene: " + String(gene), "info")
+        addMessage("new builder gene: " + gene.name, "info")
     };
 
     // Handle walker gene selection
-    const handleWalkerGeneChange = (gene: string) => {
+    const handleWalkerGeneChange = (gene: GeneType) => {
         setWalkerGene(gene);
-        addMessage("new walker gene: " + String(gene), "info")
+        addMessage("new walker gene: " + gene.name, "info")
     };
 
     return (
@@ -171,10 +230,11 @@ const MintPage = () => {
                         <legend>MINTING PREVIEW</legend>
                         <CipherWrapperIframe
                             coordinates={coordinates}
-                            builderTurmites={builderGenes}
-                            walkerTurmites={[walkerGene]}
+                            builderTurmites={builderGenes.map(g => g.rule)}
+                            walkerTurmites={[walkerGene.rule]}
                             speed={1}
                             chaosNumbers={chaosNumbers}
+                            color={color}
                         />
                         <div className="canvas-controls">
                             <button onClick={generateRandomCoordinates} className="random-btn">
@@ -188,8 +248,6 @@ const MintPage = () => {
 
                         {/* Color Selection Dropdown */}
                         <div className="gene-section">
-
-
                             <p>Select Color Theme</p>
                             <div className="color-dropdown">
                                 <select
@@ -204,8 +262,18 @@ const MintPage = () => {
                                     ))}
                                 </select>
                             </div>
-
                         </div>
+
+                        {/* Animation Parameters */}
+                        <AnimationParameterSelector
+                            pusherFrames={pusherFrames}
+                            cleanerFrames={cleanerFrames}
+                            rectangleCount={rectangleCount}
+                            onPusherChange={handlePusherChange}
+                            onCleanerChange={handleCleanerChange}
+                            onRectangleChange={handleRectangleChange}
+                            includeRectangleCount={true}
+                        />
 
                         <div className="gene-section">
                             <fieldset className="terminal-fieldset">
@@ -222,7 +290,7 @@ const MintPage = () => {
                                                         checked={gene === option}
                                                         onChange={() => handleBuilderGeneChange(index, option)}
                                                     />
-                                                    <span className="gene-name">Type {optionIndex + 1}</span>
+                                                    <span className="gene-name">{option.name}</span>
                                                 </label>
                                             ))}
                                         </div>
@@ -245,7 +313,7 @@ const MintPage = () => {
                                                     checked={walkerGene === option}
                                                     onChange={() => handleWalkerGeneChange(option)}
                                                 />
-                                                <span className="gene-name">Type {optionIndex + 1}</span>
+                                                <span className="gene-name">{option.name}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -296,28 +364,36 @@ const MintPage = () => {
                                             throw new Error("Wallet not registered. Please register your public key first.");
                                         }
 
-                                        const allRules = builderGenes.concat(walkerGene);
-                                        const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers));
+                                        const allRules = builderGenes.map(g => g.rule).concat(walkerGene.rule);
+                                        // Color is 0-15 in UI but encoding expects 1-16
+                                        const encoded = toBigInts(encodeAll(coordinates, allRules, chaosNumbers, color + 1));
                                         const newEncryptionKey = generateEncryptionKey();
                                         const currentTimestamp = timeStamp();
                                         const cipherText = poseidonEncryption(currentTimestamp, newEncryptionKey, encoded);
 
-                                        console.log('Generating proof with public key:', publicKey[0]);
+                                        console.log('Generating minting proof with public key:', publicKey[0]);
 
+                                        // For minting: Alice encrypts to herself, so all old/new values are the same
                                         const proof = await generateProofTurmite(
-                                            privateKey,
-                                            publicKey,
-                                            encoded,
-                                            secretScalar,
-                                            cipherText,
-                                            newEncryptionKey,
-                                            currentTimestamp
+                                            secretScalar,                // myPrivateKey (derived secret scalar)
+                                            publicKey,                   // oldSenderPublicKey (Alice's public key)
+                                            publicKey,                   // newReciverPublicKey (Alice's public key - same)
+                                            newEncryptionKey,            // oldResultKey (ECDH key)
+                                            newEncryptionKey,            // newResultKey (same ECDH key)
+                                            encoded,                     // oldMessage (3 slots)
+                                            encoded,                     // newMessage (same 3 slots)
+                                            cipherText,                  // oldComputedCipherText (4 elements)
+                                            cipherText,                  // newComputedCipherText (same 4 elements)
+                                            currentTimestamp,            // oldNonce
+                                            currentTimestamp,            // newNonce (same)
+                                            publicKey,                   // myPublicKey
+                                            "0"                          // enableOneValueCheck (disabled for minting)
                                         );
 
                                         return proof.calldata;
                                     }}
                                     autoGenerate={false}
-                                    triggerDeps={[coordinates, builderGenes, walkerGene, chaosNumbers]}
+                                    triggerDeps={[coordinates, builderGenes, walkerGene, chaosNumbers, color, pusherFrames, cleanerFrames]}
                                     preparingMessage="Preparing proof generation..."
                                     generatingMessage="Generating zero-knowledge proof (this may take a moment)..."
                                     readyMessage="Proof generated successfully! Ready to mint."
@@ -338,6 +414,39 @@ const MintPage = () => {
                                 </ProofGenerator>
                             </RequireWallets>
                         </div>
+                    </fieldset>
+
+                    {/* Temporary Export Button */}
+                    <fieldset className="terminal-fieldset">
+                        <legend>EXPORT VALUES (DEBUG)</legend>
+                        <button
+                            onClick={() => {
+                                const exportData = {
+                                    coordinates,
+                                    builderGenes: builderGenes.map(g => ({ rule: g.rule, name: g.name })),
+                                    walkerGene: { rule: walkerGene.rule, name: walkerGene.name },
+                                    color,
+                                    pusherFrames,
+                                    cleanerFrames,
+                                    rectangleCount,
+                                    chaosNumbers
+                                };
+                                const jsonString = JSON.stringify(exportData, null, 2);
+                                const blob = new Blob([jsonString], { type: 'application/json' });
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `mint-values-${Date.now()}.json`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                URL.revokeObjectURL(url);
+                                addMessage("Exported mint values to JSON", "success");
+                            }}
+                            className="export-btn"
+                        >
+                            EXPORT VALUES AS JSON
+                        </button>
                     </fieldset>
                 </div>
 
