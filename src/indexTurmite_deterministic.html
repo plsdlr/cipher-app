@@ -78,24 +78,10 @@
             };
         }
 
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // Clear the canvas
+        // Clear the canvas on initial load
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-
-        function resizeCanvas() {
-            // Keep internal resolution fixed
-            canvas.width = 300;
-            canvas.height = 300;
-
-            // The canvas styling is handled by CSS now
-            // This ensures it fills the container while maintaining aspect ratio
-        }
 
         // function setSinglePixelColor(x, y, pixel, r, g, b) {
         //     const index = (y * canvas.width + x) * 4;
@@ -783,10 +769,25 @@
             }
 
             async function runAnimation() {
-                while (true) {
+                // Create a unique ID for this animation instance
+                const myId = Symbol('animation');
+                currentAnimationId = myId;
+                shouldRunAnimation = true;
+
+                while (shouldRunAnimation && currentAnimationId === myId) {
                     animate();
-                    //16
                     await new Promise(resolve => setTimeout(resolve, 10));
+
+                    // Pause when tab is hidden to save CPU
+                    if (document.hidden) {
+                        await new Promise(resolve => {
+                            const handler = () => {
+                                document.removeEventListener('visibilitychange', handler);
+                                resolve();
+                            };
+                            document.addEventListener('visibilitychange', handler);
+                        });
+                    }
                 }
             }
 
@@ -807,6 +808,11 @@
             color: null          // Color index (0-15)
         };
 
+        // ============ ANIMATION CONTROL ============
+        // These variables control the animation loop lifecycle
+        let shouldRunAnimation = false;
+        let currentAnimationId = null;
+
 
 
         // const builders = ["ff0800ff0201ff0800000001", "ff0801000200000800ff0800", "ff0201000201ff0400000000", "ff0201000801ff0000000000", "ff0201000800ff0000000801", "ff0001000001ff0801000000", "ff0001000201ff0000000800"]
@@ -820,9 +826,12 @@
 
         // 2. In buildStart function, modify to:
         const buildStart = () => {
+            // Stop any existing animation first
+            shouldRunAnimation = false;
+            currentAnimationId = null;
+
             // Make sure coordinates are properly set
             if (!config.coordinates || !config.coordinates.length || config.coordinates.length < 20) {
-                console.log("Missing coordinates, cannot start animation");
                 return;
             }
 
@@ -881,22 +890,28 @@
 
         // Listen for messages from the parent window
         window.addEventListener('message', (event) => {
-            console.log('Iframe received message:', event.data);
+            // Ignore messages without a type (from extensions, devtools, etc.)
+            if (!event.data || !event.data.type) {
+                return;
+            }
+
+            // CLEANUP handler - stops the animation loop
+            if (event.data.type === 'CLEANUP') {
+                shouldRunAnimation = false;
+                currentAnimationId = null;
+                window.parent.postMessage({ type: 'CLEANUP_DONE' }, '*');
+                return;
+            }
+
             // You might want to check event.origin for security
             if (event.data.type === 'UPDATE_ANIMATION' && event.data.data) {
-                // Update the configuration
                 Object.assign(config, event.data.data);
-                console.log('Config updated:', config);
-                // Restart the animation with new values
                 buildStart();
             }
 
-            // ADD THIS NEW CASE:
+            // SVG Export handler
             if (event.data.type === 'EXPORT_SVG') {
-                console.log('Export SVG requested');
                 const svgString = redBlackCanvasToSVG(canvas);
-
-                // Send SVG data back to parent
                 window.parent.postMessage({
                     type: 'SVG_READY',
                     svgData: svgString

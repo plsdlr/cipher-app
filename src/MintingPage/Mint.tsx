@@ -12,6 +12,8 @@ import { MintNFT } from './MintConnector.tsx';
 
 import { useConsole } from '../console/ConsoleContext.tsx';
 import { ProofGenerator, RequireWallets } from '../components';
+import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
+import { OnboardingModal } from '../components/OnboardingModal';
 
 // Type for gene structure
 type GeneType = {
@@ -55,7 +57,6 @@ const BUILDER_GENES = [
     { rule: "ff0200000801ff0800000201", name: "Guwoz" },
     { rule: "ff0800ff0201000200000801", name: "Crown" },
     { rule: "ff0201ff0000000200ff0400", name: "Snow" },
-    { rule: "ff0801ff0200000200ff0001", name: "Wolf (r)" },
     { rule: "ff0201ff0201ff0400000000", name: "Vermin" },
     { rule: "ff0400000401ff0200ff0801", name: "Ibis" }
 ];
@@ -66,10 +67,9 @@ const WALKER_GENES = [
     { rule: "ff0801ff0200000200ff0001", name: "Aurora (r)" },
     { rule: "ff0001ff0800000000ff0001", name: "Peregrine (r]" },
     { rule: "ff0000ff0801ff0400000200", name: "Flock" },
-    { rule: "ff0801ff0200000200ff0001", name: "Wolf (r)" },
     { rule: "ff0001000801ff0000ff0200", name: "Ant" }, //// this one needs to stay
     { rule: "ff0001ff0201ff0000ff0800", name: "Epitome" },
-    { rule: "ff0400000401ff0200ff0801", name: "Vermicular" },
+    { rule: "ff0400000401ff0200ff0801", name: "Ibis" },
     { rule: "ff0200000001000000ff0801", name: "terra" }
 ];
 
@@ -106,6 +106,23 @@ const MintPage = () => {
     } = useWallet();
 
     const { addMessage } = useConsole();
+
+    // Onboarding modal state
+    const { needsOnboarding, dismissOnboarding } = useOnboardingStatus();
+    const [showOnboarding, setShowOnboarding] = useState(false);
+
+    useEffect(() => {
+        setShowOnboarding(needsOnboarding);
+    }, [needsOnboarding]);
+
+    const handleOnboardingComplete = () => {
+        setShowOnboarding(false);
+    };
+
+    const handleOnboardingDismiss = () => {
+        dismissOnboarding();
+        setShowOnboarding(false);
+    };
 
     // Handle successful mint
     const handleMintSuccess = useCallback(() => {
@@ -213,6 +230,12 @@ const MintPage = () => {
 
     return (
         <div className="mint-page">
+            {showOnboarding && (
+                <OnboardingModal
+                    onComplete={handleOnboardingComplete}
+                    onDismiss={handleOnboardingDismiss}
+                />
+            )}
             <div className="mint-content">
 
                 <fieldset className="terminal-fieldset">

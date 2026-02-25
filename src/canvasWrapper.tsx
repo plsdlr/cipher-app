@@ -7,6 +7,7 @@ interface CipherWrapperProps {
     builderTurmites?: string[];
     chaosNumbers?: number[];  // [pusherSlowness, cleanerSlowness, rectangleCount]
     color?: number;           // Color index (0-15)
+    hideControls?: boolean;   // Hide fullscreen and export buttons
 }
 
 const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
@@ -15,7 +16,8 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
     walkerTurmites = [],
     builderTurmites = [],
     chaosNumbers = [],
-    color = 0
+    color = 0,
+    hideControls = false
 }) => {
     // Add a key state that changes whenever props change significantly
     const [iframeKey, setIframeKey] = useState(0);
@@ -44,17 +46,18 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
             // Force cleanup of iframe content
             if (iframe && iframe.contentWindow) {
                 try {
-                    // Stop any animations or timers in the iframe
                     iframe.contentWindow.postMessage({ type: 'CLEANUP' }, '*');
                 } catch (e) {
                     // Ignore errors if iframe is already being removed
                 }
             }
 
-            // Clear the iframe src to help garbage collection
-            if (iframe) {
-                iframe.src = 'about:blank';
-            }
+            // Use a small delay before clearing src to allow cleanup to process
+            setTimeout(() => {
+                if (iframe && iframe.src !== 'about:blank') {
+                    iframe.src = 'about:blank';
+                }
+            }, 50);
         };
     }, [iframeKey]); // Run cleanup when key changes
 
@@ -94,40 +97,18 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
 
     // Fullscreen toggle handler
     const toggleFullscreen = () => {
-        console.log("Toggle fullscreen called");
         if (!document.fullscreenElement) {
-            if (wrapperRef.current?.requestFullscreen) {
-                console.log("Requesting fullscreen");
-                wrapperRef.current.requestFullscreen()
-                    .then(() => {
-                        console.log("Fullscreen enabled");
-                        setIsFullscreen(true);
-                        // Increment the key to force iframe reload when entering fullscreen
-                        setIframeKey(prevKey => prevKey + 1);
-                    })
-                    .catch(err => console.error(`Error attempting to enable fullscreen: ${err.message}`));
-            } else {
-                console.log("Fullscreen API not available");
-            }
+            wrapperRef.current?.requestFullscreen()
+                .catch(err => console.error(`Error attempting to enable fullscreen: ${err.message}`));
         } else {
-            if (document.exitFullscreen) {
-                console.log("Exiting fullscreen");
-                document.exitFullscreen()
-                    .then(() => {
-                        console.log("Fullscreen exited");
-                        setIsFullscreen(false);
-                        // Increment the key to force iframe reload when exiting fullscreen
-                        setIframeKey(prevKey => prevKey + 1);
-                    })
-                    .catch(err => console.error(`Error attempting to exit fullscreen: ${err.message}`));
-            }
+            document.exitFullscreen()
+                .catch(err => console.error(`Error attempting to exit fullscreen: ${err.message}`));
         }
     };
 
     // Listen for fullscreen change events
     useEffect(() => {
         const handleFullscreenChange = () => {
-            console.log("Fullscreen change event triggered");
             setIsFullscreen(!!document.fullscreenElement);
         };
 
@@ -139,8 +120,6 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             if (event.data.type === 'SVG_READY') {
-                console.log('SVG export received from iframe');
-
                 // Create download
                 const svgString = event.data.svgData;
                 const blob = new Blob([svgString], { type: 'image/svg+xml' });
@@ -173,7 +152,6 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
 
         return () => {
             window.removeEventListener('message', handleMessage);
-            // Clean up any pending timeout
             if (cleanupTimeoutRef.current) {
                 clearTimeout(cleanupTimeoutRef.current);
                 cleanupTimeoutRef.current = null;
@@ -185,9 +163,7 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
     const exportSVG = () => {
         const iframe = iframeRef.current;
         if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage({
-                type: 'EXPORT_SVG'
-            }, '*');
+            iframe.contentWindow.postMessage({ type: 'EXPORT_SVG' }, '*');
         }
     };
 
@@ -213,7 +189,7 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
         >
             <iframe
                 ref={iframeRef}
-                key={`iframe-${iframeKey}-${isFullscreen ? 'full' : 'normal'}`}
+                key={`iframe-${iframeKey}`}
                 src="/src/indexTurmite_deterministic.html"
                 title="Cipher Animation"
                 style={{
@@ -233,36 +209,40 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
                 frameBorder="0"
             />
 
-            <button
-                ref={fullscreenButtonRef}
-                onClick={toggleFullscreen}
-                style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    right: '10px',
-                    zIndex: 10,
-                    background: 'rgba(0, 0, 0, 0.7)',
-                    fontFamily: '"Reactor7", system-ui, -apple-system, sans-serif',
-                    fontSize: '16px',
-                }}
-            >
-                {isFullscreen ? 'EXIT FULLSCREEN' : 'FULLSCREEN'}
-            </button>
+            {!hideControls && (
+                <>
+                    <button
+                        ref={fullscreenButtonRef}
+                        onClick={toggleFullscreen}
+                        style={{
+                            position: 'absolute',
+                            bottom: '10px',
+                            right: '10px',
+                            zIndex: 10,
+                            background: 'rgba(0, 0, 0, 0.7)',
+                            fontFamily: '"Reactor7", system-ui, -apple-system, sans-serif',
+                            fontSize: '16px',
+                        }}
+                    >
+                        {isFullscreen ? 'EXIT FULLSCREEN' : 'FULLSCREEN'}
+                    </button>
 
-            <button
-                onClick={exportSVG}
-                style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    right: '120px',
-                    zIndex: 10,
-                    background: 'rgba(0, 0, 0, 0.7)',
-                    fontFamily: '"Reactor7", system-ui, -apple-system, sans-serif',
-                    fontSize: '16px',
-                }}
-            >
-                EXPORT SVG
-            </button>
+                    <button
+                        onClick={exportSVG}
+                        style={{
+                            position: 'absolute',
+                            bottom: '10px',
+                            right: '120px',
+                            zIndex: 10,
+                            background: 'rgba(0, 0, 0, 0.7)',
+                            fontFamily: '"Reactor7", system-ui, -apple-system, sans-serif',
+                            fontSize: '16px',
+                        }}
+                    >
+                        EXPORT SVG
+                    </button>
+                </>
+            )}
         </div>
     );
 };

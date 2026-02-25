@@ -1,42 +1,158 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
+import { OnboardingModal } from './OnboardingModal';
+import CipherWrapperIframe from '../canvasWrapper';
+
+// Generate deterministic coordinates for examples
+const generateCoordinates = (seed: number) => {
+    const coords = [];
+    for (let i = 0; i < 20; i++) {
+        coords.push({
+            x: ((seed * (i + 1) * 17) % 256),
+            y: ((seed * (i + 1) * 23) % 256)
+        });
+    }
+    return coords;
+};
+
+// Example turmite configurations with different seeds
+// Turmite rules are 24-char hex strings encoding state transitions
+const TURMITE_EXAMPLES = [
+    {
+        name: 'Spiral',
+        walkerTurmites: ['ff0000ff0801000000000200'],
+        builderTurmites: ['ff0800ff0201ff0800000001'],
+        chaosNumbers: [11, 5, 30],
+        color: 0,
+        coordinates: generateCoordinates(42)
+    },
+    {
+        name: 'Chaos',
+        walkerTurmites: ['ff0001000200000200000200'],
+        builderTurmites: ['ff0201000201ff0400000000'],
+        chaosNumbers: [8, 3, 20],
+        color: 5,
+        coordinates: generateCoordinates(137)
+    },
+    {
+        name: 'Highway',
+        walkerTurmites: ['ff0001ff0201ff0000ff0800'],
+        builderTurmites: ['ff0001000001ff0801000000'],
+        chaosNumbers: [15, 2, 15],
+        color: 10,
+        coordinates: generateCoordinates(256)
+    }
+];
 
 const Home = () => {
+    const { needsOnboarding, dismissOnboarding } = useOnboardingStatus();
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [selectedExample, setSelectedExample] = useState(0);
+
+    // Sync with hook state when it updates (after initial localStorage check)
+    useEffect(() => {
+        setShowOnboarding(needsOnboarding);
+    }, [needsOnboarding]);
+
+    const handleOnboardingComplete = () => {
+        setShowOnboarding(false);
+    };
+
+    const handleOnboardingDismiss = () => {
+        dismissOnboarding();
+        setShowOnboarding(false);
+    };
+
     return (
         <div className="home-container">
+            {showOnboarding && (
+                <OnboardingModal
+                    onComplete={handleOnboardingComplete}
+                    onDismiss={handleOnboardingDismiss}
+                />
+            )}
+
             <fieldset className="terminal-fieldset">
                 <legend>Welcome</legend>
-                <section className="hero-section">
-                    <h1 className="hero-title">Welcome to Cipher</h1>
-                    <p className="hero-subtitle">
-                        An zero-knowlege encrypted digital artwork and protocoll. Ciphers are onchain verifiable encrypted erc721 like assets. Think of them like encrypted nfts on eth.
+
+                {/* <section className="features-section">
+                    <pre>{`
+❚❚❚❚❚  ❚  ❚❚❚❚❚  ❚   ❚  ❚❚❚❚❚  ❚❚❚❚❚
+❚      ❚  ❚   ❚  ❚   ❚  ❚      ❚   ❚
+❚      ❚  ❚❚❚❚❚  ❚❚❚❚❚  ❚❚❚❚❚  ❚❚❚❚❚
+❚      ❚  ❚      ❚   ❚  ❚      ❚ ❚
+❚❚❚❚❚  ❚  ❚      ❚   ❚  ❚❚❚❚❚  ❚  ❚❚  v.0.1
+`}</pre>
+                </section> */}
+
+                <div className="cipher">
+                    <h3>Cipher V0.1</h3>
+                </div>
+
+
+
+                <section className="features-section">
+                    <p>
+                        Cipher is a a zero-knowlege encrypted digital artwork and protocol. Ciphers are onchain verifiable encrypted erc721 like assets. Think of them like encrypted nfts on eth.
                     </p>
                 </section>
 
-                <section className="features-section">
-                    <div className="features-list">
-                        <div className="feature-item">
-                            <h3>MINT</h3>
-                            <p>Create unique Ciphers with customizable turmite patterns and colors. This Ciphers is verifiable encrypted and can only be seen by you.</p>
-                        </div>
 
-                        <div className="feature-item">
-                            <h3>VIEW / SEND</h3>
-                            <p>Manage your Cipher collection. View your tokens, transfer them to other addresses, or explore their unique properties.</p>
+                <div className="home-split-section">
+                    <fieldset className="terminal-fieldset example-fieldset">
+                        <legend>Examples</legend>
+                        <div className="turmite-example-selector">
+                            {TURMITE_EXAMPLES.map((example, index) => (
+                                <label key={index} className="radio-label">
+                                    <input
+                                        type="radio"
+                                        name="turmite-example"
+                                        checked={selectedExample === index}
+                                        onChange={() => setSelectedExample(index)}
+                                    />
+                                    {example.name}
+                                </label>
+                            ))}
                         </div>
-
-                        <div className="feature-item">
-                            <h3>RE-CIPHER</h3>
-                            <p>Transform your existing Ciphers by applying new turmite patterns. Create evolved versions while maintaining provenance.</p>
+                        <div className="turmite-preview">
+                            <CipherWrapperIframe
+                                coordinates={TURMITE_EXAMPLES[selectedExample].coordinates}
+                                walkerTurmites={TURMITE_EXAMPLES[selectedExample].walkerTurmites}
+                                builderTurmites={TURMITE_EXAMPLES[selectedExample].builderTurmites}
+                                chaosNumbers={TURMITE_EXAMPLES[selectedExample].chaosNumbers}
+                                color={TURMITE_EXAMPLES[selectedExample].color}
+                                hideControls
+                            />
                         </div>
+                    </fieldset>
 
-                        <div className="feature-item">
-                            <h3>NIGHTMARKET</h3>
-                            <p>Trade Ciphers. Connect with other collectors in the decentralized marketplace.</p>
+                    <fieldset className="terminal-fieldset features-fieldset">
+                        <legend>Features</legend>
+                        <div className="features-list">
+                            <div className="feature-item">
+                                <h3>MINT</h3>
+                                <p>Create unique Ciphers with customizable turmite patterns and colors. This Ciphers is verifiable encrypted and can only be seen by you.</p>
+                            </div>
+
+                            <div className="feature-item">
+                                <h3>VIEW / SEND</h3>
+                                <p>Manage your Cipher collection. View your tokens, transfer them to other addresses, or explore their unique properties.</p>
+                            </div>
+
+                            <div className="feature-item">
+                                <h3>RE-CIPHER</h3>
+                                <p>Transform your existing Ciphers by applying new turmite patterns. Create evolved versions while maintaining provenance.</p>
+                            </div>
+
+                            <div className="feature-item">
+                                <h3>NIGHTMARKET</h3>
+                                <p>Trade Ciphers. Connect with other collectors in the decentralized marketplace.</p>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </fieldset>
+                </div>
 
-                <section className="getting-started">
+                {/* <section className="getting-started">
                     <h2>Getting Started</h2>
                     <ol className="steps-list">
                         <li>Connect your wallet using the sidebar on the right</li>
@@ -45,7 +161,7 @@ const Home = () => {
                         <li>Customize your turmite genes and color palette</li>
                         <li>Generate proof and mint your unique creation</li>
                     </ol>
-                </section>
+                </section> */}
 
                 <section className="info-section">
                     <h2>What is Ciper?</h2>

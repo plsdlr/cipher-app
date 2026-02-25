@@ -9,7 +9,7 @@ import { config } from './wagmi.ts'
 import { ConsoleProvider, ConsoleDisplay, useConsole } from './console/ConsoleContext.tsx';
 
 
-import './index.css'
+import './index-test.css'
 
 globalThis.Buffer = Buffer
 

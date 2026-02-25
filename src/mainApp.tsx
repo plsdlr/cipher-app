@@ -37,6 +37,27 @@ const MainContent = () => {
 
 // 
 
+// Header elements - hidden on home page
+const CipherTitle = () => {
+    const location = useLocation();
+    if (location.pathname === '/') return null;
+
+    return (
+        <div className="cipher">
+            Cipher V0.1
+        </div>
+    );
+};
+
+const Logo = () => {
+
+    return (
+        <div className="logo">
+            <img src="/laughingManNoAnimation.svg" alt="Laughing Man" className="laughing-man-logo" />
+        </div>
+    );
+};
+
 // Menu component
 const Menu = () => {
     const location = useLocation();
@@ -89,13 +110,9 @@ function MainApp() {
                     <Menu />
                 </div>
 
-                <div className="cipher">
-                    Cipher V0.1
-                </div>
+                <CipherTitle />
 
-                <div className="logo">
-                    <img src="/laughingManNoAnimation.svg" alt="Laughing Man" className="laughing-man-logo" />
-                </div>
+                <Logo />
 
                 <div className="content">
                     <MainContent />
