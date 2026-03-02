@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi';
 import { TransactionStatus, TransactionButton } from '../components';
 import { type ProofCalldata } from '../ProofSystem/ProofSystem.tsx';
@@ -11,9 +12,12 @@ import {
 interface ReCipherNFTProps {
     calldata: ProofCalldata;
     tokenId: string;
+    onSuccess?: () => void;
 }
 
-export function ReCipherNFT({ calldata, tokenId }: ReCipherNFTProps) {
+export function ReCipherNFT({ calldata, tokenId, onSuccess }: ReCipherNFTProps) {
+    const lastProcessedTx = useRef<string | null>(null);
+
     const {
         data: hash,
         error,
@@ -21,12 +25,7 @@ export function ReCipherNFT({ calldata, tokenId }: ReCipherNFTProps) {
         writeContract
     } = useWriteContract()
 
-    // Getting the contract address for Sepolia testnet
-    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
-
-    // Make sure the address is properly formatted as a hex string with 0x prefix
-    // This is what TypeScript is expecting for the address
-    const formattedAddress = contractAddress as `0x${string}`;
+    const formattedAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`;
 
     async function submit() {
         writeContract({
@@ -38,9 +37,14 @@ export function ReCipherNFT({ calldata, tokenId }: ReCipherNFTProps) {
     }
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            hash,
-        })
+        useWaitForTransactionReceipt({ hash })
+
+    useEffect(() => {
+        if (isConfirmed && hash && lastProcessedTx.current !== hash && onSuccess) {
+            lastProcessedTx.current = hash;
+            onSuccess();
+        }
+    }, [isConfirmed, hash, onSuccess]);
 
     return (
         <>

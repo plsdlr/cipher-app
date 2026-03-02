@@ -61,5 +61,5 @@ export const RequireWallets: React.FC<RequireWalletsProps> = ({
         );
     }
 
-    return <WalletConnectionWarning message={message} compact={renderMode === 'inline'} />;
+    return <WalletConnectionWarning message={message} compact={false} />;
 };

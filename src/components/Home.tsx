@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
 import { OnboardingModal } from './OnboardingModal';
 import CipherWrapperIframe from '../canvasWrapper';

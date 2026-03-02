@@ -159,14 +159,14 @@ const ViewList = () => {
 
 
     // Navigate to token detail view
-    const handleTokenClick = (tokenId) => {
+    const handleTokenClick = (tokenId: bigint) => {
         // Clear any errors when viewing a token
         setRegistrationError(null);
         setRecipherError(null);
         navigate(`/view/${tokenId}`);
     };
 
-    const handleReCipher = async (e, tokenId) => {
+    const handleReCipher = async (e: React.MouseEvent, tokenId: bigint) => {
         e.stopPropagation(); // Prevent the row click event from firing
         setRecipherError(null); // Reset recipher error
         setRegistrationError(null); // Clear send error
@@ -198,7 +198,7 @@ const ViewList = () => {
     };
 
     // Handle showing the send form for a specific token
-    const handleSendClick = async (e, tokenId) => {
+    const handleSendClick = async (e: React.MouseEvent, tokenId: bigint) => {
         e.stopPropagation(); // Prevent the row click event from firing
 
         // Check if sender is registered before opening send form

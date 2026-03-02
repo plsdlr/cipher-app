@@ -19,7 +19,7 @@ interface ProofResult {
 }
 
 export async function generateProofTransfer(
-    privateKey: Uint8Array,
+    _privateKey: Uint8Array,
     deriveSecretScalarPrivKey: bigint,
     myPublicKey: bigint[],
     previosSenderPublicKey: bigint[],

@@ -1,13 +1,12 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 // Assuming you've installed these packages in your React project
-import { Point, mulPointEscalar } from "@zk-kit/baby-jubjub";
+import { mulPointEscalar } from "@zk-kit/baby-jubjub";
 import { crypto } from "@zk-kit/utils";
 import { derivePublicKey, deriveSecretScalar } from "@zk-kit/eddsa-poseidon";
-import { poseidonEncrypt, poseidonDecrypt, poseidonDecryptWithoutCheck } from "@zk-kit/poseidon-cipher";
+import { poseidonEncrypt } from "@zk-kit/poseidon-cipher";
 
 // For encryption, we'll use the Web Crypto API
 const encoder = new TextEncoder();
-const decoder = new TextDecoder();
 
 // Define types for our context
 type PublicKey = [bigint, bigint]; // Public key is an array of two BigInts
@@ -182,10 +181,6 @@ const serializePublicKey = (publicKey: PublicKey): string => {
   return JSON.stringify([publicKey[0].toString(), publicKey[1].toString()]);
 };
 
-const deserializePublicKey = (serializedKey: string): PublicKey => {
-  const parsed = JSON.parse(serializedKey);
-  return [BigInt(parsed[0]), BigInt(parsed[1])];
-};
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [walletState, setWalletState] = useState<WalletState>('EMPTY');

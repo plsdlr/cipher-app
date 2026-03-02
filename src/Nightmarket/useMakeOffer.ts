@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { NightMarketABI, NightMarket_CONTRACT_ADDRESS } from '../contractABI/NightMarket/contractAbi';
 import { parseEther } from 'viem';
@@ -76,7 +76,7 @@ export const useMakeOffer = (): UseMakeOfferResult => {
         isConfirming,
         isSuccess,
         error: error || writeError?.message || confirmError?.message || null,
-        txHash,
+        txHash: txHash ?? null,
         offerId,
         reset
     };

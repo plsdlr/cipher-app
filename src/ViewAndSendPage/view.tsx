@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useReadContract, useAccount } from 'wagmi';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi.ts';
@@ -12,13 +12,13 @@ type TokenParams = {
 
 const ViewPage = () => {
     const { tokenId } = useParams<TokenParams>();
-    const { address, isConnected } = useAccount();
+    const { isConnected } = useAccount();
 
     const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
     const formattedAddress = contractAddress as `0x${string}`;
 
     // Fetch encrypted data from the blockchain
-    const { data: encryptedNote, isLoading: isLoadingContract, error: contractError } = useReadContract({
+    const { isLoading: isLoadingContract, error: contractError } = useReadContract({
         abi: EncryptedNFTABI,
         address: formattedAddress,
         functionName: 'getEncryptedNote',
@@ -29,15 +29,7 @@ const ViewPage = () => {
     });
 
 
-    const { data: decryptedToken, isLoading: isDecrypting, error: decryptError } = useDecryptToken(tokenId);
-
-    useEffect(() => {
-        if (decryptedToken) {
-            console.log(JSON.stringify(decryptedToken, (key, value) => {
-                return typeof value === 'bigint' ? value.toString() : value;
-            }, 2))
-        }
-    }, [decryptedToken]);
+    const { data: decryptedToken, isLoading: isDecrypting, error: decryptError } = useDecryptToken(tokenId ?? null);
 
     // Check wallet connection first
     if (!isConnected) {
@@ -139,7 +131,7 @@ const ViewPage = () => {
 
 
                                         {/* Positions - All 20 positions */}
-                                        {decryptedToken.decryptedData.positions.map((position, index) => (
+                                        {decryptedToken.decryptedData.positions.map((position: { x: number; y: number }, index: number) => (
                                             <React.Fragment key={index}>
                                                 <tr>
                                                     <td>Position {index + 1} X</td>
@@ -177,21 +169,21 @@ const ViewPage = () => {
                                         {/* Encryption Keys */}
                                         <tr>
                                             <td>Encryption Key 1</td>
-                                            <td>{decryptedToken.usedEncryptionKey[0].toString()}</td>
+                                            <td>{decryptedToken.usedEncryptionKey?.[0]?.toString() ?? 'N/A'}</td>
                                         </tr>
                                         <tr>
                                             <td>Encryption Key 2</td>
-                                            <td>{decryptedToken.usedEncryptionKey[1].toString()}</td>
+                                            <td>{decryptedToken.usedEncryptionKey?.[1]?.toString() ?? 'N/A'}</td>
                                         </tr>
 
                                         {/* Last Owner Public Keys */}
                                         <tr>
                                             <td>Last Owner Public Key 1</td>
-                                            <td>{decryptedToken.lastOwnerPubKeys[0].toString()}</td>
+                                            <td>{decryptedToken.lastOwnerPubKeys?.[0]?.toString() ?? 'N/A'}</td>
                                         </tr>
                                         <tr>
                                             <td>Last Owner Public Key 2</td>
-                                            <td>{decryptedToken.lastOwnerPubKeys[1].toString()}</td>
+                                            <td>{decryptedToken.lastOwnerPubKeys?.[1]?.toString() ?? 'N/A'}</td>
                                         </tr>
 
                                         {/* Animation Parameters */}

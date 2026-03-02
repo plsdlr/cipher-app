@@ -103,7 +103,7 @@ export const useFulfillOffer = (): UseFulfillOfferResult => {
         isConfirming,
         isSuccess,
         error: error || writeError?.message || confirmError?.message || null,
-        txHash,
+        txHash: txHash ?? null,
         reset
     };
 };

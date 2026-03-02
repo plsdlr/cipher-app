@@ -87,7 +87,7 @@ export const useDecryptTurmite = (
                 setState({
                     data: null,
                     isLoading: false,
-                    error: err.message || "Unknown decryption error",
+                    error: (err as Error).message || "Unknown decryption error",
                     usedEncryptionKey: null,
                     usedPublicKey: null
                 });

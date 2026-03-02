@@ -1,26 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, useNavigate, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import WalletPage from './WalletPage';
-import CipherWrapper from './canvasWrapper';
 import MintPage from './MintingPage/Mint';
 import ViewList from './ViewAndSendPage/viewList';
-import ViewPage from './ViewAndSendPage/view'; // Import the TokenView component
-import { ConsoleProvider, ConsoleDisplay, useConsole } from './console/ConsoleContext.tsx';
+import ViewPage from './ViewAndSendPage/view';
+import { ConsoleDisplay } from './console/ConsoleContext.tsx';
 import EditTokenPage from './ReCipher/recipher.tsx';
 import MarketPage from './Nightmarket/MarketPage';
 import { Home } from './components';
 
 // Main content component that handles routing
 const MainContent = () => {
-    const location = useLocation();
-
-    // Determine active menu item from URL path
-    const getActiveMenuFromPath = () => {
-        const path = location.pathname.split('/')[1];
-        if (!path) return 'home';
-        return path;
-    };
-
     return (
         <Routes>
             <Route path="/" element={<Home />} />
@@ -82,7 +71,7 @@ const Menu = () => {
     ];
 
     // Function to handle menu item selection
-    const handleMenuSelect = (path) => {
+    const handleMenuSelect = (path: string) => {
         navigate(path);
     };
 

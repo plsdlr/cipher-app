@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useViewOffers, useCurrentOffers } from './useViewOffers';
 import { useCancelOffer } from './useCancelOffer';
 import { useFulfillOffer } from './useFulfillOffer';
@@ -58,8 +58,6 @@ const OffersList = () => {
         writeContract: approveNFT,
         data: approveTxHash,
         isPending: isApprovePending,
-        isSuccess: isApproveSuccess,
-        error: approveError
     } = useWriteContract();
 
     // Wait for approval transaction to be confirmed

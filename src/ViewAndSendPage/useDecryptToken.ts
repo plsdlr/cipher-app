@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi.ts';
 import { useReadContract, useReadContracts, useAccount } from 'wagmi';
 import { useDecryptTurmite } from '../utils/useDecryptTurmite';
@@ -37,8 +37,9 @@ export const useDecryptToken = (tokenId: string | null): UseDecryptTokenResult =
     });
 
     // Extract flag from encrypted note
-    const cipherFlag = encryptedNote?.[5] as boolean;
-    const hasEncryptedNote = !!encryptedNote && cipherFlag !== undefined;
+    // Contract returns (uint256[] ciphertext, uint256 timestamp, bool flag)
+    const cipherFlag = (encryptedNote as any)?.[2] as boolean;
+    const hasEncryptedNote = !!encryptedNote && (encryptedNote as any)[2] !== undefined;
 
     // Step 2: Get last owner address (only if flag is false - meaning we need ECDH)
     const { data: lastAddress, isLoading: isLoadingLastOwner, error: contractError1 } = useReadContract({
@@ -72,12 +73,13 @@ export const useDecryptToken = (tokenId: string | null): UseDecryptTokenResult =
         }
     });
 
-    // Format public keys for the decryption hook
-    const formattedPreviousSender = lastSenderPubKeys &&
-        lastSenderPubKeys[0]?.result !== undefined &&
-        lastSenderPubKeys[1]?.result !== undefined ?
-        [lastSenderPubKeys[0].result, lastSenderPubKeys[1].result] as [bigint, bigint] :
-        undefined;
+    // Format public keys for the decryption hook - memoized to prevent new array reference each render
+    const formattedPreviousSender = useMemo(() => {
+        if (!lastSenderPubKeys ||
+            lastSenderPubKeys[0]?.result === undefined ||
+            lastSenderPubKeys[1]?.result === undefined) return undefined;
+        return [lastSenderPubKeys[0].result, lastSenderPubKeys[1].result] as [bigint, bigint];
+    }, [lastSenderPubKeys]);
 
     // Determine if we're ready to decrypt
     const readyToDecrypt = hasEncryptedNote && (
@@ -86,6 +88,13 @@ export const useDecryptToken = (tokenId: string | null): UseDecryptTokenResult =
     );
 
     // Step 4: Decrypt the data - only when we have all required data
+    // Build flat [c0, c1, c2, c3, timestamp] tuple from (uint256[] ciphertext, uint256 timestamp, bool flag)
+    // Memoized to maintain stable reference - prevents useDecryptTurmite's effect from re-running every render
+    const encryptedTuple = useMemo(() => {
+        if (!readyToDecrypt || !encryptedNote) return undefined;
+        return [...((encryptedNote as any)[0] as bigint[]), (encryptedNote as any)[1] as bigint] as [bigint, bigint, bigint, bigint, bigint];
+    }, [readyToDecrypt, encryptedNote]);
+
     const {
         data: decryptedData,
         isLoading: isDecrypting,
@@ -93,7 +102,7 @@ export const useDecryptToken = (tokenId: string | null): UseDecryptTokenResult =
         usedEncryptionKey,
         usedPublicKey
     } = useDecryptTurmite(
-        readyToDecrypt ? encryptedNote as [bigint, bigint, bigint, bigint, bigint] : undefined,
+        encryptedTuple,
         cipherFlag,
         formattedPreviousSender
     );
@@ -110,35 +119,18 @@ export const useDecryptToken = (tokenId: string | null): UseDecryptTokenResult =
         decryptError;
 
     // Determine the owner address to return
-    const ownerAddress = cipherFlag === false ? lastAddress : account.address;
+    const ownerAddress = (cipherFlag === false ? lastAddress : account.address) as string | undefined;
 
     // Build final result
     const data: DecryptedTokenData | null = tokenId && hasEncryptedNote && decryptedData ? {
         tokenId,
-        encryptedNote: [...encryptedNote.slice(0, 5), cipherFlag] as [bigint, bigint, bigint, bigint, bigint, boolean],
+        encryptedNote: [...((encryptedNote as any)[0] as bigint[]), (encryptedNote as any)[1] as bigint, cipherFlag] as [bigint, bigint, bigint, bigint, bigint, boolean],
         decryptedData,
         usedEncryptionKey,
         cipherFlag,
         lastOwnerAddress: ownerAddress,
         lastOwnerPubKeys: usedPublicKey || []
     } : null;
-
-    // Debug logging
-    useEffect(() => {
-        if (tokenId) {
-            console.log('useDecryptToken Debug:', {
-                tokenId,
-                hasEncryptedNote,
-                cipherFlag,
-                readyToDecrypt,
-                isLoading,
-                error,
-                lastAddress,
-                formattedPreviousSender,
-                decryptedData: !!decryptedData
-            });
-        }
-    }, [tokenId, hasEncryptedNote, cipherFlag, readyToDecrypt, isLoading, error, lastAddress, formattedPreviousSender, decryptedData]);
 
     return {
         data,

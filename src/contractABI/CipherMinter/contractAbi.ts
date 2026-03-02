@@ -1,17 +1,17 @@
 import { Abi } from 'viem';  // viem is a dependency of wagmi
 
 // Import the ABI directly from the JSON file
-import NightMarket from './NFTMarketplace.json';
+import CipherMinter from './CipherMinter.json';
 
-export const NightMarketABI = NightMarket.abi as Abi;
+export const CipherMinterABI = CipherMinter.abi as Abi;
 
 // Export the ABI from the JSON structure
 
 // Export the contract address for different networks
-export const NightMarket_CONTRACT_ADDRESS = {
+export const CipherMinter_CONTRACT_ADDRESS = {
     1: '.', // Mainnet
-    11155111: '0x79151e1007C5c76CABB54E4c8dA2afDDa0f25c74', // Sepolia
+    11155111: '0xA12Ba64dA11Eb66cf973Ad82e5Dc8Bd7d5C843b1', // Sepolia
 };
 
 // Default export for more convenient imports
-export default NightMarketABI;
+export default CipherMinterABI;

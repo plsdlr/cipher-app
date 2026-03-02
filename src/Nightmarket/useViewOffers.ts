@@ -32,11 +32,14 @@ export const useViewOffers = (start: number = 0, end: number = 100): UseViewOffe
         address: contractAddress,
         functionName: 'getOffers',
         args: [BigInt(start), BigInt(end)],
+        query: {
+            enabled: end > start,
+        }
     });
 
     // Parse the response: [offerIds[], offers[]]
-    const offerIds = data?.[0] as bigint[] | undefined;
-    const offers = data?.[1] as Offer[] | undefined;
+    const offerIds = (data as any)?.[0] as bigint[] | undefined;
+    const offers = (data as any)?.[1] as Offer[] | undefined;
 
     return {
         offers,
@@ -70,8 +73,8 @@ export const useViewOffersByAddress = (buyerAddress?: string): UseViewOffersResu
     });
 
     // Parse the response: [offerIds[], offers[]]
-    const offerIds = data?.[0] as bigint[] | undefined;
-    const offers = data?.[1] as Offer[] | undefined;
+    const offerIds = (data as any)?.[0] as bigint[] | undefined;
+    const offers = (data as any)?.[1] as Offer[] | undefined;
 
     return {
         offers,

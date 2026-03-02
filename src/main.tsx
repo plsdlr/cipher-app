@@ -6,7 +6,7 @@ import { WagmiProvider } from 'wagmi'
 import { WalletProvider } from './cipherWallet/cipherWallet.tsx';
 import MainApp from './mainApp.tsx';
 import { config } from './wagmi.ts'
-import { ConsoleProvider, ConsoleDisplay, useConsole } from './console/ConsoleContext.tsx';
+import { ConsoleProvider } from './console/ConsoleContext.tsx';
 
 
 import './index-test.css'

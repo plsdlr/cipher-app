@@ -1,11 +1,13 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi';
+import { CipherMinterABI, CipherMinter_CONTRACT_ADDRESS } from '../contractABI/CipherMinter/contractAbi';
 import { TransactionStatus, TransactionButton, RequireWallets } from '../components';
 import { type ProofCalldata } from '../ProofSystem/ProofSystem.tsx';
 
 import {
     type BaseError,
     useAccount,
+    useReadContract,
     useWaitForTransactionReceipt,
     useWriteContract
 } from 'wagmi';
@@ -16,46 +18,89 @@ interface MintNFTProps {
 }
 
 export function MintNFT({ calldata, onSuccess }: MintNFTProps) {
-    // Ref to track processed transaction and prevent duplicate callbacks
     const lastProcessedTx = useRef<string | null>(null);
+
+    const { address } = useAccount();
+
+    const minterAddress = CipherMinter_CONTRACT_ADDRESS[11155111] as `0x${string}`;
+    const nftAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`;
+
+    // Fetch allowlist signature from static JSON served at /allowlist.json
+    const [allowlistSig, setAllowlistSig] = useState<`0x${string}` | null>(null);
+
+    useEffect(() => {
+        if (!address) {
+            setAllowlistSig(null);
+            return;
+        }
+        fetch('/allowlist.json')
+            .then(r => r.json())
+            .then((data: Record<string, string>) => {
+                const sig = data[address.toLowerCase()] ?? null;
+                setAllowlistSig(sig as `0x${string}` | null);
+            })
+            .catch(() => setAllowlistSig(null));
+    }, [address]);
+
+    // Check on-chain if this address already used its allowlist spot
+    const { data: allowlistUsed } = useReadContract({
+        address: minterAddress,
+        abi: CipherMinterABI,
+        functionName: 'allowlistUsed',
+        args: address ? [address] : undefined,
+        query: { enabled: !!address },
+    });
+
+    // Read discounted allowlist price from minter
+    const { data: allowlistPrice } = useReadContract({
+        address: minterAddress,
+        abi: CipherMinterABI,
+        functionName: 'ALLOWLIST_PRICE',
+    });
+
+    // Read public price from NFT contract (source of truth)
+    const { data: publicPrice } = useReadContract({
+        address: nftAddress,
+        abi: EncryptedNFTABI,
+        functionName: 'price',
+    });
+
+    const canMintDiscounted = !!allowlistSig && !allowlistUsed;
 
     const {
         data: hash,
         error,
         isPending,
         writeContract
-    } = useWriteContract()
-
-    const { address } = useAccount();
-
-    // Getting the contract address for Sepolia testnet
-    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
-
-    // Make sure the address is properly formatted as a hex string with 0x prefix
-    // This is what TypeScript is expecting for the address
-    const formattedAddress = contractAddress as `0x${string}`;
+    } = useWriteContract();
 
     async function submit() {
-        if (!address) {
-            console.error("Ethereum wallet not connected");
-            return;
-        }
+        if (!address) return;
 
-        writeContract({
-            address: formattedAddress,
-            abi: EncryptedNFTABI,
-            functionName: 'mint',
-            args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, address],
-            value: BigInt(100000000000000000), // 0.1 ether in wei
-        })
+        if (canMintDiscounted && allowlistSig && allowlistPrice != null) {
+            writeContract({
+                address: minterAddress,
+                abi: CipherMinterABI,
+                functionName: 'mintAllowlist',
+                args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, address, allowlistSig],
+                value: allowlistPrice as bigint,
+                gas: BigInt(3_000_000),
+            });
+        } else if (publicPrice != null) {
+            writeContract({
+                address: minterAddress,
+                abi: CipherMinterABI,
+                functionName: 'mint',
+                args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, address],
+                value: publicPrice as bigint,
+                gas: BigInt(3_000_000),
+            });
+        }
     }
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =
-        useWaitForTransactionReceipt({
-            hash,
-        })
+        useWaitForTransactionReceipt({ hash });
 
-    // Call onSuccess callback when mint is confirmed (only once per transaction)
     useEffect(() => {
         if (isConfirmed && hash && lastProcessedTx.current !== hash && onSuccess) {
             lastProcessedTx.current = hash;
@@ -63,13 +108,18 @@ export function MintNFT({ calldata, onSuccess }: MintNFTProps) {
         }
     }, [isConfirmed, hash, onSuccess]);
 
+    const mintLabel = canMintDiscounted ? 'Mint (Allowlist)' : 'Mint';
+
     return (
         <RequireWallets>
+            {canMintDiscounted && (
+                <p className="allowlist-badge">Allowlist eligible — discounted price</p>
+            )}
             <TransactionButton
                 onClick={submit}
                 isPending={isPending}
                 isConfirming={isConfirming}
-                idleText="Mint"
+                idleText={mintLabel}
                 pendingText="Submitting..."
                 confirmingText="Confirming..."
             />
@@ -84,7 +134,5 @@ export function MintNFT({ calldata, onSuccess }: MintNFTProps) {
                 successMessage="NFT minted successfully!"
             />
         </RequireWallets>
-    )
+    );
 }
-
-

@@ -65,7 +65,7 @@ export const decryptTurmiteData = async (
         };
     } catch (error) {
         console.error('Decryption error:', error);
-        throw new Error(`Failed to decrypt data: ${error.message}`);
+        throw new Error(`Failed to decrypt data: ${(error as Error).message}`);
     }
 };
 

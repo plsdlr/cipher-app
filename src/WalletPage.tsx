@@ -4,7 +4,7 @@ import { useWallet } from './cipherWallet/cipherWallet';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractABI/EncryptedERC721/contractAbi';
 import EthWallet from './ETHWalletConnector/EthConnector';
-import { ConsoleProvider, ConsoleDisplay, useConsole } from './console/ConsoleContext.tsx';
+import { useConsole } from './console/ConsoleContext.tsx';
 import { TransactionStatus, TransactionButton } from './components';
 
 type WalletMode = 'create' | 'import';
@@ -63,7 +63,7 @@ const WalletPage = () => {
   });
 
   // Check if the user's address is registered
-  const { data: addressRegistered, isLoading: isLoadingContract, error: contractError, refetch } = useReadContract({
+  const { data: addressRegistered, refetch } = useReadContract({
     abi: EncryptedNFTABI,
     address: formattedAddress,
     functionName: 'userPublicKeys',
@@ -193,9 +193,9 @@ const WalletPage = () => {
         addMessage(`${walletMode} wallet operation failed`, "error");
       }
     } catch (error) {
-      const errorMsg = `Error: ${error.message}`;
+      const errorMsg = `Error: ${(error as Error).message}`;
       showMessage(errorMsg, 'error');
-      addMessage(`Critical error during ${walletMode}: ${error.message}`, "error");
+      addMessage(`Critical error during ${walletMode}: ${(error as Error).message}`, "error");
     } finally {
       setIsLoading(false);
       addMessage(`${walletMode} wallet process completed`, "info");
@@ -228,9 +228,9 @@ const WalletPage = () => {
         addMessage("✗ Wallet restore failed - incorrect password or corrupted backup", "error");
       }
     } catch (error) {
-      const errorMsg = `Error restoring wallet: ${error.message}`;
+      const errorMsg = `Error restoring wallet: ${(error as Error).message}`;
       showMessage(errorMsg, 'error');
-      addMessage(`Critical error during restore: ${error.message}`, "error");
+      addMessage(`Critical error during restore: ${(error as Error).message}`, "error");
     } finally {
       setIsLoading(false);
       addMessage("Wallet restoration process completed", "info");
@@ -257,9 +257,9 @@ const WalletPage = () => {
       });
       addMessage("Transaction submitted to blockchain", "info");
     } catch (error) {
-      const errorMsg = `Error registering public key: ${error.message}`;
+      const errorMsg = `Error registering public key: ${(error as Error).message}`;
       showMessage(errorMsg, 'error');
-      addMessage(`Registration error: ${error.message}`, "error");
+      addMessage(`Registration error: ${(error as Error).message}`, "error");
     }
   };
 

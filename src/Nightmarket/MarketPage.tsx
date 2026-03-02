@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMakeOffer } from './useMakeOffer';
 import { useConsole } from '../console/ConsoleContext';
 import OffersList from './OffersList';
