@@ -4,27 +4,6 @@
 
 /* Fonts */
 @font-face {
-    font-family: 'Reactor7';
-    src: url('/src/fonts/Reactor7.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'oxy';
-    src: url('/src/fonts/OXYGENE1.TTF') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'chrono';
-    src: url('/src/fonts/ChronoType.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
     font-family: 'Kiwi';
     src: url('/src/fonts/Lady Radical.ttf') format('truetype');
     font-weight: normal;
@@ -34,27 +13,6 @@
 @font-face {
     font-family: 'Geist';
     src: url('/src/fonts/GeistMono-VariableFont_wght.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Anon';
-    src: url('src/fonts/AnonymousPro-Regular.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Vera';
-    src: url('src/fonts/VeraMono.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Share';
-    src: url('src/fonts/ShareTechMono-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
@@ -210,6 +168,8 @@ button {
     margin-top: var(--space-md);
     margin-bottom: var(--space-md);
     cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
 }
 
 button:hover {
@@ -382,6 +342,8 @@ input {
     background-color: transparent;
     color: var(--primary-color);
     border: 1px solid var(--primary-color);
+    font-family: inherit;
+    font-size: inherit;
 }
 
 input::placeholder {
@@ -427,6 +389,8 @@ select {
     border-radius: var(--radius);
     padding: 6px;
     accent-color: var(--color-green);
+    font-family: inherit;
+    font-size: inherit;
 }
 
 select:focus {

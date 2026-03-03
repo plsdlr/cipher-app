@@ -190,7 +190,7 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
             <iframe
                 ref={iframeRef}
                 key={`iframe-${iframeKey}`}
-                src="/src/indexTurmite_deterministic.html"
+                src="/indexTurmite_deterministic.html"
                 title="Cipher Animation"
                 style={{
                     width: isFullscreen ? '100%' : '100%',
@@ -220,8 +220,6 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
                             right: '10px',
                             zIndex: 10,
                             background: 'rgba(0, 0, 0, 0.7)',
-                            fontFamily: '"Reactor7", system-ui, -apple-system, sans-serif',
-                            fontSize: '16px',
                         }}
                     >
                         {isFullscreen ? 'EXIT FULLSCREEN' : 'FULLSCREEN'}
@@ -235,8 +233,6 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
                             right: '120px',
                             zIndex: 10,
                             background: 'rgba(0, 0, 0, 0.7)',
-                            fontFamily: '"Reactor7", system-ui, -apple-system, sans-serif',
-                            fontSize: '16px',
                         }}
                     >
                         EXPORT SVG
