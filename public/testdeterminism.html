@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>determinism test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #000;
+            color: #0f0;
+            font-family: monospace;
+            padding: 12px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 13px;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .info {
+            font-size: 11px;
+            color: #090;
+            margin-bottom: 10px;
+            max-width: 900px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        select,
+        button {
+            background: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 4px 8px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        button:hover {
+            background: #0f0;
+            color: #000;
+        }
+
+        .seed {
+            font-size: 11px;
+            color: #060;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .label {
+            font-size: 11px;
+            color: #0f0;
+        }
+
+        .sublabel {
+            font-size: 10px;
+            color: #060;
+            margin-bottom: 2px;
+        }
+
+        iframe {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border: 1px solid #1a1a1a;
+            background: #000;
+            display: block;
+        }
+
+        .status {
+            font-size: 10px;
+            color: #060;
+            margin-top: 4px;
+            min-height: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>// determinism test — A (original) vs B (bravesafe) vs A2 (original #2)</h1>
+    <p class="info">
+        All three iframes receive identical seed, rules and chaos numbers.
+        A and A2 are both the original (getImageData) version — they must stay in sync.
+        B is the bravesafe (stateBuffer) version. If A=A2 but A≠B, there is a logic bug in bravesafe, not a timing
+        issue.
+    </p>
+
+    <div class="controls">
+        <select id="exSelect">
+            <option value="0">Spiral — seed 42</option>
+            <option value="1">Chaos — seed 137</option>
+            <option value="2">Highway — seed 256</option>
+        </select>
+        <button id="restartBtn">restart</button>
+        <span id="seedDisplay" class="seed"></span>
+    </div>
+
+    <div class="grid">
+        <div class="col">
+            <div class="label">A — original (/indexTurmite_deterministic.html)</div>
+            <div class="sublabel">reads state via getImageData() — Brave poisons this on HTTPS</div>
+            <iframe id="iframeA" src="/indexTurmite_deterministic.html"></iframe>
+            <div class="status" id="statusA">loading…</div>
+        </div>
+        <div class="col">
+            <div class="label">B — authoritative (/indexTurmite_deterministic_authoritative.html)</div>
+            <div class="sublabel">reads state from JS stateBuffer — immune to fingerprinting noise</div>
+            <iframe id="iframeB" src="/indexTurmite_deterministic_authoritative.html"></iframe>
+            <div class="status" id="statusB">loading…</div>
+        </div>
+    </div>
+
+    <script>
+        const EXAMPLES = [
+            {
+                walkerTurmites: ['ff0000ff0801000000000200'],
+                builderTurmites: ['ff0800ff0201ff0800000001'],
+                chaosNumbers: [11, 5, 30],
+                color: 0,
+                seed: 42
+            },
+            {
+                walkerTurmites: ['ff0001000200000200000200'],
+                builderTurmites: ['ff0201000201ff0400000000'],
+                chaosNumbers: [8, 3, 20],
+                color: 5,
+                seed: 137
+            }
+        ];
+
+        const SRCS = [
+            '/indexTurmite_deterministic.html',
+            '/indexTurmite_deterministic_authoritative.html',
+        ];
+
+        function generateCoordinates(seed) {
+            const coords = [];
+            for (let i = 0; i < 20; i++) {
+                coords.push({
+                    x: ((seed * (i + 1) * 17) % 256),
+                    y: ((seed * (i + 1) * 23) % 256)
+                });
+            }
+            return coords;
+        }
+
+        function buildData(exIdx) {
+            const ex = EXAMPLES[exIdx];
+            const coordinates = generateCoordinates(ex.seed);
+            const derivedSeed = (coordinates[0].x * 256 + coordinates[0].y) * 31337;
+            document.getElementById('seedDisplay').textContent =
+                `seed: ${ex.seed}  →  derived: ${derivedSeed}`;
+            return {
+                coordinates,
+                speed: 1,
+                walkerTurmites: ex.walkerTurmites,
+                builderTurmites: ex.builderTurmites,
+                chaosNumbers: ex.chaosNumbers,
+                color: ex.color
+            };
+        }
+
+        function loadAndSend(iframeEl, statusEl, src, data) {
+            statusEl.textContent = 'loading…';
+
+            const onload = () => {
+                iframeEl.removeEventListener('load', onload);
+                iframeEl.contentWindow.postMessage({ type: 'UPDATE_ANIMATION', data }, '*');
+                statusEl.textContent = 'running — derived seed ' +
+                    (data.coordinates[0].x * 256 + data.coordinates[0].y) * 31337;
+            };
+
+            iframeEl.addEventListener('load', onload);
+            // Append timestamp to bust any browser cache and guarantee a fresh load
+            iframeEl.src = src + '?t=' + Date.now();
+        }
+
+        function restart() {
+            const idx = parseInt(document.getElementById('exSelect').value);
+            const data = buildData(idx);
+            loadAndSend(
+                document.getElementById('iframeA'),
+                document.getElementById('statusA'),
+                SRCS[0], data
+            );
+            loadAndSend(
+                document.getElementById('iframeB'),
+                document.getElementById('statusB'),
+                SRCS[1], data
+            );
+        }
+
+        // Initial boot — iframes are already loading from their src attributes.
+        // Check if they beat the script; otherwise wait for their load event.
+        function initIframe(iframeEl, statusEl, src, data) {
+            const send = () => {
+                iframeEl.contentWindow.postMessage({ type: 'UPDATE_ANIMATION', data }, '*');
+                statusEl.textContent = 'running — derived seed ' +
+                    (data.coordinates[0].x * 256 + data.coordinates[0].y) * 31337;
+            };
+
+            if (
+                iframeEl.contentDocument &&
+                iframeEl.contentDocument.readyState === 'complete' &&
+                iframeEl.src !== 'about:blank'
+            ) {
+                send();
+            } else {
+                iframeEl.addEventListener('load', function onload() {
+                    iframeEl.removeEventListener('load', onload);
+                    send();
+                });
+            }
+        }
+
+        const initData = buildData(0);
+        initIframe(document.getElementById('iframeA'), document.getElementById('statusA'), SRCS[0], initData);
+        initIframe(document.getElementById('iframeB'), document.getElementById('statusB'), SRCS[1], initData);
+
+        document.getElementById('restartBtn').addEventListener('click', restart);
+        document.getElementById('exSelect').addEventListener('change', restart);
+    </script>
+</body>
+
+</html>

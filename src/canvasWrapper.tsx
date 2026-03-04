@@ -190,7 +190,7 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
             <iframe
                 ref={iframeRef}
                 key={`iframe-${iframeKey}`}
-                src="/indexTurmite_deterministic.html"
+                src="/indexTurmite_deterministic_authoritative.html"
                 title="Cipher Animation"
                 style={{
                     width: isFullscreen ? '100%' : '100%',

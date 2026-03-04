@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        /* Allow content to determine size, don't force hidden */
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    canvas {
+        display: block;
+        image-rendering: pixelated;
+        /* Chrome */
+        image-rendering: crisp-edges;
+        /* Firefox */
+        /* Let canvas size be contained within viewport */
+        max-width: 100%;
+        max-height: 100%;
+        width: min(100vw, 100vh);
+        height: min(100vw, 100vh);
+    }
+</style>
+
+<body>
+    <canvas id="myCanvas" width="300" height="300"></canvas>
+    <script>
+
+        const pico8Palette = [
+            { r: 255, g: 70, b: 0 },    // black
+            { r: 169, g: 183, b: 223 },   // dark blue
+            { r: 126, g: 37, b: 83 },   // dark purple
+            { r: 0, g: 135, b: 81 },   // dark green
+            { r: 171, g: 82, b: 54 },   // brown
+            { r: 95, g: 87, b: 79 },   // dark gray
+            { r: 194, g: 195, b: 199 },  // light gray
+            { r: 255, g: 241, b: 232 },  // white
+            { r: 255, g: 0, b: 0 },   // red
+            { r: 255, g: 163, b: 0 },    // orange
+            { r: 255, g: 236, b: 39 },   // yellow
+            { r: 0, g: 228, b: 54 },   // green
+            { r: 41, g: 173, b: 255 },  // blue
+            { r: 131, g: 118, b: 156 },  // lavender
+            { r: 255, g: 119, b: 168 },  // pink
+            { r: 255, g: 204, b: 170 }   // peach
+        ];
+
+
+        // Get the canvas element and its context
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d', {
+            willReadFrequently: true  // Optimizes for frequent pixel manipulation
+        });
+
+        // Brave-safe: maintain authoritative state in JS memory, never read back from canvas.
+        // Brave's fingerprinting protection randomizes getImageData() on HTTPS origins,
+        // which breaks deterministic simulations that store state in canvas pixels.
+        const displayImageData = new ImageData(300, 300);
+        const stateBuffer = displayImageData.data;
+
+
+
+        function seededRandom(seed) {
+            // Create a simple LCG
+            let state = seed;
+            return function () {
+                // Constants from a well-known LCG implementation
+                state = (state * 1664525 + 1013904223) % 2147483648;
+                return state / 2147483648;
+            };
+        }
+
+        // Clear the canvas on initial load
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // function setSinglePixelColor(x, y, pixel, r, g, b) {
+        //     const index = (y * canvas.width + x) * 4;
+        //     pixel[index] = r;
+        //     pixel[index + 1] = g;
+        //     pixel[index + 2] = b;
+        //     return pixel;
+        // }
+
+        function drawOnIndices(pixels, indices, r, g, b) {
+            for (let i = 0; i < indices.length; i++) {
+                pixels[indices[i]] = r;
+                pixels[indices[i] + 1] = g;
+                pixels[indices[i] + 2] = b;
+            }
+            return pixels
+        }
+
+
+        class turmiteobj {
+            constructor(turmite1, colorIndex) {
+                this.posx = parseInt(turmite1.posy);
+                this.posy = parseInt(turmite1.posx);
+                this.rule = turmite1.rule;
+                this.direction = turmite1.direction;
+                this.state = turmite1.state;
+                this.color = pico8Palette[colorIndex];
+                this.gradient = 0;
+                this.colorIndicator = this.getHighestChannel(this.color);
+
+
+                /// temp slots
+                this.newDirection = 0;
+                this.colorOfField = 0;
+            }
+
+
+            getHighestChannel(color) {
+                if (color.r >= color.g && color.r >= color.b) {
+                    return 'r';
+                } else if (color.g >= color.r && color.g >= color.b) {
+                    return 'g';
+                } else {
+                    return 'b';
+                }
+            }
+
+
+            getPixelColor(x, y, pixels) {
+                const index = (y * canvas.width + x) * 4;
+                return {
+                    r: pixels[index],
+                    g: pixels[index + 1],
+                    b: pixels[index + 2],
+                    a: pixels[index + 3]
+                };
+            }
+
+
+            chooseDirection(pixels) {
+                var stateOfField = this.getPixelColor(this.posx, this.posy, pixels)[this.colorIndicator];
+                //console.log(stateOfField, this.state)
+                if (stateOfField == 0 && this.state == 0) {
+                    //0 0 change mirrow
+                    this.colorOfField = this.rule[0] + this.rule[1];
+                    this.newDirection = this.rule[2] + this.rule[3];
+                    this.state = parseInt(this.rule[4] + this.rule[5]);
+
+                    // change me back later pleease
+                    // } else if (stateOfField == 255 && this.state == 0) {
+                } else if (this.state == 0) {
+                    //1 0
+                    this.colorOfField = this.rule[6] + this.rule[7];
+                    this.newDirection = this.rule[8] + this.rule[9];
+                    this.state = parseInt(this.rule[10] + this.rule[11]);
+                    //console.log("rule:2");
+                } else if (stateOfField == 0 && this.state == 1) {
+                    // 0 1
+                    this.colorOfField = this.rule[12] + this.rule[13];
+                    this.newDirection = this.rule[14] + this.rule[15];
+                    this.state = parseInt(this.rule[16] + this.rule[17]);
+                    //console.log("rule:3");
+                    // change me back later pleease
+                    // } else if (stateOfField == 255 && this.state == 1) {
+                } else if (this.state == 1) {
+                    //11
+                    this.colorOfField = this.rule[18] + this.rule[19];
+                    this.newDirection = this.rule[20] + this.rule[21];
+                    this.state = parseInt(this.rule[22] + this.rule[23]);
+                    //console.log("rule:4");
+                }
+            }
+
+
+            changeDirection() {
+                //change direction
+                if (this.newDirection == "02") {
+                    //console.log("changedirection:left")
+                    this.direction = (this.direction + 1) % 4; // +
+                } else if (this.newDirection == "08") {
+                    //console.log("changedirection:right")
+                    this.direction = (this.direction - 1) % 4; // -
+                    if (this.direction < 0) {
+                        this.direction = 3;
+                    }
+                } else if (this.newDirection == "04") {
+                    //console.log("changedirection:uturn")
+                    this.direction = (this.direction + 2) % 4;
+                }
+            }
+
+            takeStep() {
+                //console.log("_____")
+                //console.log(this.direction)
+                if (this.direction == 0) {
+                    // 0 2 3 1
+                    //console.log("move:left");
+                    this.posy = (this.posy + 1) % 300;
+                } else if (this.direction == 2) {
+                    //console.log("move:right");
+                    if (this.posy == 0) {
+                        this.posy = 299;
+                    } else {
+                        this.posy = this.posy - 1;
+                    }
+                } else if (this.direction == 3) {
+                    //console.log("move:up");
+                    this.posx = (this.posx + 1) % 300;
+                } else if (this.direction == 1) {
+                    //console.log("move:down");
+                    if (this.posx == 0) {
+                        this.posx = 299;
+                    } else {
+                        this.posx = this.posx - 1;
+                    }
+                }
+            }
+
+            setSinglePixelColor(x, y, pixel, r, g, b, a) {
+                const index = (y * canvas.width + x) * 4;
+                pixel[index] = r;
+                pixel[index + 1] = g;
+                pixel[index + 2] = b;
+                pixel[index + 3] = a;
+                return pixel;
+            }
+
+            newSetField(pixels) {
+                if (this.colorOfField == "ff") {
+                    /// change me back later please
+                    //return setSinglePixelColor(this.posx, this.posy, pixels, [40, 80, 150, 200, 250][Math.floor(this.gradient / 51.2)], 0, 0);
+                    //return this.setSinglePixelColor(this.posx, this.posy, pixels, [40, 80, 150, 200, 250][Math.floor(this.gradient / 51.2)], 0, 0, 255);
+                    return this.setSinglePixelColor(this.posx, this.posy, pixels, this.color["r"], this.color["g"], this.color["b"], [40, 80, 150, 200, 250][Math.floor(this.gradient / 51.2)])
+                } else {
+                    return this.setSinglePixelColor(this.posx, this.posy, pixels, 0, 0, 0, 0);
+                }
+            }
+
+            step(pixels) {
+                this.chooseDirection(pixels);
+                const newPixels = this.newSetField(pixels);
+                this.changeDirection();
+                this.takeStep();
+                this.gradient = (this.gradient + 1) % 256;
+                return newPixels
+            }
+        }
+
+        class Cleaner {
+            constructor(posx, posy) {
+                this.posx = posx;
+                this.posy = posy;
+                this.gridSize = 300;
+            }
+
+            setSinglePixelColor(x, y, pixel, r, g, b) {
+                const index = (y * canvas.width + x) * 4;
+                pixel[index] = r;
+                pixel[index + 1] = g;
+                pixel[index + 2] = b;
+                return pixel;
+            }
+
+            move() {
+                // Random direction: 0 = up, 1 = right, 2 = down, 3 = left
+                const direction = Math.floor(costomRandom() * 4);
+
+                switch (direction) {
+                    case 0: // up
+                        //this.posy = (this.posy - 1 + this.gridSize) % this.gridSize;
+                        break;
+                    case 1: // right
+                        this.posx = (this.posx - 25) % this.gridSize;
+                        break;
+                    case 2: // down
+                        //this.posy = (this.posy + 1) % this.gridSize;
+                        break;
+                    case 3: // left
+                        this.posx = (this.posx - 1 + this.gridSize) % this.gridSize;
+                        break;
+                }
+            }
+
+            // Brave-safe: write directly to stateBuffer instead of ctx.fillRect,
+            // so the clean stripe is part of the authoritative JS state.
+            drawAllArround(x, y, buffer) {
+                if (x < 0 || x >= 300) return; // ctx.fillRect silently ignores out-of-bounds; match that behaviour
+                for (let row = 0; row < 300; row++) {
+                    const idx = (row * 300 + x) * 4;
+                    buffer[idx] = 0;
+                    buffer[idx + 1] = 0;
+                    buffer[idx + 2] = 0;
+                    buffer[idx + 3] = 255;
+                }
+            }
+
+            step(buffer) {
+                this.move();
+                this.drawAllArround(this.posx, this.posy, buffer);
+            }
+
+        }
+
+        class PixelPusher {
+            constructor(area, direction, steps) {
+                this.steps = steps
+                this.currentSteps = 0;
+                this.direction = direction;
+                // area is  {x1, y1, x2, y2}
+                this.area = area;
+            }
+
+
+            shiftRectangleDownRight(pixel, canvasWidth) {
+                const shiftedDown = this.shiftRectangleDown(pixel, canvasWidth);
+                const shiftedDownRight = this.shiftRectangleRight(shiftedDown["pixels"], canvasWidth);
+                return shiftedDownRight;
+            }
+
+
+            shiftRectangleDownLeft(pixel, canvasWidth) {
+                const shiftedDown = this.shiftRectangleDown(pixel, canvasWidth);
+                const shiftedDownLeft = this.shiftRectangleLeft(shiftedDown["pixels"], canvasWidth);
+                return shiftedDownLeft;
+            }
+
+
+            shiftRectangleUpLeft(pixel, canvasWidth) {
+                const shiftedUp = this.shiftRectangleUp(pixel, canvasWidth);
+                const shiftedUpLeft = this.shiftRectangleLeft(shiftedUp["pixels"], canvasWidth);
+                return shiftedUpLeft;
+            }
+
+
+            shiftRectangleUpRight(pixel, canvasWidth) {
+                const shiftedUp = this.shiftRectangleUp(pixel, canvasWidth);
+                const shiftedUpRight = this.shiftRectangleRight(shiftedUp["pixels"], canvasWidth);
+                return shiftedUpRight;
+            }
+
+
+
+            shiftRectangleLeft(pixels, canvasWidth) {
+                const newPixels = new Uint8ClampedArray(pixels);
+                const startX = Math.min(this.area.x1, this.area.x2);
+                const endX = Math.max(this.area.x1, this.area.x2);
+                const startY = Math.min(this.area.y1, this.area.y2);
+                const endY = Math.max(this.area.y1, this.area.y2);
+
+                for (let y = startY; y < endY; y++) {
+                    const rowStart = (y * canvasWidth + startX) * 4;
+                    const temp = [
+                        newPixels[rowStart],
+                        newPixels[rowStart + 1],
+                        newPixels[rowStart + 2],
+                        newPixels[rowStart + 3]
+                    ];
+
+                    for (let x = startX; x < endX - 1; x++) {
+                        const currentIndex = (y * canvasWidth + x) * 4;
+                        const nextIndex = currentIndex + 4;
+                        for (let i = 0; i < 4; i++) {
+                            newPixels[currentIndex + i] = newPixels[nextIndex + i];
+                        }
+                    }
+
+                    const lastIndex = (y * canvasWidth + endX - 1) * 4;
+                    for (let i = 0; i < 4; i++) {
+                        newPixels[lastIndex + i] = temp[i];
+                    }
+                }
+
+                return { pixels: newPixels, width: canvasWidth, height: pixels.length / (4 * canvasWidth) };
+            }
+
+            shiftRectangleRight(pixels, canvasWidth) {
+                const newPixels = new Uint8ClampedArray(pixels);
+                const startX = Math.min(this.area.x1, this.area.x2);
+                const endX = Math.max(this.area.x1, this.area.x2);
+                const startY = Math.min(this.area.y1, this.area.y2);
+                const endY = Math.max(this.area.y1, this.area.y2);
+
+                for (let y = startY; y < endY; y++) {
+                    // Save last pixel instead of first for right shift
+                    const lastIndex = (y * canvasWidth + endX - 1) * 4;
+                    const temp = [
+                        newPixels[lastIndex],
+                        newPixels[lastIndex + 1],
+                        newPixels[lastIndex + 2],
+                        newPixels[lastIndex + 3]
+                    ];
+
+                    for (let x = endX - 1; x > startX; x--) {
+                        const currentIndex = (y * canvasWidth + x) * 4;
+                        const prevIndex = currentIndex - 4;
+                        for (let i = 0; i < 4; i++) {
+                            newPixels[currentIndex + i] = newPixels[prevIndex + i];
+                        }
+                    }
+
+                    // Put saved pixel at start
+                    const firstIndex = (y * canvasWidth + startX) * 4;
+                    for (let i = 0; i < 4; i++) {
+                        newPixels[firstIndex + i] = temp[i];
+                    }
+                }
+
+                return { pixels: newPixels, width: canvasWidth, height: pixels.length / (4 * canvasWidth) };
+            }
+
+            shiftRectangleUp(pixels, canvasWidth) {
+                const newPixels = new Uint8ClampedArray(pixels);
+                const startX = Math.min(this.area.x1, this.area.x2);
+                const endX = Math.max(this.area.x1, this.area.x2);
+                const startY = Math.min(this.area.y1, this.area.y2);
+                const endY = Math.max(this.area.y1, this.area.y2);
+
+                for (let x = startX; x < endX; x++) {
+                    const colStart = (startY * canvasWidth + x) * 4;
+                    const temp = [
+                        newPixels[colStart],
+                        newPixels[colStart + 1],
+                        newPixels[colStart + 2],
+                        newPixels[colStart + 3]
+                    ];
+
+                    for (let y = startY; y < endY - 1; y++) {
+                        const currentIndex = (y * canvasWidth + x) * 4;
+                        const nextIndex = ((y + 1) * canvasWidth + x) * 4;
+                        for (let i = 0; i < 4; i++) {
+                            newPixels[currentIndex + i] = newPixels[nextIndex + i];
+                        }
+                    }
+
+                    const lastIndex = ((endY - 1) * canvasWidth + x) * 4;
+                    for (let i = 0; i < 4; i++) {
+                        newPixels[lastIndex + i] = temp[i];
+                    }
+                }
+
+                return { pixels: newPixels, width: canvasWidth, height: pixels.length / (4 * canvasWidth) };
+            }
+
+            shiftRectangleDown(pixels, canvasWidth) {
+                const newPixels = new Uint8ClampedArray(pixels);
+                const startX = Math.min(this.area.x1, this.area.x2);
+                const endX = Math.max(this.area.x1, this.area.x2);
+                const startY = Math.min(this.area.y1, this.area.y2);
+                const endY = Math.max(this.area.y1, this.area.y2);
+
+                for (let x = startX; x < endX; x++) {
+                    // Save bottom pixel instead of top for down shift
+                    const bottomIndex = ((endY - 1) * canvasWidth + x) * 4;
+                    const temp = [
+                        newPixels[bottomIndex],
+                        newPixels[bottomIndex + 1],
+                        newPixels[bottomIndex + 2],
+                        newPixels[bottomIndex + 3]
+                    ];
+
+                    for (let y = endY - 1; y > startY; y--) {
+                        const currentIndex = (y * canvasWidth + x) * 4;
+                        const prevIndex = ((y - 1) * canvasWidth + x) * 4;
+                        for (let i = 0; i < 4; i++) {
+                            newPixels[currentIndex + i] = newPixels[prevIndex + i];
+                        }
+                    }
+
+                    // Put saved pixel at top
+                    const topIndex = (startY * canvasWidth + x) * 4;
+                    for (let i = 0; i < 4; i++) {
+                        newPixels[topIndex + i] = temp[i];
+                    }
+                }
+
+                return { pixels: newPixels, width: canvasWidth, height: pixels.length / (4 * canvasWidth) };
+            }
+
+
+            shift(pixels, canvasWidth) {
+                this.currentSteps = this.currentSteps + 1;
+                switch (this.direction) {
+                    case 'left': return this.shiftRectangleLeft(pixels, canvasWidth);
+                    case 'right': return this.shiftRectangleRight(pixels, canvasWidth);
+                    case 'up': return this.shiftRectangleUp(pixels, canvasWidth);
+                    case 'down': return this.shiftRectangleDown(pixels, canvasWidth);
+                    case 'downRight': return this.shiftRectangleDownRight(pixels, canvasWidth);
+                    case 'downLeft': return this.shiftRectangleDownLeft(pixels, canvasWidth);
+                    case 'upRight': return this.shiftRectangleUpRight(pixels, canvasWidth);
+                    case 'upLeft': return this.shiftRectangleUpLeft(pixels, canvasWidth);
+
+                    default: return this.shiftRectangleLeft(pixels, canvasWidth);
+                }
+            }
+        }
+
+
+
+        function getRectangleIndices(canvasWidth, x1, y1, x2, y2) {
+            const startX = Math.min(x1, x2);
+            const endX = Math.max(x1, x2);
+            const startY = Math.min(y1, y2);
+            const endY = Math.max(y1, y2);
+
+            // Returns array of indices that make up the rectangle
+            const indices = [];
+
+            for (let y = startY; y < endY; y++) {
+                for (let x = startX; x < endX; x++) {
+                    const index = (y * canvasWidth + x) * 4;
+                    indices.push(index); // R index
+                }
+            }
+
+            return indices;
+        }
+
+        function generateRandomRectangles(canvas, count, minSize = 2, maxSize = 60) {
+            const rectangles = [];
+
+            for (let i = 0; i < count; i++) {
+                // Generate random starting point
+                const x1 = Math.floor(costomRandom() * (canvas.width - maxSize));
+                const y1 = Math.floor(costomRandom() * (canvas.height - maxSize));
+
+                // Generate random width and height between min and max size
+                const width = Math.floor(costomRandom() * (maxSize - minSize)) + minSize;
+                const height = Math.floor(costomRandom() * (maxSize - minSize)) + minSize;
+
+                // Ensure we don't exceed canvas bounds
+                const x2 = Math.min(x1 + width, canvas.width);
+                const y2 = Math.min(y1 + height, canvas.height);
+
+                rectangles.push({
+                    x1,
+                    y1,
+                    x2,
+                    y2
+                });
+            }
+
+            return rectangles;
+        }
+
+        /// svg convert function here
+
+        function redBlackCanvasToSVG(canvas) {
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Create SVG element with black background
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+            // Add black background
+            const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            background.setAttribute('width', width);
+            background.setAttribute('height', height);
+            background.setAttribute('x', 0);
+            background.setAttribute('y', 0);
+            background.setAttribute('fill', 'black');
+            svg.appendChild(background);
+
+            // Read from stateBuffer directly instead of canvas getImageData (Brave-safe)
+            const data = stateBuffer;
+
+            // Check for red pixels and add them to SVG
+            // Red is roughly (255, 0, 0) in RGB
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+
+                    // Check if pixel is red (allowing some tolerance)
+                    if (r > 0) {
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', x);
+                        rect.setAttribute('y', y);
+                        rect.setAttribute('width', 1);
+                        rect.setAttribute('height', 1);
+                        rect.setAttribute('fill', `rgb(${r}, ${g}, ${b})`);
+                        svg.appendChild(rect);
+                    }
+                }
+            }
+
+            // Convert SVG to string
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svg);
+
+            return svgString;
+        }
+
+
+        function fullColorCanvasToSVG(canvas) {
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Create SVG element with black background
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+            // Add black background
+            const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            background.setAttribute('width', width);
+            background.setAttribute('height', height);
+            background.setAttribute('x', 0);
+            background.setAttribute('y', 0);
+            background.setAttribute('fill', 'black');
+            svg.appendChild(background);
+
+            // Read from stateBuffer directly instead of canvas getImageData (Brave-safe)
+            const data = stateBuffer;
+
+            // Export all pixels with their actual colors (including alpha channel)
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const r = data[index];
+                    const g = data[index + 1];
+                    const b = data[index + 2];
+                    const a = data[index + 3];
+
+                    // Check if pixel has any color or alpha value (not completely transparent black)
+                    if (r > 0 || g > 0 || b > 0 || a > 0) {
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', x);
+                        rect.setAttribute('y', y);
+                        rect.setAttribute('width', 1);
+                        rect.setAttribute('height', 1);
+
+                        // Include alpha channel in the color
+                        if (a < 255) {
+                            rect.setAttribute('fill', `rgba(${r}, ${g}, ${b}, ${a / 255})`);
+                        } else {
+                            rect.setAttribute('fill', `rgb(${r}, ${g}, ${b})`);
+                        }
+
+                        svg.appendChild(rect);
+                    }
+                }
+            }
+
+            // Convert SVG to string
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svg);
+
+            return svgString;
+        }
+
+
+        function exportAndDownloadSVG(canvas, writefunction) {
+            const svgString = writefunction(canvas);
+
+            // Create a Blob from the SVG string
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            // Create a temporary link element
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = 'cipher.svg'; // Name of the downloaded file
+            downloadLink.style.display = 'none';     // Hide the link
+            document.body.appendChild(downloadLink);
+
+            // Trigger download and clean up
+            downloadLink.click();
+
+            // Clean up: remove link and revoke object URL after download starts
+            setTimeout(() => {
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+
+
+
+        function main(turmites, pusherFrames, cleanerFrames, rectangleCount) {
+            var pixelPusher = [];
+            var step = 0;
+            //var turmites = [];
+
+            var lastTurmiteUpdate = 0;
+            var lastPusherUpdate = 0;
+            var lastCleanerUpdate = 0;
+
+            // Animation parameters from encoded data
+            const FRAMES_PER_TURMITE_UPDATE = 1;    // Keep constant
+            const FRAMES_PER_PUSHER_UPDATE = pusherFrames;    // From additionalValues[0]
+            const FRAMES_PER_CLEANER_UPDATE = cleanerFrames;  // From additionalValues[2]
+            const RECTANGLE_PUSHER_NUMBER = rectangleCount;   // Test parameter (not encoded yet)
+
+            const newcleaner = new Cleaner(150, 0);
+
+
+            var listofSelections = generateRandomRectangles(canvas, RECTANGLE_PUSHER_NUMBER);
+            var choice = ["up", "down", "left", "right", "downRight", "downLeft", "upLeft", "upRight"];
+
+            listofSelections.forEach(rect => {
+                const pusher = new PixelPusher(rect, choice[Math.floor(costomRandom() * choice.length)], 70);
+                pixelPusher.push(pusher);
+            });
+
+            function animate() {
+                step++;
+
+                // Brave-safe: read from stateBuffer, never from canvas getImageData.
+                let currentPixels = stateBuffer;
+
+                // Turmite updates more frequently
+                if (step % FRAMES_PER_TURMITE_UPDATE === 0) {
+                    turmites.forEach(turmite => {
+                        currentPixels = turmite.step(currentPixels);
+                    })
+                    lastTurmiteUpdate = step;
+                }
+
+                // Pixel pushers update less frequently
+                if (step % FRAMES_PER_PUSHER_UPDATE === 0) {
+                    pixelPusher = pixelPusher.filter(pusher => {
+                        return pusher.currentSteps < pusher.steps;
+                    });
+
+                    if (pixelPusher.length == 0) {
+                        var listofSelections = generateRandomRectangles(canvas, RECTANGLE_PUSHER_NUMBER);
+                        var choice = ["up", "down", "left", "right", "downRight", "downLeft", "upLeft", "upRight"];
+                        var choice2 = [2, 20, 30, 40]; //2, 20, 30, 40
+
+                        listofSelections.forEach(rect => {
+                            // You can create a PixelPusher for each rectangle
+                            const pusher = new PixelPusher(rect, choice[Math.floor(costomRandom() * choice.length)], choice2[Math.floor(costomRandom() * choice2.length)]);
+                            pixelPusher.push(pusher)
+                        });
+                    }
+                    pixelPusher.forEach(pusher => {
+                        const result = pusher.shift(currentPixels, canvas.width);
+                        currentPixels = result.pixels;
+                    });
+                    lastPusherUpdate = step;
+                }
+
+                // Copy pusher result (new array) back into stateBuffer, then display.
+                stateBuffer.set(currentPixels);
+                ctx.putImageData(displayImageData, 0, 0);
+
+                if (step % FRAMES_PER_CLEANER_UPDATE === 0) {
+                    newcleaner.step(stateBuffer);
+                    lastCleanerUpdate = step;
+                }
+
+            }
+
+            async function runAnimation() {
+                // Create a unique ID for this animation instance
+                const myId = Symbol('animation');
+                currentAnimationId = myId;
+                shouldRunAnimation = true;
+
+                while (shouldRunAnimation && currentAnimationId === myId) {
+                    animate();
+                    await new Promise(resolve => setTimeout(resolve, 10));
+
+                    // Pause when tab is hidden to save CPU
+                    if (document.hidden) {
+                        await new Promise(resolve => {
+                            const handler = () => {
+                                document.removeEventListener('visibilitychange', handler);
+                                resolve();
+                            };
+                            document.addEventListener('visibilitychange', handler);
+                        });
+                    }
+                }
+            }
+
+            runAnimation();
+
+        }
+
+        ///setup from here
+
+
+        // Configuration object that will be updated by postMessage
+        const config = {
+            coordinates: null,
+            speed: null,
+            walkerTurmites: null,
+            builderTurmites: null,
+            chaosNumbers: null,  // [pusherSlowness, cleanerSlowness, rectangleCount]
+            color: null          // Color index (0-15)
+        };
+
+        // ============ ANIMATION CONTROL ============
+        // These variables control the animation loop lifecycle
+        let shouldRunAnimation = false;
+        let currentAnimationId = null;
+
+
+
+        // const builders = ["ff0800ff0201ff0800000001", "ff0801000200000800ff0800", "ff0201000201ff0400000000", "ff0201000801ff0000000000", "ff0201000800ff0000000801", "ff0001000001ff0801000000", "ff0001000201ff0000000800"]
+
+        // const crawler = ["ff0000ff0801000000000200", "ff0000ff0801000201000000", "ff0000ff0801000201000200", "ff0000ff0801ff0400000200", "ff0001000200000200000200", "ff0001000200000200ff0000", "ff0001000801ff0000ff0200", "ff0001ff0201ff0000ff0800"]
+
+        // var allturmites = [];
+
+        // 1. Initial random declaration (keep this)
+        let random; // Don't initialize with a default value yet
+
+        // 2. In buildStart function, modify to:
+        const buildStart = () => {
+            // Stop any existing animation first
+            shouldRunAnimation = false;
+            currentAnimationId = null;
+
+            // Make sure coordinates are properly set
+            if (!config.coordinates || !config.coordinates.length || config.coordinates.length < 20) {
+                return;
+            }
+
+            // Derive seed from coordinates for deterministic but unique-per-token randomness
+            const derivedSeed = (config.coordinates[0].x * 256 + config.coordinates[0].y) * 31337;
+            costomRandom = seededRandom(derivedSeed);
+            console.log("Using derived seed:", derivedSeed);
+
+            // Make sure turmite rules are provided
+            if (!config.builderTurmites || !config.builderTurmites.length ||
+                !config.walkerTurmites || !config.walkerTurmites.length) {
+                console.log("Missing turmite rules, cannot start animation");
+                return;
+            }
+
+            // Now proceed with the animation
+            var allturmites = [];
+
+            // Create turmites without defaults
+            // Use config.color (0-15) for turmite color
+            const turmiteColor = config.color !== null ? config.color : 0;
+
+            for (var a = 0; a < 15; a++) {
+                var gene = config.builderTurmites[a % config.builderTurmites.length];
+                const turmiteData = {
+                    posx: config.coordinates[a].x + 22,
+                    posy: config.coordinates[a].y + 22,
+                    rule: gene,
+                    state: 0,
+                    direction: 1
+                };
+                const turmiteobjNew = new turmiteobj(turmiteData, turmiteColor);
+                allturmites.push(turmiteobjNew);
+            }
+
+            for (var b = 15; b < 20; b++) {
+                var gene = config.walkerTurmites[b % config.walkerTurmites.length];
+                const turmiteData = {
+                    posx: config.coordinates[b].x + 22,
+                    posy: config.coordinates[b].y + 22,
+                    rule: gene,
+                    state: 0,
+                    direction: 1
+                };
+                const turmiteobjNew = new turmiteobj(turmiteData, turmiteColor);
+                allturmites.push(turmiteobjNew);
+            }
+
+            // Extract animation parameters: chaosNumbers = [pusherSlowness, cleanerSlowness, rectangleCount]
+            const pusherFrames = config.chaosNumbers[0] === 0 ? 11 : config.chaosNumbers[0];
+            const cleanerFrames = config.chaosNumbers[1] === 0 ? 1 : config.chaosNumbers[1];
+            const rectangleCount = config.chaosNumbers[2] === 0 ? 30 : config.chaosNumbers[2];
+
+            main(allturmites, pusherFrames, cleanerFrames, rectangleCount);
+        }
+
+        // Listen for messages from the parent window
+        window.addEventListener('message', (event) => {
+            // Ignore messages without a type (from extensions, devtools, etc.)
+            if (!event.data || !event.data.type) {
+                return;
+            }
+
+            // CLEANUP handler - stops the animation loop
+            if (event.data.type === 'CLEANUP') {
+                shouldRunAnimation = false;
+                currentAnimationId = null;
+                window.parent.postMessage({ type: 'CLEANUP_DONE' }, '*');
+                return;
+            }
+
+            // You might want to check event.origin for security
+            if (event.data.type === 'UPDATE_ANIMATION' && event.data.data) {
+                Object.assign(config, event.data.data);
+                buildStart();
+            }
+
+            // SVG Export handler
+            if (event.data.type === 'EXPORT_SVG') {
+                const svgString = redBlackCanvasToSVG(canvas);
+                window.parent.postMessage({
+                    type: 'SVG_READY',
+                    svgData: svgString
+                }, '*');
+            }
+        });
+
+        // Start the animation when
+        // if (config.walkerTurmites.length > 0) {
+        //     buildStart();
+        // }
+
+
+
+    </script>
+</body>
+
+</html>
