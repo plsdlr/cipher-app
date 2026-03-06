@@ -10,6 +10,7 @@ import { ConsoleProvider } from './console/ConsoleContext.tsx';
 
 
 import './index-test.css'
+import './index-light.css'
 
 globalThis.Buffer = Buffer
 

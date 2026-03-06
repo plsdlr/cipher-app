@@ -83,10 +83,10 @@ export const ConsoleDisplay: React.FC = () => {
 
   const getMessageColor = (type: ConsoleMessage['type']) => {
     switch (type) {
-      case 'success': return '#00ff00';
-      case 'error': return '#ff4444';
-      case 'warning': return '#ffaa00';
-      default: return '#ffffff'; // Your app's red theme
+      case 'success': return 'var(--color-green)';
+      case 'error': return 'var(--color-red)';
+      case 'warning': return 'var(--color-orange)';
+      default: return 'var(--primary-color)';
     }
   };
 

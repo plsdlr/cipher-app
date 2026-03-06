@@ -297,7 +297,7 @@ const WalletPage = () => {
   // Format BigInt for display
   const formatBigInt = (value: bigint): string => {
     const str = value.toString();
-    return str.length > 10 ? `${str.substring(0, 5)}...${str.substring(str.length - 5)}` : str;
+    return str.length > 10 ? `${str.substring(0, 3)}...${str.substring(str.length - 3)}` : str;
   };
 
   // Format byte array for display
@@ -305,7 +305,7 @@ const WalletPage = () => {
     const hex = Array.from(array)
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
-    return `${hex.substring(0, 8)}...${hex.substring(hex.length - 8)}`;
+    return `${hex.substring(0, 6)}...${hex.substring(hex.length - 6)}`;
   };
 
   const formatByteArrayFull = (array: Uint8Array): string => {
@@ -387,15 +387,18 @@ const WalletPage = () => {
               {privateKey && (
                 <div className="wallet-info-row private-key">
                   <div className="wallet-info-label">Private Key:</div>
-                  <div className="wallet-info-value">
-                    {formatByteArray(privateKey)} (active in session)
-                    <button onClick={() => navigator.clipboard.writeText(formatByteArrayFull(privateKey))}>
-                      Copy Private Key to clipboard for manual backup
-                    </button>
-                  </div>
+                  <div className="wallet-info-value">{formatByteArray(privateKey)}</div>
                 </div>
               )}
             </div>
+            {privateKey && publicKey && (
+              <button
+                className="disconnect-button"
+                onClick={() => navigator.clipboard.writeText("Private Key:" + formatByteArrayFull(privateKey) + "Public Key:" + String(publicKey[0]) + "," + String(publicKey[1]))}
+              >
+                Copy Keys
+              </button>
+            )}
 
           </fieldset>
         </div>

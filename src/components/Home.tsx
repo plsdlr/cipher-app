@@ -1,46 +1,36 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
 import { OnboardingModal } from './OnboardingModal';
 import CipherWrapperIframe from '../canvasWrapper';
+import mintValues1 from './mint-values-1768387749712.json';
+import mintValues2 from './mint-values-1768388277534.json';
+import mintValues3 from './mint-values-1768389083964.json';
 
-// Generate deterministic coordinates for examples
-const generateCoordinates = (seed: number) => {
-    const coords = [];
-    for (let i = 0; i < 20; i++) {
-        coords.push({
-            x: ((seed * (i + 1) * 17) % 256),
-            y: ((seed * (i + 1) * 23) % 256)
-        });
-    }
-    return coords;
-};
-
-// Example turmite configurations with different seeds
-// Turmite rules are 24-char hex strings encoding state transitions
 const TURMITE_EXAMPLES = [
     {
-        name: 'Spiral',
-        walkerTurmites: ['ff0000ff0801000000000200'],
-        builderTurmites: ['ff0800ff0201ff0800000001'],
-        chaosNumbers: [11, 5, 30],
-        color: 0,
-        coordinates: generateCoordinates(42)
+        name: "ONE",
+        walkerTurmites: [mintValues3.walkerGene.rule],
+        builderTurmites: mintValues3.builderGenes.map(g => g.rule),
+        chaosNumbers: mintValues3.chaosNumbers,
+        color: mintValues3.color,
+        coordinates: mintValues3.coordinates
     },
     {
-        name: 'Chaos',
-        walkerTurmites: ['ff0001000200000200000200'],
-        builderTurmites: ['ff0201000201ff0400000000'],
-        chaosNumbers: [8, 3, 20],
-        color: 5,
-        coordinates: generateCoordinates(137)
+        name: "TWO",
+        walkerTurmites: [mintValues2.walkerGene.rule],
+        builderTurmites: mintValues2.builderGenes.map(g => g.rule),
+        chaosNumbers: mintValues2.chaosNumbers,
+        color: mintValues2.color,
+        coordinates: mintValues2.coordinates
     },
     {
-        name: 'Highway',
-        walkerTurmites: ['ff0001ff0201ff0000ff0800'],
-        builderTurmites: ['ff0001000001ff0801000000'],
-        chaosNumbers: [15, 2, 15],
-        color: 10,
-        coordinates: generateCoordinates(256)
+        name: "THREE",
+        walkerTurmites: [mintValues1.walkerGene.rule],
+        builderTurmites: mintValues1.builderGenes.map(g => g.rule),
+        chaosNumbers: mintValues1.chaosNumbers,
+        color: mintValues1.color,
+        coordinates: mintValues1.coordinates
     }
 ];
 
@@ -121,7 +111,6 @@ const Home = () => {
                                 builderTurmites={TURMITE_EXAMPLES[selectedExample].builderTurmites}
                                 chaosNumbers={TURMITE_EXAMPLES[selectedExample].chaosNumbers}
                                 color={TURMITE_EXAMPLES[selectedExample].color}
-                                hideControls
                             />
                         </div>
                     </fieldset>
@@ -171,8 +160,9 @@ const Home = () => {
 
                     <h2>How does it work?</h2>
                     <p>
-                        Alice want to send a Cipher to Bob. Alice knows the Public Ethereum Address of Bob. Bob has also saved his public Cipher Key onchain. Alice generates via Diffie–Hellman a shared key (using her private cipher key and Bobs public cipher key saved onchain). She encrypts the data and with the key and generates a zero knowlege proof. (using poseidon encryption). She sends a transaction with the proof to the cipher smart contract. The cipher smart contract checks the coorectness of the proof and saves the public input which contains the encrypted data. The nft like asset changes now the owner but Alice proofed also that Bob can encrypt the Data.
+                        Alice want to send a Cipher to Bob. Alice knows the Public Ethereum Address of Bob. Bob has also saved his public Cipher Key onchain. Alice generates via Diffie–Hellman a shared key (using her private cipher key and Bobs public cipher key saved onchain). She encrypts the data and with the key and generates a zero knowlege proof. (using poseidon encryption). She sends a transaction with the proof to the cipher smart contract. The cipher smart contract checks the coorectness of the proof and saves the public input which contains the encrypted data. The nft like asset changes now the owner but Alice proved also that Bob can encrypt the Data.
                     </p>
+                    <p>For a full technical explanation see the <Link to="/specs">protocol specs →</Link></p>
                 </section>
             </fieldset>
         </div >

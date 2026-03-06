@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import CipherWrapperIframe from '../canvasWrapper.tsx';
+import CipherWrapperIframe, { CipherWrapperHandle } from '../canvasWrapper.tsx';
 import { useDecryptToken } from '../ViewAndSendPage/useDecryptToken.ts';
 import { useConsole } from '../console/ConsoleContext.tsx';
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
@@ -60,6 +60,7 @@ const EditTokenPage = () => {
     const { tokenId } = useParams<TokenParams>();
     const { addMessage } = useConsole();
     const navigate = useNavigate();
+    const cipherRef = useRef<CipherWrapperHandle>(null);
 
     const handleReCipherSuccess = useCallback(() => {
         addMessage("Token re-ciphered successfully! Redirecting to View page...", "success");
@@ -164,12 +165,19 @@ const EditTokenPage = () => {
             return;
         }
 
-        // Animation params are treated as one group
-        if (pusherFrames !== originalValues.pusherFrames ||
-            cleanerFrames !== originalValues.cleanerFrames ||
-            rectangleCount !== originalValues.rectangleCount) {
+        if (pusherFrames !== originalValues.pusherFrames) {
             setHasChanges(true);
-            setChangedParameter('animation');
+            setChangedParameter('pusher');
+            return;
+        }
+        if (cleanerFrames !== originalValues.cleanerFrames) {
+            setHasChanges(true);
+            setChangedParameter('cleaner');
+            return;
+        }
+        if (rectangleCount !== originalValues.rectangleCount) {
+            setHasChanges(true);
+            setChangedParameter('rectangle');
             return;
         }
 
@@ -282,15 +290,6 @@ const EditTokenPage = () => {
         addMessage(`Rectangle count changed to: ${value}`, "info");
     };
 
-    // Generate random coordinates
-    const generateRandomCoordinates = () => {
-        const newCoords = Array(20).fill(null).map(() => ({
-            x: Math.floor(Math.random() * 256),
-            y: Math.floor(Math.random() * 256)
-        }));
-        setCoordinates(newCoords);
-        addMessage("Generated random coordinates", "info");
-    };
 
     if (isDecrypting) {
         return <div>Loading and decrypting token #{tokenId}...</div>;
@@ -321,7 +320,9 @@ const EditTokenPage = () => {
                                 <p style={{ color: 'var(--color-orange)', marginBottom: '12px' }}>
                                     {(() => {
                                         if (changedParameter === 'color') return 'Color changed — all other parameters are locked.';
-                                        if (changedParameter === 'animation') return 'Animation parameters changed — all other parameters are locked.';
+                                        if (changedParameter === 'pusher') return 'Pusher Slowness changed — all other parameters are locked.';
+                                        if (changedParameter === 'cleaner') return 'Cleaner Slowness changed — all other parameters are locked.';
+                                        if (changedParameter === 'rectangle') return 'Rectangle Count changed — all other parameters are locked.';
                                         if (changedParameter === 'walker') return 'Walker Gene changed — all other parameters are locked.';
                                         if (changedParameter.startsWith('builder-')) {
                                             const builderIndex = parseInt(changedParameter.split('-')[1]);
@@ -348,6 +349,7 @@ const EditTokenPage = () => {
                     <fieldset className="terminal-fieldset">
                         <legend>PREVIEW</legend>
                         <CipherWrapperIframe
+                            ref={cipherRef}
                             coordinates={coordinates}
                             builderTurmites={builderGenes.map(g => g.rule)}
                             walkerTurmites={[walkerGene.rule]}
@@ -355,13 +357,10 @@ const EditTokenPage = () => {
                             chaosNumbers={chaosNumbers}
                             color={color}
                         />
-                        {!hasChanges && (
-                            <div className="canvas-controls">
-                                <button onClick={generateRandomCoordinates} className="random-btn">
-                                    RANDOMIZE COORDINATES
-                                </button>
-                            </div>
-                        )}
+                        <div className="canvas-controls">
+                            <button onClick={() => cipherRef.current?.toggleFullscreen()}>FULLSCREEN</button>
+                            <button onClick={() => cipherRef.current?.exportSVG()}>EXPORT SVG</button>
+                        </div>
                     </fieldset>
 
                     <fieldset className="terminal-fieldset">
@@ -391,21 +390,19 @@ const EditTokenPage = () => {
                         </div>
 
                         {/* Animation Parameters */}
-                        <div style={{
-                            opacity: isParameterDisabled('animation') ? 0.3 : 1,
-                            pointerEvents: isParameterDisabled('animation') ? 'none' : 'auto',
-                            transition: 'opacity 0.3s ease'
-                        }}>
-                            <AnimationParameterSelector
-                                pusherFrames={pusherFrames}
-                                cleanerFrames={cleanerFrames}
-                                rectangleCount={rectangleCount}
-                                onPusherChange={handlePusherChange}
-                                onCleanerChange={handleCleanerChange}
-                                onRectangleChange={handleRectangleChange}
-                                includeRectangleCount={true}
-                            />
-                        </div>
+                        <AnimationParameterSelector
+                            pusherFrames={pusherFrames}
+                            cleanerFrames={cleanerFrames}
+                            rectangleCount={rectangleCount}
+                            onPusherChange={handlePusherChange}
+                            onCleanerChange={handleCleanerChange}
+                            onRectangleChange={handleRectangleChange}
+                            includeRectangleCount={true}
+                            disableCascade={true}
+                            disabledPusher={isParameterDisabled('pusher')}
+                            disabledCleaner={isParameterDisabled('cleaner')}
+                            disabledRectangle={isParameterDisabled('rectangle')}
+                        />
 
                         <div className="gene-section">
                             <fieldset className="terminal-fieldset">

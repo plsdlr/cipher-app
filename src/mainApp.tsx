@@ -6,7 +6,7 @@ import ViewPage from './ViewAndSendPage/view';
 import { ConsoleDisplay } from './console/ConsoleContext.tsx';
 import EditTokenPage from './ReCipher/recipher.tsx';
 import MarketPage from './Nightmarket/MarketPage';
-import { Home } from './components';
+import { Home, Specs } from './components';
 
 // Main content component that handles routing
 const MainContent = () => {
@@ -18,6 +18,7 @@ const MainContent = () => {
             <Route path="/view/:tokenId" element={<ViewPage />} />
             <Route path="/recipher/:tokenId" element={<EditTokenPage />} />
             <Route path="/market" element={<MarketPage />} />
+            <Route path="/specs" element={<Specs />} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
@@ -67,7 +68,8 @@ const Menu = () => {
         { id: 'home', label: 'HOME', path: '/' },
         { id: 'mint', label: 'MINT', path: '/mint' },
         { id: 'view', label: 'VIEW / SEND', path: '/view' },
-        { id: 'market', label: 'NIGHTMARKET', path: '/market' }
+        { id: 'market', label: 'NIGHTMARKET', path: '/market' },
+        { id: 'specs', label: 'SPECS', path: '/specs' }
     ];
 
     // Function to handle menu item selection
@@ -81,7 +83,7 @@ const Menu = () => {
                 <li
                     key={item.id}
                     className={activeMenu === item.id ? 'active' : ''}
-                    onClick={() => handleMenuSelect(item.id)}
+                    onClick={() => handleMenuSelect(item.path)}
                 >
                     {item.label}
                 </li>

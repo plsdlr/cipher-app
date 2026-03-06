@@ -1,4 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
+
+export interface CipherWrapperHandle {
+    exportSVG: () => void;
+    toggleFullscreen: () => void;
+}
 
 interface CipherWrapperProps {
     coordinates?: { x: number, y: number }[];
@@ -7,24 +12,21 @@ interface CipherWrapperProps {
     builderTurmites?: string[];
     chaosNumbers?: number[];  // [pusherSlowness, cleanerSlowness, rectangleCount]
     color?: number;           // Color index (0-15)
-    hideControls?: boolean;   // Hide fullscreen and export buttons
 }
 
-const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
+const CipherWrapperIframe = forwardRef<CipherWrapperHandle, CipherWrapperProps>(({
     coordinates,
     speed = 1,
     walkerTurmites = [],
     builderTurmites = [],
     chaosNumbers = [],
     color = 0,
-    hideControls = false
-}) => {
+}, ref) => {
     // Add a key state that changes whenever props change significantly
     const [iframeKey, setIframeKey] = useState(0);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const fullscreenButtonRef = useRef<HTMLButtonElement>(null);
     const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Update the key when props change significantly, causing a reload
@@ -167,6 +169,8 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
         }
     };
 
+    useImperativeHandle(ref, () => ({ exportSVG, toggleFullscreen }));
+
 
     return (
         <div
@@ -209,38 +213,8 @@ const CipherWrapperIframe: React.FC<CipherWrapperProps> = ({
                 frameBorder="0"
             />
 
-            {!hideControls && (
-                <>
-                    <button
-                        ref={fullscreenButtonRef}
-                        onClick={toggleFullscreen}
-                        style={{
-                            position: 'absolute',
-                            bottom: '10px',
-                            right: '10px',
-                            zIndex: 10,
-                            background: 'rgba(0, 0, 0, 0.7)',
-                        }}
-                    >
-                        {isFullscreen ? 'EXIT FULLSCREEN' : 'FULLSCREEN'}
-                    </button>
-
-                    <button
-                        onClick={exportSVG}
-                        style={{
-                            position: 'absolute',
-                            bottom: '10px',
-                            right: '120px',
-                            zIndex: 10,
-                            background: 'rgba(0, 0, 0, 0.7)',
-                        }}
-                    >
-                        EXPORT SVG
-                    </button>
-                </>
-            )}
         </div>
     );
-};
+});
 
 export default CipherWrapperIframe;

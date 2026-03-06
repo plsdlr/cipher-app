@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CipherWrapperIframe from '../canvasWrapper.tsx';
+import CipherWrapperIframe, { CipherWrapperHandle } from '../canvasWrapper.tsx';
 import encodeAll from '../utils/encodingUtils.js';
 import { useWallet } from '../cipherWallet/cipherWallet.tsx';
 import AnimationParameterSelector from '../components/AnimationParameterSelector.tsx';
@@ -96,6 +96,7 @@ const COLOR_NAMES = [
 const MintPage = () => {
 
     const navigate = useNavigate();
+    const cipherRef = useRef<CipherWrapperHandle>(null);
 
     const {
         publicKey,
@@ -252,6 +253,7 @@ const MintPage = () => {
                     <fieldset className="terminal-fieldset">
                         <legend>MINTING PREVIEW</legend>
                         <CipherWrapperIframe
+                            ref={cipherRef}
                             coordinates={coordinates}
                             builderTurmites={builderGenes.map(g => g.rule)}
                             walkerTurmites={[walkerGene.rule]}
@@ -262,6 +264,9 @@ const MintPage = () => {
                         <div className="canvas-controls">
                             <button onClick={generateRandomCoordinates} className="random-btn">
                                 RANDOMIZE COORDINATES
+                            </button>
+                            <button onClick={() => cipherRef.current?.toggleFullscreen()}>
+                                FULLSCREEN
                             </button>
                         </div>
                     </fieldset>

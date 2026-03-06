@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useReadContract, useAccount } from 'wagmi';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi.ts';
-import CipherWrapperIframe from '../canvasWrapper';
+import CipherWrapperIframe, { CipherWrapperHandle } from '../canvasWrapper';
 import { useDecryptToken } from './useDecryptToken.ts';
 import { WalletConnectionWarning } from '../components';
 
@@ -13,6 +13,7 @@ type TokenParams = {
 const ViewPage = () => {
     const { tokenId } = useParams<TokenParams>();
     const { isConnected } = useAccount();
+    const cipherRef = useRef<CipherWrapperHandle>(null);
 
     const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
     const formattedAddress = contractAddress as `0x${string}`;
@@ -69,6 +70,7 @@ const ViewPage = () => {
                         <div className='view-token'>
 
                             <CipherWrapperIframe
+                                ref={cipherRef}
                                 coordinates={decryptedToken.decryptedData.positions}
                                 builderTurmites={decryptedToken.decryptedData.rules.slice(0, 3)}
                                 walkerTurmites={[decryptedToken.decryptedData.rules[3]]}
@@ -80,6 +82,10 @@ const ViewPage = () => {
                                 ]}
                                 color={decryptedToken.decryptedData.color - 1}  // Convert from 1-16 to 0-15 for UI
                             />
+                            <div className="canvas-controls">
+                                <button onClick={() => cipherRef.current?.toggleFullscreen()}>FULLSCREEN</button>
+                                <button onClick={() => cipherRef.current?.exportSVG()}>EXPORT SVG</button>
+                            </div>
                         </div>
 
                         <fieldset className="terminal-fieldset">

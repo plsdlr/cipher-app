@@ -18,7 +18,7 @@ function EthWallet() {
           {account.address && (
             <div className="wallet-info-row">
               <div className="wallet-info-label">Address:</div>
-              <div className="wallet-info-value">{account.address}</div>
+              <div className="wallet-info-value">{account.address.slice(0, 9)}...</div>
             </div>
           )}
           {account.chainId && (

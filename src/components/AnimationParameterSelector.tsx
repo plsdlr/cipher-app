@@ -32,7 +32,11 @@ interface AnimationParameterSelectorProps {
     onPusherChange: (value: number) => void;
     onCleanerChange: (value: number) => void;
     onRectangleChange: (value: number) => void;
-    includeRectangleCount?: boolean; // Optional: to hide rectangle count if not needed
+    includeRectangleCount?: boolean;
+    disableCascade?: boolean;       // Prevent auto-cascading when one param changes
+    disabledPusher?: boolean;
+    disabledCleaner?: boolean;
+    disabledRectangle?: boolean;
 }
 
 const AnimationParameterSelector: React.FC<AnimationParameterSelectorProps> = ({
@@ -42,7 +46,11 @@ const AnimationParameterSelector: React.FC<AnimationParameterSelectorProps> = ({
     onPusherChange,
     onCleanerChange,
     onRectangleChange,
-    includeRectangleCount = true
+    includeRectangleCount = true,
+    disableCascade = false,
+    disabledPusher = false,
+    disabledCleaner = false,
+    disabledRectangle = false,
 }) => {
     // Helper functions for validation
     const getValidCleaners = (pusher: number): number[] => {
@@ -60,6 +68,7 @@ const AnimationParameterSelector: React.FC<AnimationParameterSelectorProps> = ({
 
     const handlePusherChange = (value: number) => {
         onPusherChange(value);
+        if (disableCascade) return;
         // Auto-select first valid cleaner and rectangle
         const validCleaners = getValidCleaners(value);
         if (validCleaners.length > 0) {
@@ -74,6 +83,7 @@ const AnimationParameterSelector: React.FC<AnimationParameterSelectorProps> = ({
 
     const handleCleanerChange = (value: number) => {
         onCleanerChange(value);
+        if (disableCascade) return;
         // Auto-select first valid rectangle
         const validRects = getValidRectangles(pusherFrames, value);
         if (validRects.length > 0) {
@@ -84,7 +94,7 @@ const AnimationParameterSelector: React.FC<AnimationParameterSelectorProps> = ({
     return (
         <>
             {/* Pusher Slowness */}
-            <div className="gene-section">
+            <div className="gene-section" style={{ opacity: disabledPusher ? 0.3 : 1, pointerEvents: disabledPusher ? 'none' : 'auto', transition: 'opacity 0.3s ease' }}>
                 <p>Pusher Slowness</p>
                 <div className="gene-options">
                     {[6, 11, 15, 25].map((value) => {
@@ -95,7 +105,7 @@ const AnimationParameterSelector: React.FC<AnimationParameterSelectorProps> = ({
                                     type="radio"
                                     name="pusher-slowness"
                                     checked={pusherFrames === value}
-                                    disabled={!hasValidCombos}
+                                    disabled={!hasValidCombos || disabledPusher}
                                     onChange={() => handlePusherChange(value)}
                                 />
                                 <span className="gene-name" style={{ opacity: hasValidCombos ? 1 : 0.3 }}>
@@ -108,7 +118,7 @@ const AnimationParameterSelector: React.FC<AnimationParameterSelectorProps> = ({
             </div>
 
             {/* Cleaner Slowness */}
-            <div className="gene-section">
+            <div className="gene-section" style={{ opacity: disabledCleaner ? 0.3 : 1, pointerEvents: disabledCleaner ? 'none' : 'auto', transition: 'opacity 0.3s ease' }}>
                 <p>Cleaner Slowness</p>
                 <div className="gene-options">
                     {[1, 2, 3, 4].map((value) => {
@@ -119,7 +129,7 @@ const AnimationParameterSelector: React.FC<AnimationParameterSelectorProps> = ({
                                     type="radio"
                                     name="cleaner-slowness"
                                     checked={cleanerFrames === value}
-                                    disabled={!isValid}
+                                    disabled={!isValid || disabledCleaner}
                                     onChange={() => handleCleanerChange(value)}
                                 />
                                 <span className="gene-name" style={{ opacity: isValid ? 1 : 0.3 }}>
@@ -133,8 +143,8 @@ const AnimationParameterSelector: React.FC<AnimationParameterSelectorProps> = ({
 
             {/* Rectangle Count (optional) */}
             {includeRectangleCount && (
-                <div className="gene-section">
-                    <p>Rectangle Count (TEST - not encoded)</p>
+                <div className="gene-section" style={{ opacity: disabledRectangle ? 0.3 : 1, pointerEvents: disabledRectangle ? 'none' : 'auto', transition: 'opacity 0.3s ease' }}>
+                    <p>Rectangle Count</p>
                     <div className="gene-options">
                         {[5, 20, 25, 30].map((value) => {
                             const isValid = isValidCombination(pusherFrames, cleanerFrames, value);
@@ -144,7 +154,7 @@ const AnimationParameterSelector: React.FC<AnimationParameterSelectorProps> = ({
                                         type="radio"
                                         name="rectangle-count"
                                         checked={rectangleCount === value}
-                                        disabled={!isValid}
+                                        disabled={!isValid || disabledRectangle}
                                         onChange={() => onRectangleChange(value)}
                                     />
                                     <span className="gene-name" style={{ opacity: isValid ? 1 : 0.3 }}>
