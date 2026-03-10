@@ -1,11 +1,11 @@
 // WalletPage.tsx - Enhanced with comprehensive console outputs
 import React, { useState, useEffect } from 'react';
 import { useWallet } from './cipherWallet/cipherWallet';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from './contractABI/EncryptedERC721/contractAbi';
+import { useAccount } from 'wagmi';
 import EthWallet from './ETHWalletConnector/EthConnector';
 import { useConsole } from './console/ConsoleContext.tsx';
 import { TransactionStatus, TransactionButton } from './components';
+import { useRegisterPublicKey } from './hooks/useRegisterPublicKey';
 
 type WalletMode = 'create' | 'import';
 
@@ -32,46 +32,26 @@ const WalletPage = () => {
   const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>('info');
   const [isLoading, setIsLoading] = useState(false);
 
-  const [hasRegisteredKey, setHasRegisteredKey] = useState(false);
   const [isETHConnected, setIsETHConnected] = useState(false);
 
   // Track previous states to prevent duplicate messages
   const [previousStates, setPreviousStates] = useState({
     walletState: '',
     accountStatus: '',
-    hasRegisteredKey: false
+    registeredOnChain: false,
   });
 
   const account = useAccount();
-  const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
-  const formattedAddress = contractAddress as `0x${string}`;
 
-  // Hook for writing to contract (registerPublicKey)
   const {
-    data: registerHash,
-    error: registerError,
-    isPending: isRegisterPending,
-    writeContract
-  } = useWriteContract();
-
-  // Hook to wait for registration transaction confirmation
-  const {
-    isLoading: isRegisterConfirming,
-    isSuccess: isRegisterConfirmed
-  } = useWaitForTransactionReceipt({
-    hash: registerHash,
-  });
-
-  // Check if the user's address is registered
-  const { data: addressRegistered, refetch } = useReadContract({
-    abi: EncryptedNFTABI,
-    address: formattedAddress,
-    functionName: 'userPublicKeys',
-    args: [account.address, 0],
-    query: {
-      enabled: !!account.address
-    }
-  });
+    register,
+    registerHash,
+    registerError,
+    isRegisterPending,
+    isRegisterConfirming,
+    isRegisterConfirmed,
+    hasRegisteredKey: registeredOnChain,
+  } = useRegisterPublicKey();
 
   // Separate useEffect for account status changes
   useEffect(() => {
@@ -105,14 +85,11 @@ const WalletPage = () => {
 
   // Separate useEffect for blockchain registration changes
   useEffect(() => {
-    const currentHasRegisteredKey = !!addressRegistered;
-    setHasRegisteredKey(currentHasRegisteredKey);
-
-    if (currentHasRegisteredKey !== previousStates.hasRegisteredKey && addressRegistered && account.address) {
+    if (registeredOnChain !== previousStates.registeredOnChain && registeredOnChain && account.address) {
       addMessage(`Public key found on blockchain for address: ${account.address.slice(0, 6)}...${account.address.slice(-4)}`, "info");
-      setPreviousStates(prev => ({ ...prev, hasRegisteredKey: currentHasRegisteredKey }));
+      setPreviousStates(prev => ({ ...prev, registeredOnChain: registeredOnChain }));
     }
-  }, [addressRegistered, account.address, previousStates.hasRegisteredKey]);
+  }, [registeredOnChain, account.address, previousStates.registeredOnChain]);
 
   // Show message helper with console output
   const showMessage = (msg: string, type: 'success' | 'error' | 'info') => {
@@ -238,7 +215,7 @@ const WalletPage = () => {
   };
 
   // Handle register public key on-chain
-  const handleRegisterPublicKey = async () => {
+  const handleRegisterPublicKey = () => {
     if (!publicKey) {
       showMessage('No public key available', 'error');
       addMessage("Registration failed: no public key available", "error");
@@ -248,19 +225,8 @@ const WalletPage = () => {
     addMessage("Starting public key registration on-chain...", "info");
     addMessage(`Registering key: [${formatBigInt(publicKey[0])}, ${formatBigInt(publicKey[1])}]`, "info");
 
-    try {
-      writeContract({
-        address: formattedAddress,
-        abi: EncryptedNFTABI,
-        functionName: 'registerPublicKey',
-        args: [publicKey[0], publicKey[1]],
-      });
-      addMessage("Transaction submitted to blockchain", "info");
-    } catch (error) {
-      const errorMsg = `Error registering public key: ${(error as Error).message}`;
-      showMessage(errorMsg, 'error');
-      addMessage(`Registration error: ${(error as Error).message}`, "error");
-    }
+    register(publicKey);
+    addMessage("Transaction submitted to blockchain", "info");
   };
 
   // Handle reset wallet with enhanced console output
@@ -332,11 +298,8 @@ const WalletPage = () => {
     if (isRegisterConfirmed) {
       addMessage("✓ Registration transaction confirmed on-chain!", "success");
       showMessage('Public key registered successfully!', 'success');
-
-      // Refetch registration status now that transaction is confirmed
-      refetch();
     }
-  }, [isRegisterConfirmed, refetch]);
+  }, [isRegisterConfirmed]);
 
   // Log wallet state changes
   useEffect(() => {
@@ -539,7 +502,7 @@ const WalletPage = () => {
               <p>Your wallet is active and ready to use</p>
 
               {/* Show register button if ETH wallet connected but key not registered */}
-              {isETHConnected && !hasRegisteredKey && (
+              {isETHConnected && !registeredOnChain && (
                 <div className="registration-section">
                   <p><strong>⚠ Action Required:</strong> Register your CIPHER public key on-chain to receive NFTs</p>
                   <TransactionButton
@@ -565,7 +528,7 @@ const WalletPage = () => {
               )}
 
               {/* Show status if already registered */}
-              {isETHConnected && hasRegisteredKey && (
+              {isETHConnected && registeredOnChain && (
                 <div className="registration-section">
                   <p><strong>✓ Public Key Registered:</strong> Your CIPHER wallet is registered on-chain</p>
                 </div>

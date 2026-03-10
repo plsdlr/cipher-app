@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useWallet } from '../../../cipherWallet/cipherWallet';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../../../contractABI/EncryptedERC721/contractAbi';
+import { useAccount } from 'wagmi';
+import { useRegisterPublicKey } from '../../../hooks/useRegisterPublicKey';
 import EthWallet from '../../../ETHWalletConnector/EthConnector';
 
 interface RegisterOnChainStepProps {
@@ -14,22 +14,14 @@ const RegisterOnChainStep: React.FC<RegisterOnChainStepProps> = ({ onComplete, o
     const { publicKey } = useWallet();
     const account = useAccount();
 
-    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
-    const formattedAddress = contractAddress as `0x${string}`;
-
     const {
-        data: registerHash,
-        error: registerError,
-        isPending: isRegisterPending,
-        writeContract
-    } = useWriteContract();
-
-    const {
-        isLoading: isRegisterConfirming,
-        isSuccess: isRegisterConfirmed
-    } = useWaitForTransactionReceipt({
-        hash: registerHash,
-    });
+        register,
+        registerHash,
+        registerError,
+        isRegisterPending,
+        isRegisterConfirming,
+        isRegisterConfirmed,
+    } = useRegisterPublicKey();
 
     // Auto-complete when registration is confirmed
     useEffect(() => {
@@ -40,13 +32,7 @@ const RegisterOnChainStep: React.FC<RegisterOnChainStepProps> = ({ onComplete, o
 
     const handleRegister = () => {
         if (!publicKey) return;
-
-        writeContract({
-            address: formattedAddress,
-            abi: EncryptedNFTABI,
-            functionName: 'registerPublicKey',
-            args: [publicKey[0], publicKey[1]],
-        });
+        register(publicKey);
     };
 
     const formatBigInt = (value: bigint): string => {
