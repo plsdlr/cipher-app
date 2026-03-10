@@ -153,7 +153,7 @@ const Home = () => {
                 </section> */}
 
                 <section className="info-section">
-                    <h2>What is Ciper?</h2>
+                    <h2>What is Cipher?</h2>
                     <p>
                         Cipher is a artistic experiment in protocol design. It makes heavy use of zero-knolege proofs and smart contracts to enable encrypted digital artworks on eth. Each cipher is a erc721 like token with onchain stored encrypted code for a generative turmite artwork. Transfering these token involves verfiable encrypting them. The owner of a token can also RE-CIPHER it making the artwork truly unknowable even to previos owners by changing the parameters of the encrypted artwork.
                     </p>

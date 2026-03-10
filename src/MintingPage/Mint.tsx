@@ -155,8 +155,8 @@ const MintPage = () => {
     const [color, setColor] = useState(0);
     const [pusherFrames, setPusherFrames] = useState(11);
     const [cleanerFrames, setCleanerFrames] = useState(1);
-    const [rectangleCount, setRectangleCount] = useState(5); // Default to valid combo
-    const [chaosNumbers, setChaosNumbers] = useState([11, 1, 5]); // [pusherSlowness, cleanerSlowness, rectangleCount]
+    const [rectangleCount, setRectangleCount] = useState(20);
+    const [chaosNumbers, setChaosNumbers] = useState([11, 1, 20]); // [pusherSlowness, cleanerSlowness, rectangleCount]
 
 
     // Handle coordinate input changes

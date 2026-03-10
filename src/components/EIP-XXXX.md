@@ -6,7 +6,7 @@ author: plsdlr
 status: Draft
 type: Standards Track
 category: ERC
-created: 2025-02-17
+created: 2026-03-09
 requires: 721
 ---
 

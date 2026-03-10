@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/EncryptedERC721/contractAbi.ts';
 import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt, useConfig } from 'wagmi';
 import { readContract } from 'wagmi/actions';
@@ -288,7 +288,7 @@ const ViewList = () => {
 
                     {tokenList.length === 0 ? (
                         <div className="no-tokens">
-                            <p>You don't own any Turmite NFTs yet.</p>
+                            <p>You don't own any Ciphers yet. <Link to="/mint">Mint one →</Link></p>
                         </div>
                     ) : (
                         <>

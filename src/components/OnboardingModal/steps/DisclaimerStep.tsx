@@ -30,7 +30,7 @@ const DisclaimerStep: React.FC<DisclaimerStepProps> = ({ onAccept }) => {
                         <strong>Backup Required:</strong> Export and securely backup your private key. If you lose access to this browser or forget your password, your cipher assets may be unrecoverable.
                     </li>
                     <li>
-                        <strong>Experimental Software:</strong> Cipher is experimental cryptographic software. Use at your own risk. Using this protocoll might result in the loss of the ether you used for minting or buying.
+                        <strong>Experimental Software:</strong> Cipher is experimental cryptographic software. Use at your own risk. Using this protocol might result in the loss of the ether you used for minting or buying.
                     </li>
                 </ul>
             </div>
