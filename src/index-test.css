@@ -143,8 +143,9 @@ canvas {
 .container>div.footer {
     grid-area: footer;
     padding: var(--space-lg);
-    padding-bottom: 0;
+    padding-bottom: 10px;
     border-top: 1px solid var(--primary-background);
+    align-self: start;
 }
 
 .laughing-man-logo {
@@ -1236,6 +1237,7 @@ td {
     padding-top: var(--space-md);
     border-top: 1px dashed var(--primary-color);
 }
+
 /* ============================================
    PAGE - SPECS
    ============================================ */
