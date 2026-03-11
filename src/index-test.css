@@ -240,6 +240,17 @@ button:disabled {
     color: var(--primary-background);
 }
 
+.copy-confirmation {
+    color: var(--color-green);
+    font-size: 0.85em;
+}
+
+.advanced-warning {
+    color: var(--color-orange);
+    font-size: 0.85em;
+    margin: 0.5rem 0 0.25rem;
+}
+
 /* ============================================
    COMPONENTS - ALERTS (Unified System)
    Usage: <div class="alert alert--warning">...</div>

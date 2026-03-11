@@ -33,6 +33,8 @@ const WalletPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [isETHConnected, setIsETHConnected] = useState(false);
+  const [keysCopied, setKeysCopied] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Track previous states to prevent duplicate messages
   const [previousStates, setPreviousStates] = useState({
@@ -355,12 +357,19 @@ const WalletPage = () => {
               )}
             </div>
             {privateKey && publicKey && (
-              <button
-                className="disconnect-button"
-                onClick={() => navigator.clipboard.writeText("Private Key:" + formatByteArrayFull(privateKey) + "Public Key:" + String(publicKey[0]) + "," + String(publicKey[1]))}
-              >
-                Copy Keys
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <button
+                  className="disconnect-button"
+                  onClick={() => {
+                    navigator.clipboard.writeText("Private Key:" + formatByteArrayFull(privateKey) + "Public Key:" + String(publicKey[0]) + "," + String(publicKey[1]));
+                    setKeysCopied(true);
+                    setTimeout(() => setKeysCopied(false), 2000);
+                  }}
+                >
+                  Copy Keys
+                </button>
+                {keysCopied && <span className="copy-confirmation">Copied to your clipboard</span>}
+              </div>
             )}
 
           </fieldset>
@@ -534,14 +543,22 @@ const WalletPage = () => {
                 </div>
               )}
 
-              <div className="wallet-actions">
-                <button className="reset-button" onClick={handleResetWallet}>
-                  Reset Wallet
-                </button>
-              </div>
-
               <div className="wallet-info">
                 <p><strong>Security Note:</strong> Your wallet will remain active until you close this browser tab or the session expires.</p>
+              </div>
+
+              <div className="wallet-actions">
+                <button className="secondary-button" onClick={() => setShowAdvanced(v => !v)}>
+                  {showAdvanced ? 'Hide Advanced' : 'Advanced'}
+                </button>
+                {showAdvanced && (
+                  <>
+                    <p className="advanced-warning">Only proceed if you know what you are doing.</p>
+                    <button className="reset-button" onClick={handleResetWallet}>
+                      Reset Wallet
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </fieldset>

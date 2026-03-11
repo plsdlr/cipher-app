@@ -110,10 +110,15 @@ export function MintNFT({ calldata, onSuccess }: MintNFTProps) {
 
     const mintLabel = canMintDiscounted ? 'Mint (Allowlist)' : 'Mint';
 
+    const currentPrice = canMintDiscounted ? allowlistPrice : publicPrice;
+    const priceEth = currentPrice != null
+        ? (Number(currentPrice as bigint) / 1e18).toString()
+        : null;
+
     return (
         <RequireWallets>
-            {canMintDiscounted && (
-                <p className="allowlist-badge">Allowlist eligible — discounted price</p>
+            {priceEth !== null && (
+                <p className="mint-price">Price: {priceEth} ETH{canMintDiscounted ? ' (allowlist)' : ''}</p>
             )}
             <TransactionButton
                 onClick={submit}
