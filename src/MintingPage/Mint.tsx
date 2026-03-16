@@ -80,7 +80,7 @@ const COLOR_NAMES = [
     "Purple",
     "Lime",
     "Brown",
-    "Gray1",
+    "Peach",
     "Gray2",
     "White",
     "Red Blood",
@@ -90,7 +90,6 @@ const COLOR_NAMES = [
     "Blue2",
     "Lavender",
     "Pink",
-    "Peach"
 ];
 
 const MintPage = () => {
@@ -152,7 +151,7 @@ const MintPage = () => {
     const [walkerGene, setWalkerGene] = useState(WALKER_GENES[0]);
 
     // New state for color selection (0-15)
-    const [color, setColor] = useState(0);
+    const [color, setColor] = useState(7); // White
     const [pusherFrames, setPusherFrames] = useState(11);
     const [cleanerFrames, setCleanerFrames] = useState(1);
     const [rectangleCount, setRectangleCount] = useState(20);
@@ -211,6 +210,41 @@ const MintPage = () => {
         addMessage("randomize coordinates", "info")
     };
 
+    // Generate random genes (respects valid animation parameter combinations)
+    const generateRandomGenes = () => {
+        const pushers = [11, 11, 11, 15, 15, 15, 6, 25];
+        const VALID_COMBINATIONS: Record<number, Record<number, number[]>> = {
+            6:  { 1: [20, 30], 2: [5] },
+            11: { 1: [20, 25, 30], 2: [5, 20, 25, 30], 3: [5] },
+            15: { 1: [5, 20, 25, 30], 2: [5, 20, 25], 3: [5], 4: [5, 20] },
+            25: { 1: [5, 30], 2: [5, 25], 3: [5], 4: [5] }
+        };
+        const randomPusher = pushers[Math.floor(Math.random() * pushers.length)];
+        const validCleaners = Object.keys(VALID_COMBINATIONS[randomPusher]).map(Number);
+        const randomCleaner = validCleaners[Math.floor(Math.random() * validCleaners.length)];
+        const validRects = VALID_COMBINATIONS[randomPusher][randomCleaner];
+        const randomRect = validRects[Math.floor(Math.random() * validRects.length)];
+
+        const randomColor = Math.floor(Math.random() * 16);
+        const weightedBuilders = [
+            ...BUILDER_GENES,
+            BUILDER_GENES.find(g => g.name === 'Snow')!,
+            BUILDER_GENES.find(g => g.name === 'Guwoz')!,
+            BUILDER_GENES.find(g => g.name === 'Vermin')!,
+            BUILDER_GENES.find(g => g.name === 'Trails')!,
+        ];
+        const randomBuilders = [0, 1, 2].map(() => weightedBuilders[Math.floor(Math.random() * weightedBuilders.length)]);
+        const randomWalker = WALKER_GENES[Math.floor(Math.random() * WALKER_GENES.length)];
+
+        setColor(randomColor);
+        setPusherFrames(randomPusher);
+        setCleanerFrames(randomCleaner);
+        setRectangleCount(randomRect);
+        setBuilderGenes(randomBuilders);
+        setWalkerGene(randomWalker);
+        addMessage(`randomize genes: builders=${randomBuilders.map(g => g.name).join(', ')} walker=${randomWalker.name}`, "info");
+    };
+
     // Load data from localStorage
     useEffect(() => {
     }, []);
@@ -264,6 +298,9 @@ const MintPage = () => {
                         <div className="canvas-controls">
                             <button onClick={generateRandomCoordinates} className="random-btn">
                                 RANDOMIZE COORDINATES
+                            </button>
+                            <button onClick={generateRandomGenes} className="random-btn">
+                                RANDOMIZE GENES
                             </button>
                             <button onClick={() => cipherRef.current?.toggleFullscreen()}>
                                 FULLSCREEN

@@ -13,24 +13,18 @@ const DisclaimerStep: React.FC<DisclaimerStepProps> = ({ onAccept }) => {
 
             <div className="disclaimer-content">
                 <p>
-                    Welcome to Cipher. Before proceeding, please understand the following:
+                    Welcome to Cipher. A few things to know before you start:
                 </p>
 
                 <ul className="disclaimer-list">
                     <li>
-                        <strong>Artwork:</strong> Cipher is an cryptographic artwork and should be treated as this. Its not an speculative asset. Its not an investment.
+                        <strong>Artwork, not an asset:</strong> Cipher is a cryptographic artwork — not an investment, not a speculative asset, and only tradable at the nightmarket due to trustless encryption.
                     </li>
                     <li>
-                        <strong>Self-Custody:</strong> You are solely responsible for securing your cipher wallet and private key.
+                        <strong>Your key, your responsibility:</strong> Your Cipher key is encrypted with a password and stored in your browser. Back it up. Lose it and your Ciphers become unencryptable — no resets, no support.
                     </li>
                     <li>
-                        <strong>Password Protection:</strong> Your cipher key will be encrypted with a password and stored in your browser. Choose a strong password.
-                    </li>
-                    <li>
-                        <strong>Backup Required:</strong> Export and securely backup your private key. If you lose access to this browser or forget your password, your cipher assets may be unrecoverable.
-                    </li>
-                    <li>
-                        <strong>Experimental Software:</strong> Cipher is experimental cryptographic software. Use at your own risk. Using this protocol might result in the loss of the ether you used for minting or buying.
+                        <strong>Experimental software:</strong> Use at your own risk — including any ETH spent minting or trading.
                     </li>
                 </ul>
             </div>

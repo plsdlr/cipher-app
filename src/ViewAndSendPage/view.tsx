@@ -85,6 +85,19 @@ const ViewPage = () => {
                             <div className="canvas-controls">
                                 <button onClick={() => cipherRef.current?.toggleFullscreen()}>FULLSCREEN</button>
                                 <button onClick={() => cipherRef.current?.exportSVG()}>EXPORT SVG</button>
+                                <button onClick={() => {
+                                    const [s1, s2, s3] = decryptedToken.decryptedData.rawDecryption;
+                                    const snippet = `var slot1Encoded=${s1.toString()}n,slot2Encoded=${s2.toString()}n,slot3Encoded=${s3.toString()}n;`;
+                                    navigator.clipboard.writeText(snippet).then(() => alert('Copied to clipboard!')).catch(() => {
+                                        const ta = document.createElement('textarea');
+                                        ta.value = snippet;
+                                        document.body.appendChild(ta);
+                                        ta.select();
+                                        document.execCommand('copy');
+                                        document.body.removeChild(ta);
+                                        alert('Copied to clipboard!');
+                                    });
+                                }}>DEBUG EXPORT SLOTS</button>
                             </div>
                         </div>
 

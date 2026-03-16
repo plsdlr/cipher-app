@@ -42,7 +42,7 @@ const BackupKeyStep: React.FC<BackupKeyStepProps> = ({ onComplete, onBack }) => 
             <h2>Backup Your Private Key</h2>
 
             <div className="backup-warning">
-                <strong>Important:</strong> Your private key is also shown in the cipher wallet, but you can allready back it up
+                <strong>Important:</strong> Your private key is also shown in the cipher wallet, but you can already back it up
                 and store it somewhere safe. If you lose access to this browser or forget your password,
                 you will need this key to recover your cipher wallet.
             </div>

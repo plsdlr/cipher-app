@@ -36,12 +36,13 @@ export const RequireWallets: React.FC<RequireWalletsProps> = ({
     requireCipher = true,
     renderMode = 'full'
 }) => {
-    const { isEthConnected, isCipherConnected, getMissingWalletMessage } = useWalletStatus();
+    const { isEthConnected, isCipherConnected, isCorrectNetwork, getMissingWalletMessage } = useWalletStatus();
 
     // Check if requirements are met
     const ethRequirementMet = !requireEth || isEthConnected;
+    const networkRequirementMet = !requireEth || !isEthConnected || isCorrectNetwork;
     const cipherRequirementMet = !requireCipher || isCipherConnected;
-    const allRequirementsMet = ethRequirementMet && cipherRequirementMet;
+    const allRequirementsMet = ethRequirementMet && networkRequirementMet && cipherRequirementMet;
 
     // If all requirements are met, render children
     if (allRequirementsMet) {

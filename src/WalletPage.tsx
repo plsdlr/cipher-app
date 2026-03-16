@@ -508,7 +508,10 @@ const WalletPage = () => {
           <fieldset className="terminal-fieldset">
             <legend>Wallet Controls</legend>
             <div className="action-section">
-              <p>Your wallet is active and ready to use</p>
+              {isETHConnected
+                ? <p>Your wallet is active and ready to use</p>
+                : <p>Cipher wallet active — connect your Ethereum wallet to mint or send.</p>
+              }
 
               {/* Show register button if ETH wallet connected but key not registered */}
               {isETHConnected && !registeredOnChain && (
@@ -544,7 +547,7 @@ const WalletPage = () => {
               )}
 
               <div className="wallet-info">
-                <p><strong>Security Note:</strong> Your wallet will remain active until you close this browser tab or the session expires.</p>
+                {isETHConnected && <p><strong>Security Note:</strong> Your wallet will remain active until you close this browser tab or the session expires.</p>}
               </div>
 
               <div className="wallet-actions">

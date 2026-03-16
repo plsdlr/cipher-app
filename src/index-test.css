@@ -300,6 +300,7 @@ button:disabled {
     --alert-color: var(--color-red-blood);
     --alert-bg: rgba(255, 255, 255, 0.04);
     padding: 10px;
+    margin-top: 10px;
     margin-bottom: 10px;
     border: 1px solid var(--alert-color);
     border-radius: var(--radius);
@@ -790,6 +791,7 @@ td {
     margin: 0 auto;
 }
 
+
 .mint-grid {
     padding-top: var(--space-lg);
     display: grid;
@@ -942,14 +944,11 @@ td {
 }
 
 .feature-item p,
+.features-section p,
 .info-section p {
     margin: 0 0 var(--space-md) 0;
     line-height: 1.6;
     opacity: 0.9;
-}
-
-.info-section p {
-    line-height: 1.8;
 }
 
 .info-section h2 {
@@ -997,8 +996,8 @@ td {
     }
 
     .home-split-section .example-fieldset {
-        flex: 0 0 auto;
-        width: 350px;
+        flex: 0 0 40%;
+        max-width: 500px;
         margin-bottom: 0;
     }
 

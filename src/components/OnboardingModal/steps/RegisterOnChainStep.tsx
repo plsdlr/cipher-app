@@ -3,6 +3,7 @@ import { useWallet } from '../../../cipherWallet/cipherWallet';
 import { useAccount } from 'wagmi';
 import { useRegisterPublicKey } from '../../../hooks/useRegisterPublicKey';
 import EthWallet from '../../../ETHWalletConnector/EthConnector';
+import { useWalletStatus } from '../../../hooks/useWalletStatus';
 
 interface RegisterOnChainStepProps {
     onComplete: () => void;
@@ -13,6 +14,7 @@ interface RegisterOnChainStepProps {
 const RegisterOnChainStep: React.FC<RegisterOnChainStepProps> = ({ onComplete, onSkip, onBack }) => {
     const { publicKey } = useWallet();
     const account = useAccount();
+    const { isCorrectNetwork } = useWalletStatus();
 
     const {
         register,
@@ -41,6 +43,7 @@ const RegisterOnChainStep: React.FC<RegisterOnChainStepProps> = ({ onComplete, o
     };
 
     const isEthConnected = account.status === 'connected';
+    const isReadyToRegister = isEthConnected && isCorrectNetwork;
     const isLoading = isRegisterPending || isRegisterConfirming;
 
     return (
@@ -60,12 +63,12 @@ const RegisterOnChainStep: React.FC<RegisterOnChainStepProps> = ({ onComplete, o
                 </div>
             )}
 
-            {!isEthConnected ? (
-                <div className="eth-connect-section">
-                    <p className="connect-prompt">Connect your Ethereum wallet to register on-chain:</p>
-                    <EthWallet />
-                </div>
-            ) : (
+            <div className="eth-connect-section">
+                <p className="connect-prompt">Connect your Ethereum wallet to register on-chain:</p>
+                <EthWallet />
+            </div>
+
+            {isReadyToRegister && (
                 <div className="register-section">
                     {registerError && (
                         <div className="message error">
@@ -104,7 +107,7 @@ const RegisterOnChainStep: React.FC<RegisterOnChainStepProps> = ({ onComplete, o
                 >
                     Skip for Now
                 </button>
-                {isEthConnected && (
+                {isReadyToRegister && (
                     <button
                         type="button"
                         onClick={handleRegister}
