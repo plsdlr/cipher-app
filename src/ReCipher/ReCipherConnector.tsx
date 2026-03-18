@@ -22,18 +22,22 @@ export function ReCipherNFT({ calldata, tokenId, onSuccess }: ReCipherNFTProps) 
         data: hash,
         error,
         isPending,
-        writeContract
+        writeContractAsync
     } = useWriteContract()
 
     const formattedAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`;
 
     async function submit() {
-        writeContract({
-            address: formattedAddress,
-            abi: EncryptedNFTABI,
-            functionName: 'reCipher',
-            args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, BigInt(tokenId)],
-        })
+        try {
+            await writeContractAsync({
+                address: formattedAddress,
+                abi: EncryptedNFTABI,
+                functionName: 'reCipher',
+                args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, BigInt(tokenId)],
+            })
+        } catch {
+            // error is captured in error from the hook
+        }
     }
 
     const { isLoading: isConfirming, isSuccess: isConfirmed } =

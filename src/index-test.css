@@ -812,7 +812,8 @@ td {
 
 .canvas-controls {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 10px;
     margin-top: 10px;
 }
 

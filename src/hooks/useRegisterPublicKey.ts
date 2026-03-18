@@ -11,7 +11,7 @@ export const useRegisterPublicKey = () => {
         data: registerHash,
         error: registerError,
         isPending: isRegisterPending,
-        writeContract
+        writeContractAsync
     } = useWriteContract();
 
     const {
@@ -38,13 +38,17 @@ export const useRegisterPublicKey = () => {
         }
     }, [isRegisterConfirmed, refetch]);
 
-    const register = (publicKey: [bigint, bigint]) => {
-        writeContract({
-            address: formattedAddress,
-            abi: EncryptedNFTABI,
-            functionName: 'registerPublicKey',
-            args: [publicKey[0], publicKey[1]],
-        });
+    const register = async (publicKey: [bigint, bigint]) => {
+        try {
+            await writeContractAsync({
+                address: formattedAddress,
+                abi: EncryptedNFTABI,
+                functionName: 'registerPublicKey',
+                args: [publicKey[0], publicKey[1]],
+            });
+        } catch {
+            // error is captured in registerError from the hook
+        }
     };
 
     return {

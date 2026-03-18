@@ -71,30 +71,34 @@ export function MintNFT({ calldata, onSuccess }: MintNFTProps) {
         data: hash,
         error,
         isPending,
-        writeContract
+        writeContractAsync
     } = useWriteContract();
 
     async function submit() {
         if (!address) return;
 
-        if (canMintDiscounted && allowlistSig && allowlistPrice != null) {
-            writeContract({
-                address: minterAddress,
-                abi: CipherMinterABI,
-                functionName: 'mintAllowlist',
-                args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, address, allowlistSig],
-                value: allowlistPrice as bigint,
-                gas: BigInt(3_000_000),
-            });
-        } else if (publicPrice != null) {
-            writeContract({
-                address: minterAddress,
-                abi: CipherMinterABI,
-                functionName: 'mint',
-                args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, address],
-                value: publicPrice as bigint,
-                gas: BigInt(3_000_000),
-            });
+        try {
+            if (canMintDiscounted && allowlistSig && allowlistPrice != null) {
+                await writeContractAsync({
+                    address: minterAddress,
+                    abi: CipherMinterABI,
+                    functionName: 'mintAllowlist',
+                    args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, address, allowlistSig],
+                    value: allowlistPrice as bigint,
+                    gas: BigInt(3_000_000),
+                });
+            } else if (publicPrice != null) {
+                await writeContractAsync({
+                    address: minterAddress,
+                    abi: CipherMinterABI,
+                    functionName: 'mint',
+                    args: [calldata.a, calldata.b, calldata.c, calldata.publivInput, address],
+                    value: publicPrice as bigint,
+                    gas: BigInt(3_000_000),
+                });
+            }
+        } catch {
+            // error is captured in error from the hook
         }
     }
 

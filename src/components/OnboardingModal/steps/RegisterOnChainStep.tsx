@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useWallet } from '../../../cipherWallet/cipherWallet';
 import { useAccount } from 'wagmi';
+import { type BaseError } from 'viem';
 import { useRegisterPublicKey } from '../../../hooks/useRegisterPublicKey';
 import EthWallet from '../../../ETHWalletConnector/EthConnector';
 import { useWalletStatus } from '../../../hooks/useWalletStatus';
@@ -72,7 +73,7 @@ const RegisterOnChainStep: React.FC<RegisterOnChainStepProps> = ({ onComplete, o
                 <div className="register-section">
                     {registerError && (
                         <div className="message error">
-                            Registration failed: {registerError.message}
+                            Registration failed: {(registerError as BaseError).shortMessage || registerError.message}
                         </div>
                     )}
 

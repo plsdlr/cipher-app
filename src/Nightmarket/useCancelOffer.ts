@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { NightMarketABI, NightMarket_CONTRACT_ADDRESS } from '../contractABI/NightMarket/contractAbi';
+import { type BaseError } from 'viem';
 
 interface UseCancelOfferResult {
     cancelOffer: (offerId: bigint) => Promise<void>;
@@ -18,7 +19,7 @@ export const useCancelOffer = (): UseCancelOfferResult => {
     // Contract write hook
     const {
         data: txHash,
-        writeContract,
+        writeContractAsync,
         isPending,
         error: writeError,
         reset: resetWrite
@@ -38,7 +39,7 @@ export const useCancelOffer = (): UseCancelOfferResult => {
             setError(null);
 
             // Call cancelOffer
-            writeContract({
+            await writeContractAsync({
                 abi: NightMarketABI,
                 address: NightMarket_CONTRACT_ADDRESS[11155111] as `0x${string}`,
                 functionName: 'cancelOffer',
@@ -60,7 +61,7 @@ export const useCancelOffer = (): UseCancelOfferResult => {
         isPending,
         isConfirming,
         isSuccess,
-        error: error || writeError?.message || confirmError?.message || null,
+        error: error || (writeError ? ((writeError as BaseError).shortMessage || writeError.message) : null) || (confirmError ? ((confirmError as BaseError).shortMessage || confirmError.message) : null) || null,
         txHash: txHash ?? null,
         reset
     };

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { NightMarketABI, NightMarket_CONTRACT_ADDRESS } from '../contractABI/NightMarket/contractAbi';
-import { parseEther } from 'viem';
+import { parseEther, type BaseError } from 'viem';
 
 interface UseMakeOfferResult {
     makeOffer: (priceInEth: string) => Promise<void>;
@@ -21,7 +21,7 @@ export const useMakeOffer = (): UseMakeOfferResult => {
     // Contract write hook
     const {
         data: txHash,
-        writeContract,
+        writeContractAsync,
         isPending,
         error: writeError,
         reset: resetWrite
@@ -51,7 +51,7 @@ export const useMakeOffer = (): UseMakeOfferResult => {
             const priceInWei = parseEther(priceInEth);
 
             // Call createOffer with ETH value
-            writeContract({
+            await writeContractAsync({
                 abi: NightMarketABI,
                 address: NightMarket_CONTRACT_ADDRESS[11155111] as `0x${string}`,
                 functionName: 'createOffer',
@@ -75,7 +75,7 @@ export const useMakeOffer = (): UseMakeOfferResult => {
         isPending,
         isConfirming,
         isSuccess,
-        error: error || writeError?.message || confirmError?.message || null,
+        error: error || (writeError ? ((writeError as BaseError).shortMessage || writeError.message) : null) || (confirmError ? ((confirmError as BaseError).shortMessage || confirmError.message) : null) || null,
         txHash: txHash ?? null,
         offerId,
         reset

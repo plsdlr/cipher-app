@@ -276,8 +276,15 @@ const MintPage = () => {
                 <fieldset className="terminal-fieldset">
                     <legend>MINT PAGE</legend>
                     <div className="terminal-content">
-
                         <p>Set the starting coordinates and select genetic patterns for your turmites</p>
+                        <div className="canvas-controls">
+                            <button onClick={generateRandomCoordinates} className="random-btn">
+                                RANDOMIZE COORDINATES
+                            </button>
+                            <button onClick={generateRandomGenes} className="random-btn">
+                                RANDOMIZE GENES
+                            </button>
+                        </div>
                     </div>
                 </fieldset>
 
@@ -296,12 +303,6 @@ const MintPage = () => {
                             color={color}
                         />
                         <div className="canvas-controls">
-                            <button onClick={generateRandomCoordinates} className="random-btn">
-                                RANDOMIZE COORDINATES
-                            </button>
-                            <button onClick={generateRandomGenes} className="random-btn">
-                                RANDOMIZE GENES
-                            </button>
                             <button onClick={() => cipherRef.current?.toggleFullscreen()}>
                                 FULLSCREEN
                             </button>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import GlitchText from './GlitchText';
 import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
 import { OnboardingModal } from './OnboardingModal';
 import CipherWrapperIframe from '../canvasWrapper';
