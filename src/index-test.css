@@ -1314,3 +1314,149 @@ td {
 .markdown-body th {
     color: var(--color-yellow);
 }
+
+/* ============================================
+   MOBILE - WALLET TOGGLE & OVERLAY
+   (hidden on desktop, activated via media query)
+   ============================================ */
+.menu-list .wallet-menu-item {
+    display: none;
+}
+
+.sidebar-close-btn {
+    display: none;
+    width: 100%;
+    text-align: left;
+    margin: 0;
+    padding: var(--space-sm) var(--space-md);
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid var(--primary-color);
+    border-radius: 0;
+    position: sticky;
+    top: 0;
+    background: var(--primary-background);
+    z-index: 1;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 99;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE - max-width: 767px
+   ============================================ */
+@media (max-width: 767px) {
+
+    /* Grid: drop cipher title column and footer row on mobile */
+    .container {
+        grid-template-areas:
+            "menue logo"
+            "content content";
+        grid-template-columns: 1fr 60px;
+        grid-template-rows: 60px 1fr;
+        height: 100dvh;
+        height: 100vh; /* fallback */
+    }
+
+    .container>div.footer {
+        display: none;
+    }
+
+    .container>div.cipher {
+        display: none;
+    }
+
+    /* Content scrolls independently */
+    .container>div.content {
+        overflow-y: auto;
+        padding: var(--space-md);
+        padding-bottom: var(--space-md);
+    }
+
+    /* Logo: shrink to fit 60px header row */
+    .laughing-man-logo {
+        height: 52px;
+        width: auto;
+    }
+
+    /* Menu: scrollable row, no wrap */
+    .container>div.menue {
+        display: flex;
+        align-items: stretch;
+        overflow: hidden;
+    }
+
+    .menu-list {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+    }
+
+    .menu-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .menu-list li {
+        padding: var(--space-xs) var(--space-sm);
+        font-size: var(--font-size-small);
+        white-space: nowrap;
+    }
+
+    /* Show wallet toggle as last menu item */
+    .menu-list .wallet-menu-item {
+        display: inline-block;
+    }
+
+    /* Sidebar becomes a fixed right drawer */
+    .container>div.sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: min(85vw, 380px);
+        height: 100dvh;
+        height: 100vh; /* fallback */
+        overflow-y: auto;
+        background: var(--primary-background);
+        border-left: 1px solid var(--primary-color);
+        z-index: 100;
+        padding: 0 var(--space-lg) var(--space-lg);
+        box-sizing: border-box;
+        transform: translateX(100%);
+        transition: transform 0.25s ease;
+        grid-area: unset;
+        padding-top: 0;
+    }
+
+    .container>div.sidebar.sidebar--open {
+        transform: translateX(0);
+    }
+
+    .sidebar-close-btn {
+        display: block;
+    }
+
+    /* Features list: single column on mobile */
+    .features-list {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+    }
+
+    /* View token: full width */
+    .view-token {
+        width: 100%;
+    }
+
+    /* Offers table: allow horizontal scroll */
+    .offers-table th:nth-child(2),
+    .offers-table td:nth-child(2) {
+        width: auto;
+        word-break: break-all;
+    }
+}
