@@ -613,15 +613,16 @@
 
             // Create SVG element with black background
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('width', width);
-            svg.setAttribute('height', height);
-            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            const scale = 4;
+            svg.setAttribute('width', width * scale);
+            svg.setAttribute('height', height * scale);
+            svg.setAttribute('viewBox', `0 0 ${width * scale} ${height * scale}`);
             svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 
             // Add black background
             const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            background.setAttribute('width', width);
-            background.setAttribute('height', height);
+            background.setAttribute('width', width * scale);
+            background.setAttribute('height', height * scale);
             background.setAttribute('x', 0);
             background.setAttribute('y', 0);
             background.setAttribute('fill', 'black');
@@ -642,10 +643,10 @@
                     // Check if pixel has any color or alpha value (not completely transparent black)
                     if (r > 0 || g > 0 || b > 0 || a > 0) {
                         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        rect.setAttribute('x', x);
-                        rect.setAttribute('y', y);
-                        rect.setAttribute('width', 1);
-                        rect.setAttribute('height', 1);
+                        rect.setAttribute('x', x * scale);
+                        rect.setAttribute('y', y * scale);
+                        rect.setAttribute('width', scale);
+                        rect.setAttribute('height', scale);
 
                         // Include alpha channel in the color
                         if (a < 255) {
@@ -911,7 +912,7 @@
 
             // SVG Export handler
             if (event.data.type === 'EXPORT_SVG') {
-                const svgString = redBlackCanvasToSVG(canvas);
+                const svgString = fullColorCanvasToSVG(canvas);
                 window.parent.postMessage({
                     type: 'SVG_READY',
                     svgData: svgString

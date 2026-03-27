@@ -53,7 +53,7 @@ export const useMakeOffer = (): UseMakeOfferResult => {
             // Call createOffer with ETH value
             await writeContractAsync({
                 abi: NightMarketABI,
-                address: NightMarket_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+                address: NightMarket_CONTRACT_ADDRESS[1] as `0x${string}`,
                 functionName: 'createOffer',
                 args: [], // No arguments, just send ETH
                 value: priceInWei, // Send ETH as the offer price

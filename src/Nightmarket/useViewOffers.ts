@@ -20,7 +20,7 @@ interface UseViewOffersResult {
  * @param end Ending offer ID (exclusive)
  */
 export const useViewOffers = (start: number = 0, end: number = 100): UseViewOffersResult => {
-    const contractAddress = NightMarket_CONTRACT_ADDRESS[11155111] as `0x${string}`;
+    const contractAddress = NightMarket_CONTRACT_ADDRESS[1] as `0x${string}`;
 
     const {
         data,
@@ -55,7 +55,7 @@ export const useViewOffers = (start: number = 0, end: number = 100): UseViewOffe
  * @param buyerAddress Address of the buyer to query offers for
  */
 export const useViewOffersByAddress = (buyerAddress?: string): UseViewOffersResult => {
-    const contractAddress = NightMarket_CONTRACT_ADDRESS[11155111] as `0x${string}`;
+    const contractAddress = NightMarket_CONTRACT_ADDRESS[1] as `0x${string}`;
 
     const {
         data,
@@ -89,7 +89,7 @@ export const useViewOffersByAddress = (buyerAddress?: string): UseViewOffersResu
  * Hook to get the current total number of offers
  */
 export const useCurrentOffers = () => {
-    const contractAddress = NightMarket_CONTRACT_ADDRESS[11155111] as `0x${string}`;
+    const contractAddress = NightMarket_CONTRACT_ADDRESS[1] as `0x${string}`;
 
     const { data, isLoading, error, refetch } = useReadContract({
         abi: NightMarketABI,

@@ -361,7 +361,7 @@ const WalletPage = () => {
                 <button
                   className="disconnect-button"
                   onClick={() => {
-                    navigator.clipboard.writeText("Private Key:" + formatByteArrayFull(privateKey) + "Public Key:" + String(publicKey[0]) + "," + String(publicKey[1]));
+                    navigator.clipboard.writeText("Private Key:" + formatByteArrayFull(privateKey) + " Public Key:" + String(publicKey[0]) + "," + String(publicKey[1]));
                     setKeysCopied(true);
                     setTimeout(() => setKeysCopied(false), 2000);
                   }}

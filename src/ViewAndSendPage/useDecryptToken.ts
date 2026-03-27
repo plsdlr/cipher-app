@@ -28,7 +28,7 @@ export const useDecryptToken = (tokenId: string | null): UseDecryptTokenResult =
     // Step 1: Get encrypted note
     const { data: encryptedNote, isLoading: isLoadingContract, error: contractError } = useReadContract({
         abi: EncryptedNFTABI,
-        address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+        address: EncryptedNFT_CONTRACT_ADDRESS[1] as `0x${string}`,
         functionName: 'getEncryptedNote',
         args: tokenId ? [tokenId] : undefined,
         query: {
@@ -44,7 +44,7 @@ export const useDecryptToken = (tokenId: string | null): UseDecryptTokenResult =
     // Step 2: Get last owner address (only if flag is false - meaning we need ECDH)
     const { data: lastAddress, isLoading: isLoadingLastOwner, error: contractError1 } = useReadContract({
         abi: EncryptedNFTABI,
-        address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+        address: EncryptedNFT_CONTRACT_ADDRESS[1] as `0x${string}`,
         functionName: 'mapLastOwner',
         args: tokenId ? [tokenId] : undefined,
         query: {
@@ -57,13 +57,13 @@ export const useDecryptToken = (tokenId: string | null): UseDecryptTokenResult =
         contracts: [
             {
                 abi: EncryptedNFTABI,
-                address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+                address: EncryptedNFT_CONTRACT_ADDRESS[1] as `0x${string}`,
                 functionName: 'userPublicKeys',
                 args: lastAddress ? [lastAddress, 0] : undefined,
             },
             {
                 abi: EncryptedNFTABI,
-                address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+                address: EncryptedNFT_CONTRACT_ADDRESS[1] as `0x${string}`,
                 functionName: 'userPublicKeys',
                 args: lastAddress ? [lastAddress, 1] : undefined,
             },

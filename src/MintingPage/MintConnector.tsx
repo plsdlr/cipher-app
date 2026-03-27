@@ -22,8 +22,8 @@ export function MintNFT({ calldata, onSuccess }: MintNFTProps) {
 
     const { address } = useAccount();
 
-    const minterAddress = CipherMinter_CONTRACT_ADDRESS[11155111] as `0x${string}`;
-    const nftAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`;
+    const minterAddress = CipherMinter_CONTRACT_ADDRESS[1] as `0x${string}`;
+    const nftAddress = EncryptedNFT_CONTRACT_ADDRESS[1] as `0x${string}`;
 
     // Fetch allowlist signature from static JSON served at /allowlist.json
     const [allowlistSig, setAllowlistSig] = useState<`0x${string}` | null>(null);

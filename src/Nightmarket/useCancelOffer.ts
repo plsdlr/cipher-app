@@ -41,7 +41,7 @@ export const useCancelOffer = (): UseCancelOfferResult => {
             // Call cancelOffer
             await writeContractAsync({
                 abi: NightMarketABI,
-                address: NightMarket_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+                address: NightMarket_CONTRACT_ADDRESS[1] as `0x${string}`,
                 functionName: 'cancelOffer',
                 args: [offerId],
             });

@@ -1,5 +1,5 @@
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
-import { sepolia } from 'wagmi/chains'
+import { mainnet } from 'wagmi/chains'
 
 function EthWallet() {
   const account = useAccount()
@@ -7,7 +7,7 @@ function EthWallet() {
   const { disconnect } = useDisconnect()
   const { switchChain, isPending: isSwitching } = useSwitchChain()
 
-  const isWrongNetwork = account.status === 'connected' && account.chainId !== sepolia.id
+  const isWrongNetwork = account.status === 'connected' && account.chainId !== mainnet.id
 
 
   return (
@@ -35,14 +35,14 @@ function EthWallet() {
         {isWrongNetwork && (
           <div className="wallet-warning">
             <strong className="wallet-warning-title">⚠ Wrong Network</strong>
-            <p className="wallet-warning-message">Please switch to Sepolia testnet.</p>
+            <p className="wallet-warning-message">Please switch to Ethereum Mainnet.</p>
             <button
               type="button"
-              onClick={() => switchChain({ chainId: sepolia.id })}
+              onClick={() => switchChain({ chainId: mainnet.id })}
               disabled={isSwitching}
               className="connect-button"
             >
-              {isSwitching ? 'Switching...' : 'Switch to Sepolia'}
+              {isSwitching ? 'Switching...' : 'Switch to Mainnet'}
             </button>
           </div>
         )}

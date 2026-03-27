@@ -1,5 +1,5 @@
 import { useAccount, useChainId } from 'wagmi';
-import { sepolia } from 'wagmi/chains';
+import { mainnet } from 'wagmi/chains';
 import { useWallet } from '../cipherWallet/cipherWallet';
 
 export interface WalletStatus {
@@ -31,7 +31,7 @@ export const useWalletStatus = (): WalletStatus => {
     const chainId = useChainId();
     const { publicKey: cipherPublicKey, privateKey } = useWallet();
 
-    const isCorrectNetwork = chainId === sepolia.id;
+    const isCorrectNetwork = chainId === mainnet.id;
     const isCipherConnected = !!(cipherPublicKey && privateKey);
     const bothConnected = isEthConnected && isCipherConnected && isCorrectNetwork;
 
@@ -43,7 +43,7 @@ export const useWalletStatus = (): WalletStatus => {
             return 'Please connect your Ethereum wallet.';
         }
         if (!isCorrectNetwork) {
-            return 'Wrong network. Please switch to Sepolia testnet.';
+            return 'Wrong network. Please switch to Ethereum Mainnet.';
         }
         if (!isCipherConnected) {
             return 'Please connect your Cipher wallet.';

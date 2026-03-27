@@ -9,8 +9,8 @@ export const NightMarketABI = NightMarket.abi as Abi;
 
 // Export the contract address for different networks
 export const NightMarket_CONTRACT_ADDRESS = {
-    1: '.', // Mainnet
-    11155111: '0x79151e1007C5c76CABB54E4c8dA2afDDa0f25c74', // Sepolia
+    1: '0x25F77D92B771cFA7ddf5944bbC0c4e688E2f4ee7', // Mainnet
+    11155111: '0x25F77D92B771cFA7ddf5944bbC0c4e688E2f4ee7', // Sepolia
 };
 
 // Default export for more convenient imports

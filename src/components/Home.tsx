@@ -150,13 +150,13 @@ const Home = () => {
                 <section className="info-section">
                     <h2>What is Cipher?</h2>
                     <p>
-                        Cipher is an encrypted generative art protocol on Ethereum. Each Cipher is a verifiable encrypted token. At its core, it's an artistic experiment in protocol design — using zero-knowledge proofs and smart contracts to keep generative artworks encrypted onchain, so only the current owner can see what they hold.
+                        Cipher is an encrypted generative art protocol. Each work encodes a set of rules governing simple agents, verifiably encrypted and accessible only to its current owner. Transfer requires decryption and re-encryption. With each new owner comes the right to modify one parameter, altering the generative output and extending the work's visual lineage.
                     </p>
                     <p>
-                        Each Cipher is driven by a set of <strong>turmites</strong> — tiny agents that crawl across a grid following fixed rules, painting as they go. Turmites are a type of 2D Turing machine: each one has a direction, a state, and a simple lookup table that tells it what color to paint the current cell, which way to turn, and what state to move into next. From just a handful of rules per turmite, they trace out wildly complex, often beautiful paths — unpredictable in appearance but fully deterministic.
+                        Each Cipher is driven by a set of <strong>turmites</strong> — tiny agents that crawl across a grid following fixed rules, painting as they go. Turmites are a type of 2D Turing machine: each one has a direction, a state, and a simple lookup table that tells it what color to paint the current cell, which way to turn, and what state to move into next. From just a handful of rules per turmite, they trace out complex pathes — unpredictable in appearance but fully deterministic.
                     </p>
                     <p>
-                        When you mint a Cipher, you're composing a collection of turmite rulesets and a color palette. The combination of multiple turmites running together is what shapes the final artwork. The encoded parameters get encrypted with your public Cipher key and stored onchain. Transferring a Cipher re-encrypts it for the new owner. Re-Ciphering swaps a single parameter — making the artwork unknowable even to whoever held it before.
+                        When you mint a Cipher, you compose turmite rulesets and a color palette, encrypted with your public key and stored onchain. Transfers re-encrypt the work for the new owner. Re-Ciphering swaps one parameter — making the artwork unknowable even to whoever held it before.
                     </p>
 
                     <h2>How does it work?</h2>

@@ -25,7 +25,7 @@ export function ReCipherNFT({ calldata, tokenId, onSuccess }: ReCipherNFTProps) 
         writeContractAsync
     } = useWriteContract()
 
-    const formattedAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`;
+    const formattedAddress = EncryptedNFT_CONTRACT_ADDRESS[1] as `0x${string}`;
 
     async function submit() {
         try {

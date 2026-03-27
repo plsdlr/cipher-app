@@ -36,7 +36,7 @@ const ViewList = () => {
 
 
     const navigate = useNavigate();
-    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
+    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[1];
     const formattedAddress = contractAddress as `0x${string}`;
     const { address } = useAccount();
     const config = useConfig();
@@ -101,13 +101,13 @@ const ViewList = () => {
         contracts: [
             {
                 abi: EncryptedNFTABI,
-                address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+                address: EncryptedNFT_CONTRACT_ADDRESS[1] as `0x${string}`,
                 functionName: 'userPublicKeys',
                 args: [receiverAddress as `0x${string}`, 0],
             },
             {
                 abi: EncryptedNFTABI,
-                address: EncryptedNFT_CONTRACT_ADDRESS[11155111] as `0x${string}`,
+                address: EncryptedNFT_CONTRACT_ADDRESS[1] as `0x${string}`,
                 functionName: 'userPublicKeys',
                 args: [receiverAddress as `0x${string}`, 1],
             },

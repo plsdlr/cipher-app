@@ -71,7 +71,7 @@ const OffersList = () => {
     const { currentOffers, isLoading: isLoadingCount, refetch: refetchCount } = useCurrentOffers();
 
     // Fetch user's owned tokens when fulfilling an offer
-    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
+    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[1];
     const formattedAddress = contractAddress as `0x${string}`;
 
     // Decrypt the token that will be sold
@@ -88,7 +88,7 @@ const OffersList = () => {
         }
     });
 
-    const marketplaceAddress = NightMarket_CONTRACT_ADDRESS[11155111] as `0x${string}`;
+    const marketplaceAddress = NightMarket_CONTRACT_ADDRESS[1] as `0x${string}`;
 
     // Fetch buyer's public key from contract
     const { data: buyerPublicKey, isLoading: isLoadingBuyerKey } = useReadContracts({

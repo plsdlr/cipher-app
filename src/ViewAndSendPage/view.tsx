@@ -15,7 +15,7 @@ const ViewPage = () => {
     const { isConnected } = useAccount();
     const cipherRef = useRef<CipherWrapperHandle>(null);
 
-    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
+    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[1];
     const formattedAddress = contractAddress as `0x${string}`;
 
     // Fetch encrypted data from the blockchain

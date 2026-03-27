@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import WalletPage from './WalletPage';
 import MintPage from './MintingPage/Mint';
@@ -43,13 +44,13 @@ const Logo = () => {
 
     return (
         <div className="logo">
-            <img src="/laughingManNoAnimation.svg" alt="Laughing Man" className="laughing-man-logo" />
+            <img src="/laughingMan_canonical.svg" alt="Laughing Man" className="laughing-man-logo" />
         </div>
     );
 };
 
 // Menu component
-const Menu = () => {
+const Menu = ({ onWalletToggle }: { onWalletToggle?: () => void }) => {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -88,17 +89,24 @@ const Menu = () => {
                     {item.label}
                 </li>
             ))}
+            {onWalletToggle && (
+                <li className="wallet-menu-item" onClick={onWalletToggle}>
+                    WALLET
+                </li>
+            )}
         </ul>
     );
 };
 
 // Main application component with router
 function MainApp() {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
     return (
         <BrowserRouter>
             <div className="container">
                 <div className="menue">
-                    <Menu />
+                    <Menu onWalletToggle={() => setSidebarOpen(v => !v)} />
                 </div>
 
                 <CipherTitle />
@@ -109,7 +117,21 @@ function MainApp() {
                     <MainContent />
                 </div>
 
-                <div className="sidebar">
+                {sidebarOpen && (
+                    <div
+                        className="sidebar-overlay"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                )}
+
+                <div className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
+                    <button
+                        className="sidebar-close-btn"
+                        onClick={() => setSidebarOpen(false)}
+                        aria-label="Close wallet"
+                    >
+                        ✕ CLOSE
+                    </button>
                     <div className="wallet1">
                         <WalletPage />
                     </div>
@@ -120,7 +142,6 @@ function MainApp() {
 
                 <div className="footer">
                     <fieldset className="terminal-fieldset">
-
                         <p>Cipher is supported by <a href='https://www.justopensource.io/'>JUST Open Source</a>.
                             Cipher is an artwork by <a href='https://plsdlr.net/'>Paul Seidler</a>. All original code © GNU Affero General Public License. Third-party libraries and dependencies retain their original licenses.
                         </p>

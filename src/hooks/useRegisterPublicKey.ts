@@ -4,7 +4,7 @@ import { EncryptedNFTABI, EncryptedNFT_CONTRACT_ADDRESS } from '../contractABI/E
 
 export const useRegisterPublicKey = () => {
     const account = useAccount();
-    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[11155111];
+    const contractAddress = EncryptedNFT_CONTRACT_ADDRESS[1];
     const formattedAddress = contractAddress as `0x${string}`;
 
     const {
