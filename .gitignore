@@ -29,4 +29,16 @@ src/testExplore.html
 src/indexTurmiteVARIANT1.html
 legacycss.css
 src/OnchainJS
+animation_combinations.csv
+encoding.js
+encodingClean_Implementation.js
+generateProofData_Implementation.js
+public/indexTurmite_deterministic.html
+public/laughingManFinalCompressed.svg
+public/testdeterminism.html
+src/assets/
+src/indexTurmite.html
+src/indexTurmite_deterministic.html
+src/utils/generateRandomSeed.js
+testindexDeployed.html
 
